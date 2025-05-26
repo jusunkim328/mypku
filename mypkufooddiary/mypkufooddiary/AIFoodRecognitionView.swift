@@ -8,22 +8,22 @@ struct AIFoodRecognitionView: View {
     var currentDate: Date
 
     // UI State
-    @State fileprivate var isSimulating: Bool = false
-    @State fileprivate var showResultsSection: Bool = false
-    @State fileprivate var simulationAttempted: Bool = false // To know if we should show "try again" or initial prompt
+    @State internal var isSimulating: Bool = false
+    @State internal var showResultsSection: Bool = false
+    @State internal var simulationAttempted: Bool = false // To know if we should show "try again" or initial prompt
 
     // AI Suggested Data (will be editable)
-    @State fileprivate var foodName: String = ""
-    @State fileprivate var proteinGrams: String = ""
-    @State fileprivate var servingSize: String = ""
-    @State fileprivate var quantity: String = "1"
+    @State internal var foodName: String = ""
+    @State internal var proteinGrams: String = ""
+    @State internal var servingSize: String = ""
+    @State internal var quantity: String = "1"
 
     // Error Handling
-    @State fileprivate var errorMessage: String? = nil
+    @State internal var errorMessage: String? = nil
     @State private var showingErrorAlert: Bool = false // This should remain private
     
     // To differentiate between first load and subsequent "try again"
-    @State fileprivate var userInitiatedSimulation: Bool = false
+    @State internal var userInitiatedSimulation: Bool = false
 
 
     var body: some View {
