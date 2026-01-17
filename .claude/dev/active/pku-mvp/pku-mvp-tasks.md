@@ -43,7 +43,8 @@
 - [x] 개발 서버 정상 작동 확인 (http://localhost:3000)
 
 ### 🔄 진행 중
-- [ ] Vercel 배포 준비
+- [x] GitHub 푸시 완료 (develop 브랜치)
+- [ ] Vercel 배포 (사용자 작업 필요)
 
 ### ⏳ 대기 중
 
@@ -59,10 +60,12 @@
 
 ## 다음 단계
 
-1. `.env` 파일에 실제 `GEMINI_API_KEY` 설정
-2. 개발 서버에서 음식 사진 분석 테스트
-3. PKU/일반 모드 전환 테스트
-4. LocalStorage 데이터 영속성 확인
+1. Vercel 배포:
+   - https://vercel.com 에서 GitHub 저장소 `jusunkim328/mypku` import
+   - Environment Variable에 `GEMINI_API_KEY` 설정
+   - develop 브랜치에서 배포
+2. 배포된 URL에서 기능 테스트
+3. 데모 시나리오 준비 및 3분 영상 촬영
 
 ## 알려진 이슈
 
