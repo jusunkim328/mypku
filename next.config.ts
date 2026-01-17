@@ -4,12 +4,7 @@ const nextConfig: NextConfig = {
   // 모든 페이지를 동적으로 렌더링
   output: "standalone",
 
-  // 정적 생성 비활성화
-  experimental: {
-    // SSG 빌드 시 오류 무시
-  },
-
-  // 개발 환경에서 경고 표시
+  // TypeScript 빌드 에러 체크
   typescript: {
     ignoreBuildErrors: false,
   },
