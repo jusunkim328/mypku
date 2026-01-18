@@ -6,7 +6,9 @@ import React from "react";
 export function Page({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`min-h-screen bg-gray-50 animate-fade-in ${className}`}>
-      {children}
+      <div className="max-w-2xl mx-auto">
+        {children}
+      </div>
     </div>
   );
 }
@@ -127,6 +129,65 @@ export function Button({
 export function Preloader({ className = "" }: { className?: string }) {
   return (
     <div className={`animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 w-5 h-5 ${className}`} />
+  );
+}
+
+// Spinner 컴포넌트 (큰 로딩)
+export function Spinner({ size = "md", className = "" }: { size?: "sm" | "md" | "lg"; className?: string }) {
+  const sizeClasses = {
+    sm: "w-6 h-6 border-2",
+    md: "w-10 h-10 border-3",
+    lg: "w-16 h-16 border-4",
+  };
+  return (
+    <div className={`animate-spin rounded-full border-gray-300 border-t-indigo-600 ${sizeClasses[size]} ${className}`} />
+  );
+}
+
+// 스켈레톤 컴포넌트
+export function Skeleton({ className = "", variant = "text" }: { className?: string; variant?: "text" | "circular" | "rectangular" }) {
+  const variantClasses = {
+    text: "h-4 rounded",
+    circular: "rounded-full",
+    rectangular: "rounded-lg",
+  };
+  return (
+    <div className={`animate-pulse bg-gray-200 ${variantClasses[variant]} ${className}`} />
+  );
+}
+
+// 스켈레톤 카드 (대시보드용)
+export function SkeletonCard({ className = "" }: { className?: string }) {
+  return (
+    <Card className={`p-4 ${className}`} animate={false}>
+      <Skeleton className="w-1/3 h-5 mb-4" />
+      <div className="flex justify-around">
+        <div className="flex flex-col items-center gap-2">
+          <Skeleton variant="circular" className="w-20 h-20" />
+          <Skeleton className="w-16 h-3" />
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <Skeleton variant="circular" className="w-20 h-20" />
+          <Skeleton className="w-16 h-3" />
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <Skeleton variant="circular" className="w-20 h-20" />
+          <Skeleton className="w-16 h-3" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// 로딩 오버레이
+export function LoadingOverlay({ message = "로딩 중..." }: { message?: string }) {
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 flex flex-col items-center gap-3 shadow-xl">
+        <Spinner size="lg" />
+        <p className="text-gray-600 font-medium">{message}</p>
+      </div>
+    </div>
   );
 }
 
