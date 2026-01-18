@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Page, Navbar, Block, Button, Card } from "@/components/ui";
+import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
 import CoachingMessage from "@/components/dashboard/CoachingMessage";
@@ -14,8 +14,19 @@ const mealTypeLabels: Record<string, string> = {
 };
 
 export default function HistoryClient() {
-  const { mealRecords, removeMealRecord, mode } = useNutritionStore();
+  const { mealRecords, removeMealRecord, mode, _hasHydrated } = useNutritionStore();
   const isPKU = mode === "pku";
+
+  // 하이드레이션 대기
+  if (!_hasHydrated) {
+    return (
+      <Page>
+        <div className="min-h-screen flex items-center justify-center">
+          <Preloader />
+        </div>
+      </Page>
+    );
+  }
 
   // 최근 7일 기록만 표시
   const recentRecords = mealRecords

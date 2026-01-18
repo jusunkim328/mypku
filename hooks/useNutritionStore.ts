@@ -24,8 +24,8 @@ interface NutritionState {
   removeMealRecord: (id: string) => void;
   updateMealRecord: (id: string, record: Partial<MealRecord>) => void;
 
-  // 계산된 값
-  todayNutrition: NutritionData;
+  // 계산된 값 (함수로 변경)
+  getTodayNutrition: () => NutritionData;
   getTodayMeals: () => MealRecord[];
   getWeeklyData: () => { date: string; nutrition: NutritionData }[];
 
@@ -113,7 +113,7 @@ export const useNutritionStore = create<NutritionState>()(
           ),
         })),
 
-      get todayNutrition() {
+      getTodayNutrition: () => {
         const todayMeals = get().mealRecords.filter((r) => isToday(r.timestamp));
         return sumNutrition(todayMeals);
       },

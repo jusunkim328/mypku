@@ -4,8 +4,11 @@ import { Card, Progressbar } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 
 export default function DailyGoalCard() {
-  const { mode, todayNutrition, dailyGoals } = useNutritionStore();
+  const { mode, getTodayNutrition, dailyGoals, mealRecords } = useNutritionStore();
   const isPKU = mode === "pku";
+
+  // mealRecords가 변경될 때마다 다시 계산됨
+  const todayNutrition = getTodayNutrition();
 
   const nutrients = [
     {
@@ -66,7 +69,7 @@ export default function DailyGoalCard() {
                   {nutrient.unit}
                 </span>
               </div>
-              <Progressbar progress={percentage / 100} />
+              <Progressbar progress={percentage / 100} warning={nutrient.warning} />
             </div>
           );
         })}

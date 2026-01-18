@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.90.1",
     "next": "15.3.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

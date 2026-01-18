@@ -1,6 +1,6 @@
 # pku-mvp Tasks
 
-**Last Updated**: 2026-01-17 21:06
+**Last Updated**: 2026-01-17 21:50
 
 ## 완료 기준
 
@@ -11,7 +11,7 @@
 - [x] 식사 기록 저장 및 히스토리 조회 (기능 구현 완료)
 - [x] AI 코칭 메시지 생성 (API 구현 완료)
 - [x] 프로덕션 빌드 성공 ✅
-- [ ] Vercel 배포 완료
+- [x] Vercel 배포 완료 ✅
 - [ ] 3분 데모 영상 제작
 
 ## 진행 상태
@@ -43,8 +43,9 @@
 - [x] 개발 서버 정상 작동 확인 (http://localhost:3000)
 
 ### 🔄 진행 중
-- [x] GitHub 푸시 완료 (develop 브랜치)
-- [ ] Vercel 배포 (사용자 작업 필요)
+- [x] GitHub 푸시 완료 (main 브랜치)
+- [x] Vercel 배포 완료
+- [x] React2Shell 보안 취약점 패치 (Next.js 15.3.8)
 
 ### ⏳ 대기 중
 
@@ -56,16 +57,13 @@
 - [ ] 에러 핸들링 강화
 - [ ] 데모 시나리오 준비
 - [ ] 3분 데모 영상 촬영
-- [ ] README 작성
 
 ## 다음 단계
 
-1. Vercel 배포:
-   - https://vercel.com 에서 GitHub 저장소 `jusunkim328/mypku` import
-   - Environment Variable에 `GEMINI_API_KEY` 설정
-   - develop 브랜치에서 배포
-2. 배포된 URL에서 기능 테스트
-3. 데모 시나리오 준비 및 3분 영상 촬영
+1. Vercel Environment Variable에 `GEMINI_API_KEY` 설정
+2. 배포된 URL에서 음식 사진 분석 테스트
+3. UI/UX 폴리싱 및 반응형 조정
+4. 데모 시나리오 준비 및 3분 영상 촬영
 
 ## 알려진 이슈
 
@@ -76,4 +74,4 @@
 
 ## 차단 요소
 
-- GEMINI_API_KEY 미설정 (사용자가 설정 필요)
+- Vercel에 GEMINI_API_KEY 환경 변수 설정 필요

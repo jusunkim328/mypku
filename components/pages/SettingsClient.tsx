@@ -1,16 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { Page, Navbar, Block, Button, Card, Toggle, List, ListItem } from "@/components/ui";
+import { Page, Navbar, Block, Button, Card, Toggle, List, ListItem, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 
 export default function SettingsClient() {
-  const { mode, setMode, dailyGoals, setDailyGoals } = useNutritionStore();
+  const { mode, setMode, dailyGoals, setDailyGoals, _hasHydrated } = useNutritionStore();
   const isPKU = mode === "pku";
 
   const handleModeToggle = () => {
     setMode(isPKU ? "general" : "pku");
   };
+
+  // 하이드레이션 대기
+  if (!_hasHydrated) {
+    return (
+      <Page>
+        <div className="min-h-screen flex items-center justify-center">
+          <Preloader />
+        </div>
+      </Page>
+    );
+  }
 
   return (
     <Page>

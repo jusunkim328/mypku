@@ -23,8 +23,10 @@ services:
     command: /bin/sh -c "
       apk add --no-cache bash git curl &&
       npm install -g bun &&
-      echo '✅ 샌드박스 준비 완료!' &&
-      /bin/bash
+      cd /workspace &&
+      bun install &&
+      echo '✅ 개발 서버 시작 중...' &&
+      bun run dev --hostname 0.0.0.0
       "
 
 volumes:

@@ -31,3 +31,9 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Secrets
+client_secret*.json
+
+# Test files
+public/test/

@@ -5,7 +5,7 @@ import React from "react";
 // Page 컴포넌트
 export function Page({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`min-h-screen bg-gray-50 ${className}`}>
+    <div className={`min-h-screen bg-gray-50 animate-fade-in ${className}`}>
       {children}
     </div>
   );
@@ -43,9 +43,17 @@ export function Block({ children, className = "" }: { children: React.ReactNode;
 }
 
 // Card 컴포넌트
-export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function Card({
+  children,
+  className = "",
+  animate = true,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  animate?: boolean;
+}) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm ${className}`}>
+    <div className={`bg-white rounded-xl shadow-sm ${animate ? "animate-fade-in-up" : ""} ${className}`}>
       {children}
     </div>
   );
@@ -56,36 +64,60 @@ export function Button({
   children,
   onClick,
   disabled = false,
+  loading = false,
   large = false,
   small = false,
   outline = false,
   clear = false,
+  danger = false,
   className = "",
+  type = "button",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
   large?: boolean;
   small?: boolean;
   outline?: boolean;
   clear?: boolean;
+  danger?: boolean;
   className?: string;
+  type?: "button" | "submit" | "reset";
 }) {
-  const baseClasses = "font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500";
+  const baseClasses = "font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98]";
   const sizeClasses = large ? "px-6 py-3 text-base" : small ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm";
-  const variantClasses = clear
-    ? "text-indigo-600 hover:text-indigo-700 bg-transparent"
-    : outline
-      ? "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50"
-      : "bg-indigo-500 text-white hover:bg-indigo-600";
-  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
+
+  let variantClasses = "";
+  if (clear) {
+    variantClasses = danger
+      ? "text-red-600 hover:text-red-700 bg-transparent focus:ring-red-500"
+      : "text-indigo-600 hover:text-indigo-700 bg-transparent focus:ring-indigo-500";
+  } else if (outline) {
+    variantClasses = danger
+      ? "border-2 border-red-500 text-red-600 hover:bg-red-50 focus:ring-red-500"
+      : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500";
+  } else {
+    variantClasses = danger
+      ? "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500"
+      : "bg-indigo-500 text-white hover:bg-indigo-600 focus:ring-indigo-500";
+  }
+
+  const disabledClasses = (disabled || loading) ? "opacity-50 cursor-not-allowed active:scale-100" : "";
 
   return (
     <button
+      type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${sizeClasses} ${variantClasses} ${disabledClasses} ${className}`}
+      disabled={disabled || loading}
+      className={`${baseClasses} ${sizeClasses} ${variantClasses} ${disabledClasses} ${className} inline-flex items-center justify-center gap-2`}
     >
+      {loading && (
+        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+      )}
       {children}
     </button>
   );
@@ -152,14 +184,23 @@ export function ListItem({
 export function Progressbar({
   progress,
   className = "",
+  warning = false,
 }: {
   progress: number;
   className?: string;
+  warning?: boolean;
 }) {
+  const isOver = progress > 1;
+  const barColor = isOver && warning
+    ? "bg-red-500"
+    : isOver
+      ? "bg-amber-500"
+      : "bg-indigo-500";
+
   return (
     <div className={`h-2 bg-gray-200 rounded-full overflow-hidden ${className}`}>
       <div
-        className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+        className={`h-full ${barColor} rounded-full transition-all duration-300`}
         style={{ width: `${Math.min(progress * 100, 100)}%` }}
       />
     </div>

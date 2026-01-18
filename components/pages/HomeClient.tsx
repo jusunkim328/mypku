@@ -1,15 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { Page, Navbar, Block, Button, Card } from "@/components/ui";
+import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import NutrientRing from "@/components/dashboard/NutrientRing";
 import DailyGoalCard from "@/components/dashboard/DailyGoalCard";
 import Disclaimer from "@/components/common/Disclaimer";
 
 export default function HomeClient() {
-  const { mode, todayNutrition, dailyGoals } = useNutritionStore();
+  const { mode, getTodayNutrition, dailyGoals, mealRecords, _hasHydrated } = useNutritionStore();
   const isPKU = mode === "pku";
+
+  // 하이드레이션 대기
+  if (!_hasHydrated) {
+    return (
+      <Page>
+        <div className="min-h-screen flex items-center justify-center">
+          <Preloader />
+        </div>
+      </Page>
+    );
+  }
+
+  // mealRecords가 변경될 때마다 다시 계산됨
+  const todayNutrition = getTodayNutrition();
 
   return (
     <Page>

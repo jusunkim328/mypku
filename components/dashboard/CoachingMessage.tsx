@@ -4,11 +4,65 @@ import { useState, useEffect } from "react";
 import { Card, Button, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 
+const CACHE_KEY = "mypku-coaching-cache";
+
+interface CachedCoaching {
+  message: string;
+  date: string; // YYYY-MM-DD
+  mode: string;
+}
+
+function getCachedMessage(currentMode: string): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+
+    const data: CachedCoaching = JSON.parse(cached);
+    const today = new Date().toISOString().split("T")[0];
+
+    // 오늘 날짜 + 같은 모드일 때만 캐시 사용
+    if (data.date === today && data.mode === currentMode) {
+      return data.message;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedMessage(message: string, mode: string): void {
+  if (typeof window === "undefined") return;
+
+  const data: CachedCoaching = {
+    message,
+    date: new Date().toISOString().split("T")[0],
+    mode,
+  };
+  localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+}
+
 export default function CoachingMessage() {
   const { mode, getWeeklyData, dailyGoals } = useNutritionStore();
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [hasData, setHasData] = useState(false);
+
+  // 캐시된 메시지 로드 및 데이터 확인
+  useEffect(() => {
+    const weeklyData = getWeeklyData();
+    const dataExists = weeklyData.some((day) => day.nutrition.calories > 0);
+    setHasData(dataExists);
+
+    if (dataExists) {
+      const cached = getCachedMessage(mode);
+      if (cached) {
+        setMessage(cached);
+      }
+    }
+  }, [mode, getWeeklyData]);
 
   const fetchCoaching = async () => {
     setIsLoading(true);
@@ -29,6 +83,7 @@ export default function CoachingMessage() {
 
       if (data.success) {
         setMessage(data.message);
+        setCachedMessage(data.message, mode);
       } else {
         setError(data.error || "코칭 메시지를 가져올 수 없습니다.");
       }
@@ -39,17 +94,8 @@ export default function CoachingMessage() {
     }
   };
 
-  // 컴포넌트 마운트 시 자동으로 코칭 메시지 가져오기
-  useEffect(() => {
-    // 기록이 있을 때만 코칭 메시지 요청
-    const weeklyData = getWeeklyData();
-    const hasData = weeklyData.some((day) => day.nutrition.calories > 0);
-    if (hasData && !message) {
-      fetchCoaching();
-    }
-  }, []);
-
-  if (!message && !isLoading && !error) {
+  // 데이터가 없으면 표시하지 않음
+  if (!hasData) {
     return null;
   }
 
@@ -73,16 +119,25 @@ export default function CoachingMessage() {
                 다시 시도
               </Button>
             </div>
-          ) : (
+          ) : message ? (
             <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
+          ) : (
+            <p className="text-sm text-gray-500">
+              AI 코치에게 피드백을 받아보세요.
+            </p>
           )}
         </div>
       </div>
-      {message && !isLoading && (
-        <Button small clear onClick={fetchCoaching} className="mt-2">
-          새 피드백 받기
-        </Button>
-      )}
+      <Button
+        small
+        outline={!message}
+        clear={!!message}
+        onClick={fetchCoaching}
+        loading={isLoading}
+        className="mt-2"
+      >
+        {message ? "새 피드백 받기" : "피드백 받기"}
+      </Button>
     </Card>
   );
 }

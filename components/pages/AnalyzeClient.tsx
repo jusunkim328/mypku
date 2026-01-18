@@ -1,15 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
+import { Page, Navbar, Block, Button, Card } from "@/components/ui";
 import ImageUploader from "@/components/analyze/ImageUploader";
 import AnalysisResult from "@/components/analyze/AnalysisResult";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { toast } from "@/hooks/useToast";
 import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
 type AnalysisState = "idle" | "loading" | "success" | "error";
+
+// Exponential Backoff로 재시도
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok || response.status < 500) {
+        return response;
+      }
+      // 5xx 에러는 재시도
+      lastError = new Error(`서버 오류: ${response.status}`);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("네트워크 오류");
+    }
+
+    if (attempt < maxRetries - 1) {
+      const delay = baseDelay * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError || new Error("요청 실패");
+}
 
 export default function AnalyzeClient() {
   const router = useRouter();
@@ -30,18 +61,23 @@ export default function AnalyzeClient() {
     setError("");
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(async () => {
     if (!imageBase64) return;
 
     setAnalysisState("loading");
     setError("");
 
     try {
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64 }),
-      });
+      const response = await fetchWithRetry(
+        "/api/analyze",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageBase64 }),
+        },
+        3,
+        1000
+      );
 
       const data = await response.json();
 
@@ -49,31 +85,41 @@ export default function AnalyzeClient() {
         setItems(data.items);
         setTotalNutrition(data.totalNutrition);
         setAnalysisState("success");
+        toast.success("음식 분석이 완료되었습니다!");
       } else {
-        setError(data.error || "분석 실패");
+        const errorMessage = data.error || "분석에 실패했습니다.";
+        setError(errorMessage);
         setAnalysisState("error");
+        toast.error(errorMessage);
       }
-    } catch {
-      setError("네트워크 오류가 발생했습니다.");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "네트워크 오류가 발생했습니다.";
+      setError(errorMessage);
       setAnalysisState("error");
+      toast.error(errorMessage);
     }
-  };
+  }, [imageBase64]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!totalNutrition || items.length === 0) return;
 
-    const record = {
-      id: `meal-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      mealType: selectedMealType,
-      imageBase64: imageBase64 || undefined,
-      items,
-      totalNutrition,
-    };
+    try {
+      const record = {
+        id: `meal-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        mealType: selectedMealType,
+        imageBase64: imageBase64 || undefined,
+        items,
+        totalNutrition,
+      };
 
-    addMealRecord(record);
-    router.push("/");
-  };
+      addMealRecord(record);
+      toast.success("식사 기록이 저장되었습니다!");
+      router.push("/");
+    } catch {
+      toast.error("저장에 실패했습니다. 다시 시도해 주세요.");
+    }
+  }, [totalNutrition, items, selectedMealType, imageBase64, addMealRecord, router]);
 
   const handleItemUpdate = (id: string, updates: Partial<FoodItem>) => {
     setItems((prev) =>
@@ -132,17 +178,10 @@ export default function AnalyzeClient() {
           <Button
             large
             onClick={handleAnalyze}
-            disabled={analysisState === "loading"}
+            loading={analysisState === "loading"}
             className="w-full"
           >
-            {analysisState === "loading" ? (
-              <span className="flex items-center justify-center gap-2">
-                <Preloader />
-                분석 중...
-              </span>
-            ) : (
-              "AI 분석 시작"
-            )}
+            {analysisState === "loading" ? "AI 분석 중..." : "AI 분석 시작"}
           </Button>
         )}
 
