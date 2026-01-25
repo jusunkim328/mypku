@@ -1,0 +1,148 @@
+{
+  "Metadata": {
+    "title": "MyPKU - AI-Powered Diet Management",
+    "description": "AI-powered personalized diet management for PKU patients and health-conscious users"
+  },
+  "Common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "settings": "Settings",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "Nutrients": {
+    "phenylalanine": "Phenylalanine",
+    "calories": "Calories",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat"
+  },
+  "MealTypes": {
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack"
+  },
+  "Modes": {
+    "pku": "PKU Mode",
+    "general": "General Mode"
+  },
+  "HomePage": {
+    "title": "MyPKU",
+    "todayIntake": "Today's Intake",
+    "takePhoto": "Take Photo",
+    "viewHistory": "View History",
+    "goal": "Goal"
+  },
+  "AnalyzePage": {
+    "title": "Food Analysis",
+    "selectPhoto": "Select a food photo",
+    "selectAnother": "Select another photo",
+    "camera": "Camera",
+    "gallery": "Gallery",
+    "startAnalysis": "Start AI Analysis",
+    "analyzing": "AI Analyzing...",
+    "analysisSummary": "Analysis Summary",
+    "estimatedPhe": "Phenylalanine (est.)",
+    "recognizedFoods": "Recognized Foods",
+    "item": "item",
+    "items": "items",
+    "mealType": "Meal Type",
+    "saveRecord": "Save Record",
+    "analysisComplete": "Food analysis complete!",
+    "analysisFailed": "Analysis failed.",
+    "networkError": "A network error occurred.",
+    "serverError": "Server error: {status}",
+    "requestFailed": "Request failed",
+    "recordSaved": "Meal record saved!",
+    "saveFailed": "Save failed. Please try again.",
+    "aiDisclaimer": "* AI analysis results are estimates. Actual values may differ."
+  },
+  "HistoryPage": {
+    "title": "Meal History",
+    "recentRecords": "Last 7 Days",
+    "noRecords": "No records yet.",
+    "recordFirst": "Record your first meal",
+    "deleteConfirm": "Delete this record?",
+    "phe": "Phe"
+  },
+  "SettingsPage": {
+    "title": "Settings",
+    "appMode": "App Mode",
+    "pkuModeDesc": "Enable phenylalanine tracking",
+    "pkuModeExplain": "In PKU mode, phenylalanine intake is prioritized and the daily goal is set to 300mg.",
+    "dailyGoals": "Daily Goals",
+    "appInfo": "App Info",
+    "version": "MyPKU v0.1.0",
+    "hackathon": "Gemini 3 Hackathon Project",
+    "language": "Language",
+    "selectLanguage": "Select language"
+  },
+  "Auth": {
+    "login": "Login",
+    "loginWithGoogle": "Continue with Google",
+    "loginFailed": "Login failed. Please try again.",
+    "continueWithoutLogin": "Use without login",
+    "guestModeDesc": "In guest mode, data is only saved on this device.",
+    "termsAgreement": "By logging in, you agree to our Terms of Service and Privacy Policy."
+  },
+  "AuthError": {
+    "title": "Authentication Error",
+    "message": "A problem occurred during login. Please try again.",
+    "loginAgain": "Login Again",
+    "goHome": "Go to Home"
+  },
+  "NotFound": {
+    "title": "404",
+    "message": "Page not found.",
+    "goHome": "Go to Home"
+  },
+  "Disclaimer": {
+    "title": "Disclaimer",
+    "content": "This service is not a medical device and cannot diagnose or treat diseases. Please consult a doctor for important medical decisions. AI analysis results are estimates and for reference only."
+  },
+  "DailyGoal": {
+    "title": "Daily Goal Progress"
+  },
+  "Coaching": {
+    "title": "AI Coach Feedback",
+    "analyzing": "Analyzing...",
+    "getNewFeedback": "Get New Feedback",
+    "getFeedback": "Get Feedback",
+    "promptText": "Get feedback from AI coach.",
+    "errorFetch": "Unable to get coaching message.",
+    "networkError": "A network error occurred."
+  },
+  "WeeklyChart": {
+    "title": "Weekly {nutrient} Intake",
+    "loading": "Loading chart...",
+    "goal": "Goal"
+  },
+  "FoodItem": {
+    "foodName": "Food name",
+    "weight": "Weight (g)",
+    "modified": "Modified",
+    "confidence": "Confidence",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "NutrientRing": {
+    "goal": "Goal",
+    "exceeded": "Limit exceeded!"
+  },
+  "ImageUploader": {
+    "selectedImage": "Selected food image"
+  },
+  "Errors": {
+    "generic": "An error occurred.",
+    "network": "A network error occurred.",
+    "server": "A server error occurred."
+  }
+}

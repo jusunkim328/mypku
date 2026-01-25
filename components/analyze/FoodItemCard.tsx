@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, Button } from "@/components/ui";
 import type { FoodItem } from "@/types/nutrition";
 
@@ -10,6 +11,8 @@ interface FoodItemCardProps {
 }
 
 export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
+  const t = useTranslations("FoodItem");
+  const tCommon = useTranslations("Common");
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [editWeight, setEditWeight] = useState(item.estimatedWeight_g.toString());
@@ -23,10 +26,10 @@ export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
 
   const confidenceLabel =
     item.confidence >= 0.8
-      ? "높음"
+      ? t("high")
       : item.confidence >= 0.5
-        ? "보통"
-        : "낮음";
+        ? t("medium")
+        : t("low");
 
   const handleSave = () => {
     onUpdate({
@@ -45,7 +48,7 @@ export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg text-sm"
-            placeholder="음식 이름"
+            placeholder={t("foodName")}
           />
           <div className="flex gap-2 items-center">
             <input
@@ -53,16 +56,16 @@ export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
               value={editWeight}
               onChange={(e) => setEditWeight(e.target.value)}
               className="flex-1 px-3 py-2 border rounded-lg text-sm"
-              placeholder="중량(g)"
+              placeholder={t("weight")}
             />
             <span className="text-gray-500 text-sm">g</span>
           </div>
           <div className="flex gap-2">
             <Button small onClick={handleSave}>
-              저장
+              {tCommon("save")}
             </Button>
             <Button small outline onClick={() => setIsEditing(false)}>
-              취소
+              {tCommon("cancel")}
             </Button>
           </div>
         </div>
@@ -73,7 +76,7 @@ export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
               <h4 className="font-medium">{item.name}</h4>
               {item.userVerified && (
                 <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
-                  수정됨
+                  {t("modified")}
                 </span>
               )}
             </div>
@@ -82,11 +85,11 @@ export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
               kcal
             </p>
             <p className={`text-xs ${confidenceColor}`}>
-              신뢰도: {confidenceLabel} ({Math.round(item.confidence * 100)}%)
+              {t("confidence")}: {confidenceLabel} ({Math.round(item.confidence * 100)}%)
             </p>
           </div>
           <Button small clear onClick={() => setIsEditing(true)}>
-            수정
+            {tCommon("edit")}
           </Button>
         </div>
       )}

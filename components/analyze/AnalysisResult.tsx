@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui";
 import FoodItemCard from "./FoodItemCard";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
@@ -16,6 +17,8 @@ export default function AnalysisResult({
   totalNutrition,
   onItemUpdate,
 }: AnalysisResultProps) {
+  const t = useTranslations("AnalyzePage");
+  const tNutrients = useTranslations("Nutrients");
   const { mode } = useNutritionStore();
   const isPKU = mode === "pku";
 
@@ -24,51 +27,51 @@ export default function AnalysisResult({
       {/* 총 영양소 요약 */}
       <Card className="p-4 bg-indigo-50">
         <h3 className="text-base font-semibold mb-3 text-indigo-900">
-          분석 결과 요약
+          {t("analysisSummary")}
         </h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           {isPKU && (
             <div className="col-span-2 bg-white rounded-lg p-3">
-              <span className="text-gray-600">페닐알라닌 (추정)</span>
+              <span className="text-gray-600">{t("estimatedPhe")}</span>
               <p className="text-xl font-bold text-indigo-600">
                 {totalNutrition.phenylalanine_mg}mg
               </p>
             </div>
           )}
           <div className="bg-white rounded-lg p-3">
-            <span className="text-gray-600">칼로리</span>
+            <span className="text-gray-600">{tNutrients("calories")}</span>
             <p className="text-lg font-semibold">
               {Math.round(totalNutrition.calories)}kcal
             </p>
           </div>
           <div className="bg-white rounded-lg p-3">
-            <span className="text-gray-600">단백질</span>
+            <span className="text-gray-600">{tNutrients("protein")}</span>
             <p className="text-lg font-semibold">
               {totalNutrition.protein_g.toFixed(1)}g
             </p>
           </div>
           <div className="bg-white rounded-lg p-3">
-            <span className="text-gray-600">탄수화물</span>
+            <span className="text-gray-600">{tNutrients("carbs")}</span>
             <p className="text-lg font-semibold">
               {totalNutrition.carbs_g.toFixed(1)}g
             </p>
           </div>
           <div className="bg-white rounded-lg p-3">
-            <span className="text-gray-600">지방</span>
+            <span className="text-gray-600">{tNutrients("fat")}</span>
             <p className="text-lg font-semibold">
               {totalNutrition.fat_g.toFixed(1)}g
             </p>
           </div>
         </div>
         <p className="text-xs text-gray-500 mt-3">
-          * AI 분석 결과는 추정치입니다. 정확한 수치는 실제와 다를 수 있습니다.
+          {t("aiDisclaimer")}
         </p>
       </Card>
 
       {/* 개별 음식 항목 */}
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-gray-700 px-1">
-          인식된 음식 ({items.length}개)
+          {t("recognizedFoods")} ({items.length}{t("items")})
         </h3>
         {items.map((item) => (
           <FoodItemCard

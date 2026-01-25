@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, Button } from "@/components/ui";
 
 interface ImageUploaderProps {
@@ -12,6 +13,8 @@ export default function ImageUploader({
   imageBase64,
   onImageSelect,
 }: ImageUploaderProps) {
+  const t = useTranslations("AnalyzePage");
+  const tImg = useTranslations("ImageUploader");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -76,7 +79,7 @@ export default function ImageUploader({
           <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
             <img
               src={imageBase64}
-              alt="선택된 음식 이미지"
+              alt={tImg("selectedImage")}
               className="w-full h-full object-cover"
             />
           </div>
@@ -86,7 +89,7 @@ export default function ImageUploader({
             onClick={() => onImageSelect("")}
             className="w-full"
           >
-            다른 사진 선택
+            {t("selectAnother")}
           </Button>
         </div>
       ) : (
@@ -111,7 +114,7 @@ export default function ImageUploader({
                 d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <p className="text-gray-500 text-sm">음식 사진을 선택하세요</p>
+            <p className="text-gray-500 text-sm">{t("selectPhoto")}</p>
           </div>
 
           <div className="flex gap-2">
@@ -121,7 +124,7 @@ export default function ImageUploader({
               disabled={isProcessing}
               className="flex-1"
             >
-              카메라
+              {t("camera")}
             </Button>
             <Button
               large
@@ -130,7 +133,7 @@ export default function ImageUploader({
               disabled={isProcessing}
               className="flex-1"
             >
-              갤러리
+              {t("gallery")}
             </Button>
           </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import NutrientRing from "@/components/dashboard/NutrientRing";
@@ -8,6 +9,10 @@ import DailyGoalCard from "@/components/dashboard/DailyGoalCard";
 import Disclaimer from "@/components/common/Disclaimer";
 
 export default function HomeClient() {
+  const t = useTranslations("HomePage");
+  const tModes = useTranslations("Modes");
+  const tNutrients = useTranslations("Nutrients");
+  const tCommon = useTranslations("Common");
   const { mode, getTodayNutrition, dailyGoals, mealRecords, _hasHydrated } = useNutritionStore();
   const isPKU = mode === "pku";
 
@@ -28,12 +33,12 @@ export default function HomeClient() {
   return (
     <Page>
       <Navbar
-        title="MyPKU"
-        subtitle={isPKU ? "PKU 모드" : "일반 모드"}
+        title={t("title")}
+        subtitle={isPKU ? tModes("pku") : tModes("general")}
         right={
           <Link href="/settings">
             <Button clear small>
-              설정
+              {tCommon("settings")}
             </Button>
           </Link>
         }
@@ -42,11 +47,11 @@ export default function HomeClient() {
       <Block className="space-y-4">
         {/* 오늘의 영양소 요약 */}
         <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-4">오늘의 섭취량</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("todayIntake")}</h2>
           <div className="flex justify-around">
             {isPKU ? (
               <NutrientRing
-                label="페닐알라닌"
+                label={tNutrients("phenylalanine")}
                 current={todayNutrition.phenylalanine_mg || 0}
                 goal={dailyGoals.phenylalanine_mg || 300}
                 unit="mg"
@@ -55,7 +60,7 @@ export default function HomeClient() {
               />
             ) : (
               <NutrientRing
-                label="칼로리"
+                label={tNutrients("calories")}
                 current={todayNutrition.calories}
                 goal={dailyGoals.calories}
                 unit="kcal"
@@ -63,14 +68,14 @@ export default function HomeClient() {
               />
             )}
             <NutrientRing
-              label="단백질"
+              label={tNutrients("protein")}
               current={todayNutrition.protein_g}
               goal={dailyGoals.protein_g}
               unit="g"
               color="var(--pku-secondary)"
             />
             <NutrientRing
-              label="탄수화물"
+              label={tNutrients("carbs")}
               current={todayNutrition.carbs_g}
               goal={dailyGoals.carbs_g}
               unit="g"
@@ -86,12 +91,12 @@ export default function HomeClient() {
         <div className="flex gap-3">
           <Link href="/analyze" className="flex-1">
             <Button large className="w-full">
-              음식 촬영하기
+              {t("takePhoto")}
             </Button>
           </Link>
           <Link href="/history" className="flex-1">
             <Button large outline className="w-full">
-              기록 보기
+              {t("viewHistory")}
             </Button>
           </Link>
         </div>

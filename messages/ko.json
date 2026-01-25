@@ -1,0 +1,148 @@
+{
+  "Metadata": {
+    "title": "MyPKU - AI 맞춤형 식단 관리",
+    "description": "PKU 환자와 일반 사용자를 위한 AI 기반 맞춤형 식단 관리 서비스"
+  },
+  "Common": {
+    "back": "뒤로",
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "수정",
+    "settings": "설정",
+    "retry": "다시 시도",
+    "loading": "로딩 중...",
+    "confirm": "확인",
+    "today": "오늘",
+    "yesterday": "어제"
+  },
+  "Nutrients": {
+    "phenylalanine": "페닐알라닌",
+    "calories": "칼로리",
+    "protein": "단백질",
+    "carbs": "탄수화물",
+    "fat": "지방"
+  },
+  "MealTypes": {
+    "breakfast": "아침",
+    "lunch": "점심",
+    "dinner": "저녁",
+    "snack": "간식"
+  },
+  "Modes": {
+    "pku": "PKU 모드",
+    "general": "일반 모드"
+  },
+  "HomePage": {
+    "title": "MyPKU",
+    "todayIntake": "오늘의 섭취량",
+    "takePhoto": "음식 촬영하기",
+    "viewHistory": "기록 보기",
+    "goal": "목표"
+  },
+  "AnalyzePage": {
+    "title": "음식 분석",
+    "selectPhoto": "음식 사진을 선택하세요",
+    "selectAnother": "다른 사진 선택",
+    "camera": "카메라",
+    "gallery": "갤러리",
+    "startAnalysis": "AI 분석 시작",
+    "analyzing": "AI 분석 중...",
+    "analysisSummary": "분석 결과 요약",
+    "estimatedPhe": "페닐알라닌 (추정)",
+    "recognizedFoods": "인식된 음식",
+    "item": "개",
+    "items": "개",
+    "mealType": "식사 유형",
+    "saveRecord": "기록 저장",
+    "analysisComplete": "음식 분석이 완료되었습니다!",
+    "analysisFailed": "분석에 실패했습니다.",
+    "networkError": "네트워크 오류가 발생했습니다.",
+    "serverError": "서버 오류: {status}",
+    "requestFailed": "요청 실패",
+    "recordSaved": "식사 기록이 저장되었습니다!",
+    "saveFailed": "저장에 실패했습니다. 다시 시도해 주세요.",
+    "aiDisclaimer": "* AI 분석 결과는 추정치입니다. 정확한 수치는 실제와 다를 수 있습니다."
+  },
+  "HistoryPage": {
+    "title": "식사 기록",
+    "recentRecords": "최근 7일 기록",
+    "noRecords": "아직 기록이 없습니다.",
+    "recordFirst": "첫 식사 기록하기",
+    "deleteConfirm": "이 기록을 삭제하시겠습니까?",
+    "phe": "Phe"
+  },
+  "SettingsPage": {
+    "title": "설정",
+    "appMode": "앱 모드",
+    "pkuModeDesc": "페닐알라닌 추적 활성화",
+    "pkuModeExplain": "PKU 모드에서는 페닐알라닌 섭취량을 우선 표시하고, 일일 목표를 300mg으로 설정합니다.",
+    "dailyGoals": "일일 목표",
+    "appInfo": "앱 정보",
+    "version": "MyPKU v0.1.0",
+    "hackathon": "Gemini 3 해커톤 프로젝트",
+    "language": "언어",
+    "selectLanguage": "언어 선택"
+  },
+  "Auth": {
+    "login": "로그인",
+    "loginWithGoogle": "Google로 계속하기",
+    "loginFailed": "로그인에 실패했습니다. 다시 시도해 주세요.",
+    "continueWithoutLogin": "로그인 없이 사용하기",
+    "guestModeDesc": "게스트 모드에서는 데이터가 이 기기에만 저장됩니다.",
+    "termsAgreement": "로그인 시 서비스 이용약관 및 개인정보처리방침에 동의하게 됩니다."
+  },
+  "AuthError": {
+    "title": "인증 오류",
+    "message": "로그인 중 문제가 발생했습니다. 다시 시도해 주세요.",
+    "loginAgain": "다시 로그인",
+    "goHome": "홈으로 돌아가기"
+  },
+  "NotFound": {
+    "title": "404",
+    "message": "페이지를 찾을 수 없습니다.",
+    "goHome": "홈으로 돌아가기"
+  },
+  "Disclaimer": {
+    "title": "면책조항",
+    "content": "본 서비스는 의료기기가 아니며, 질병의 유무를 판단하거나 치료할 수 없습니다. 중요한 의학적 결정은 반드시 의사와 상의하십시오. AI 분석 결과는 추정치이며 참고용입니다."
+  },
+  "DailyGoal": {
+    "title": "일일 목표 달성률"
+  },
+  "Coaching": {
+    "title": "AI 코치 피드백",
+    "analyzing": "분석 중...",
+    "getNewFeedback": "새 피드백 받기",
+    "getFeedback": "피드백 받기",
+    "promptText": "AI 코치에게 피드백을 받아보세요.",
+    "errorFetch": "코칭 메시지를 가져올 수 없습니다.",
+    "networkError": "네트워크 오류가 발생했습니다."
+  },
+  "WeeklyChart": {
+    "title": "주간 {nutrient} 섭취량",
+    "loading": "차트 로딩 중...",
+    "goal": "목표"
+  },
+  "FoodItem": {
+    "foodName": "음식 이름",
+    "weight": "중량(g)",
+    "modified": "수정됨",
+    "confidence": "신뢰도",
+    "high": "높음",
+    "medium": "보통",
+    "low": "낮음"
+  },
+  "NutrientRing": {
+    "goal": "목표",
+    "exceeded": "한도 초과!"
+  },
+  "ImageUploader": {
+    "selectedImage": "선택된 음식 이미지"
+  },
+  "Errors": {
+    "generic": "오류가 발생했습니다.",
+    "network": "네트워크 오류가 발생했습니다.",
+    "server": "서버 오류가 발생했습니다."
+  }
+}

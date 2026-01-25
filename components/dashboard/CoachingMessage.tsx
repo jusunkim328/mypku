@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Card, Button, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 
@@ -44,6 +45,7 @@ function setCachedMessage(message: string, mode: string): void {
 }
 
 export default function CoachingMessage() {
+  const t = useTranslations("Coaching");
   const { mode, getWeeklyData, dailyGoals } = useNutritionStore();
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -85,10 +87,10 @@ export default function CoachingMessage() {
         setMessage(data.message);
         setCachedMessage(data.message, mode);
       } else {
-        setError(data.error || "코칭 메시지를 가져올 수 없습니다.");
+        setError(data.error || t("errorFetch"));
       }
     } catch {
-      setError("네트워크 오류가 발생했습니다.");
+      setError(t("networkError"));
     } finally {
       setIsLoading(false);
     }
@@ -105,26 +107,24 @@ export default function CoachingMessage() {
         <div className="text-2xl">🤖</div>
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-indigo-900 mb-1">
-            AI 코치 피드백
+            {t("title")}
           </h3>
           {isLoading ? (
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Preloader className="!w-4 !h-4" />
-              분석 중...
+              {t("analyzing")}
             </div>
           ) : error ? (
             <div className="text-sm text-red-600">
               {error}
               <Button small clear onClick={fetchCoaching} className="ml-2">
-                다시 시도
+                {t("retry")}
               </Button>
             </div>
           ) : message ? (
             <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
           ) : (
-            <p className="text-sm text-gray-500">
-              AI 코치에게 피드백을 받아보세요.
-            </p>
+            <p className="text-sm text-gray-500">{t("promptText")}</p>
           )}
         </div>
       </div>
@@ -136,7 +136,7 @@ export default function CoachingMessage() {
         loading={isLoading}
         className="mt-2"
       >
-        {message ? "새 피드백 받기" : "피드백 받기"}
+        {message ? t("getNewFeedback") : t("getFeedback")}
       </Button>
     </Card>
   );

@@ -1,246 +1,138 @@
-# MyPKU - AI-Powered Personalized Diet Management App
+# MyPKU - AI 맞춤형 식단 관리 앱
 
-## Project Overview
-MyPKU is an AI-powered personalized diet management app specifically designed for PKU (Phenylketonuria) patients. Starting from rare disease specialization, it aims to expand into a universal diet management platform.
+## 프로젝트 개요
 
-- **Target Users**: PKU patients (primary), general health-conscious users (secondary)
-- **Core Differentiator**: Multimodal LLM Vision + Rare Disease Specialization + Hyper-personalized Coaching
-- **Service Language**: English (Global audience)
-- **Development Communication**: Korean (한국어로 대화)
+PKU(페닐케톤뇨증) 환자를 위한 AI 기반 맞춤형 식단 관리 앱.
 
-### Project Timeline
-- **Phase 0**: Gemini 3 Hackathon MVP (Due: February 9, 2026)
-- **Phase 1**: Production-level web service (2026 Q2)
-- **Phase 2-5**: Mobile app + Platform expansion (2026 Q3-Q4)
+- **대상**: PKU 환자 (1차), 일반 건강 관리 사용자 (2차)
+- **핵심 기능**: Gemini Vision 음식 분석 + 페닐알라닌 추적 + AI 코칭
+- **서비스 언어**: 영어 (기본), 한국어
+- **개발 커뮤니케이션**: 한국어
 
 ---
 
-## Tech Stack
+## 기술 스택
 
 ```
-Frontend:
-├── Next.js 15.3.8 (App Router)
-├── React 19
-├── TypeScript 5.7.3
-├── Tailwind CSS 3.4
-└── recharts 2.15 (charts)
-
-Backend:
-├── Next.js API Routes
-├── Supabase (Auth + PostgreSQL + Storage)
-└── Gemini API (@google/generative-ai)
-
-State Management: Zustand 5.x (with localStorage persist for settings)
-Deployment: Vercel
+Frontend: Next.js 15.3.8 (App Router) + React 19 + TypeScript + Tailwind CSS
+Backend: Next.js API Routes + Supabase (Auth/DB/Storage) + Gemini API
+상태관리: Zustand 5.x (localStorage persist)
+다국어: next-intl (en, ko)
+배포: Vercel
 ```
 
 ---
 
-## Development Commands
+## 개발 명령어
 
 ```bash
-# Package manager: bun
-bun dev          # Development server (localhost:3000)
-bun build        # Production build
-bun lint         # ESLint check
-bun start        # Start production server
+bun dev          # 개발 서버 (localhost:3000)
+bun build        # 프로덕션 빌드
+bun lint         # ESLint 검사
 ```
 
----
-
-## Docker Development Environment
-
-For isolated development with `--dangerously-skip-permissions`:
+### Docker 환경
 
 ```bash
-docker-compose up -d               # Start container
-docker-compose exec mypku-dev bash # Enter container
-claude --dangerously-skip-permissions  # Run Claude Code
-bun dev                            # Start dev server inside container
+docker-compose up -d                   # 컨테이너 시작 (localhost:3001)
+docker-compose exec mypku-dev bash     # 컨테이너 진입
+docker-compose down                    # 컨테이너 종료
 ```
 
 ---
 
-## Project Structure
+## 프로젝트 구조
 
 ```
-app/                    # Next.js App Router pages
-├── api/                # API Routes (server-side)
-│   ├── analyze/        # Gemini Vision API (food analysis)
-│   └── coaching/       # AI coaching message generation
-├── auth/               # Authentication pages
-│   ├── login/          # Login page with Google SSO
-│   ├── callback/       # OAuth callback handler
-│   └── error/          # Auth error page
-├── analyze/            # Food photo analysis page
-├── history/            # Meal history page
-├── settings/           # User settings page
-└── layout.tsx          # Root layout
+app/
+├── [locale]/               # 다국어 라우팅 (en, ko)
+│   ├── page.tsx            # 홈
+│   ├── analyze/            # 음식 분석
+│   ├── history/            # 기록
+│   ├── settings/           # 설정
+│   └── auth/               # 로그인/에러
+├── api/                    # API Routes (analyze, coaching)
+└── auth/callback/          # OAuth 콜백
 
 components/
-├── pages/              # Page-specific client components
-│   ├── HomeClient.tsx
-│   ├── AnalyzeClient.tsx
-│   ├── HistoryClient.tsx
-│   └── SettingsClient.tsx
-├── dashboard/          # Dashboard components
-│   ├── NutrientRing.tsx    # Circular progress
-│   ├── DailyGoalCard.tsx   # Daily goal display
-│   ├── WeeklyChart.tsx     # Weekly stats chart
-│   └── CoachingMessage.tsx # AI coaching
-├── analyze/            # Food analysis components
-│   ├── ImageUploader.tsx
-│   ├── AnalysisResult.tsx
-│   └── FoodItemCard.tsx
-├── common/             # Shared components
-│   ├── Disclaimer.tsx  # Medical disclaimer (required!)
-│   ├── Toast.tsx       # Toast notifications
-│   ├── ErrorBoundary.tsx
-│   └── Providers.tsx   # Context providers
-└── ui/                 # Base UI components
+├── pages/                  # 페이지별 클라이언트 컴포넌트
+├── dashboard/              # 대시보드 (NutrientRing, DailyGoalCard, WeeklyChart, CoachingMessage)
+├── analyze/                # 분석 (ImageUploader, AnalysisResult, FoodItemCard)
+└── common/                 # 공통 (Disclaimer, Toast, Providers)
 
-hooks/
-├── useNutritionStore.ts  # Zustand store for nutrition data
-├── useAuth.ts            # Supabase authentication hook
-├── useMealRecords.ts     # Meal records CRUD operations
-└── useToast.ts           # Toast notification hook
+i18n/                       # 다국어 설정
+├── routing.ts              # 라우팅 설정 (locales, defaultLocale)
+├── request.ts              # 서버 설정
+└── navigation.ts           # Link, useRouter, usePathname
+
+messages/                   # 번역 파일
+├── en.json                 # 영어
+└── ko.json                 # 한국어
+
+hooks/                      # 커스텀 훅
+├── useNutritionStore.ts    # Zustand 영양 데이터
+├── useAuth.ts              # Supabase 인증
+└── useToast.ts             # 토스트 알림
 
 lib/
-├── gemini.ts             # Gemini API client (server-side only!)
-├── prompts.ts            # Two-stage prompt templates
-└── supabase/
-    ├── client.ts         # Browser Supabase client
-    ├── server.ts         # Server Supabase client
-    ├── middleware.ts     # Auth middleware helpers
-    ├── storage.ts        # Image storage utilities
-    └── types.ts          # Database types
-
-types/
-└── nutrition.ts          # TypeScript type definitions
+├── gemini.ts               # Gemini API 클라이언트 (서버 전용!)
+├── prompts.ts              # 프롬프트 템플릿
+└── supabase/               # Supabase 클라이언트
 ```
 
 ---
 
-## Environment Variables
+## 환경 변수
 
 ```env
-# Gemini AI (Server-side ONLY - never expose to client!)
-GEMINI_API_KEY=your_gemini_api_key
-
-# Supabase
+GEMINI_API_KEY=xxx                    # 서버 전용 - 클라이언트 노출 금지!
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
 ---
 
-## Key Files Reference
+## 개발 규칙
 
-| File | Purpose |
-|------|---------|
-| `app/api/analyze/route.ts` | Gemini Vision API calls for food analysis |
-| `app/api/coaching/route.ts` | AI coaching message generation |
-| `hooks/useNutritionStore.ts` | Central state management for nutrition data |
-| `hooks/useAuth.ts` | Supabase authentication hook |
-| `hooks/useMealRecords.ts` | Meal records CRUD with Supabase |
-| `lib/gemini.ts` | Gemini API client configuration |
-| `lib/prompts.ts` | Two-stage prompt engineering templates |
-| `components/common/Disclaimer.tsx` | Medical disclaimer component |
+### API 보안
+- `GEMINI_API_KEY`는 절대 클라이언트에 노출 금지
+- 모든 Gemini 호출은 `app/api/` 라우트를 통해서만
 
----
+### 클라이언트 컴포넌트
+- 클라이언트 컴포넌트는 `"use client"` 디렉티브 필수
+- 페이지 로직은 `components/pages/*Client.tsx`에 작성
 
-## Important Development Rules
+### 다국어 (L10n)
+- `useTranslations()` 훅으로 번역 텍스트 사용
+- `Link`는 `@/i18n/navigation`에서 임포트
+- URL 라우팅: `/` (영어), `/ko` (한국어)
 
-### 1. API Key Security
-- **NEVER** expose `GEMINI_API_KEY` to client-side code
-- All Gemini API calls must go through API Routes (`app/api/`)
-- Use `NEXT_PUBLIC_` prefix only for public Supabase keys
+### 듀얼 모드 (PKU/일반)
+- PKU 모드: 페닐알라닌(mg) 추적 우선
+- 일반 모드: 칼로리 추적 우선
+- 공통: 칼로리, 단백질, 탄수화물, 지방
 
-### 2. Client Components
-- Add `"use client"` directive at the top of client components
-- Page components in `app/` are server components by default
-- Client-side logic goes in `components/pages/*Client.tsx`
+### 면책조항
+- 모든 페이지에 `<Disclaimer />` 컴포넌트 표시 필수
+- 의료 진단/치료 조언 제공 금지
 
-### 3. Dual Mode UI (PKU vs General)
-- PKU Mode: Focus on phenylalanine (mg) tracking
-- General Mode: Focus on calories tracking
-- Both modes track: calories, protein, carbs, fat
-- Handle mode branching in dashboard and analysis components
-
-### 4. Medical Disclaimer (Required!)
-- Display `<Disclaimer />` component on all pages
-- Never provide medical diagnosis or treatment advice
-- AI analysis results are estimates, not medical facts
-- Phenylalanine calculation formula: `protein_g × 50mg`
-
-### 5. Language Convention
-- **App UI/Content**: English (for global users)
-- **Development Communication**: Korean (한국어로 Claude와 대화)
-
-### 6. Error Handling
-- Use Exponential Backoff for API retries
-- Show user-friendly error messages
-- Log errors for debugging but don't expose internals
+### 에러 처리
+- API 재시도는 Exponential Backoff 방식 사용
 
 ---
 
-## Current Status
+## 현재 상태
 
-### Completed (MVP)
-- [x] AI food analysis with Gemini 2.0 Flash
-- [x] Dual mode UI (PKU/General)
-- [x] Daily dashboard with nutrient visualization
-- [x] Meal records & history
-- [x] AI coaching messages
-- [x] Supabase Auth integration (Google SSO)
-- [x] Database schema setup
+### 완료
+- [x] Gemini 2.0 Flash 음식 분석
+- [x] 듀얼 모드 UI (PKU/일반)
+- [x] 대시보드 및 영양소 시각화
+- [x] 식사 기록 및 히스토리
+- [x] AI 코칭 메시지
+- [x] Supabase Auth (Google SSO)
+- [x] 다국어 지원 (영어/한국어)
 
-### In Progress (Phase 1)
-- [ ] Image storage integration (Supabase Storage)
-- [ ] Vercel deployment environment variables
-- [ ] Production error handling
-
-### Pending (Phase 2+)
-- [ ] 식약처 (MFDS) API integration
-- [ ] PKU special foods database
-- [ ] Mobile app (Capacitor)
-- [ ] Push notifications
-
----
-
-## Database Schema (Supabase)
-
-```sql
--- Main tables
-profiles          -- User profiles (linked to auth.users)
-daily_goals       -- User's daily nutrition goals
-meal_records      -- Individual meal entries
-food_items        -- Food items within meals
-
--- All tables have RLS (Row Level Security) enabled
--- Users can only access their own data
-```
-
----
-
-## Testing Checklist
-
-1. **Food Analysis**
-   - Test with various food photos
-   - Verify PKU/General mode calculations
-   - Check confidence scores
-
-2. **Authentication**
-   - Google SSO login flow
-   - Session persistence
-   - Logout functionality
-
-3. **Data Persistence**
-   - Meal records save to Supabase
-   - History displays correctly
-   - Mode settings persist
-
-4. **Responsive Design**
-   - Mobile viewport (375px+)
-   - Desktop viewport (1024px+)
-   - Touch interactions work
+### 진행 중
+- [ ] Supabase Storage 이미지 저장
+- [ ] Vercel 배포 설정
+- [ ] 프로덕션 에러 핸들링

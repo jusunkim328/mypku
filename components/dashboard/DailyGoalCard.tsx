@@ -1,9 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, Progressbar } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 
 export default function DailyGoalCard() {
+  const t = useTranslations("DailyGoal");
+  const tNutrients = useTranslations("Nutrients");
   const { mode, getTodayNutrition, dailyGoals, mealRecords } = useNutritionStore();
   const isPKU = mode === "pku";
 
@@ -12,7 +15,7 @@ export default function DailyGoalCard() {
 
   const nutrients = [
     {
-      name: isPKU ? "페닐알라닌" : "칼로리",
+      name: isPKU ? tNutrients("phenylalanine") : tNutrients("calories"),
       current: isPKU
         ? todayNutrition.phenylalanine_mg || 0
         : todayNutrition.calories,
@@ -21,21 +24,21 @@ export default function DailyGoalCard() {
       warning: isPKU,
     },
     {
-      name: "단백질",
+      name: tNutrients("protein"),
       current: todayNutrition.protein_g,
       goal: dailyGoals.protein_g,
       unit: "g",
       warning: false,
     },
     {
-      name: "탄수화물",
+      name: tNutrients("carbs"),
       current: todayNutrition.carbs_g,
       goal: dailyGoals.carbs_g,
       unit: "g",
       warning: false,
     },
     {
-      name: "지방",
+      name: tNutrients("fat"),
       current: todayNutrition.fat_g,
       goal: dailyGoals.fat_g,
       unit: "g",
@@ -45,7 +48,7 @@ export default function DailyGoalCard() {
 
   return (
     <Card className="p-4">
-      <h3 className="text-base font-semibold mb-3">일일 목표 달성률</h3>
+      <h3 className="text-base font-semibold mb-3">{t("title")}</h3>
       <div className="space-y-3">
         {nutrients.map((nutrient) => {
           const percentage = Math.min(

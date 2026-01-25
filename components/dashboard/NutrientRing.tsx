@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface NutrientRingProps {
   label: string;
   current: number;
@@ -17,6 +19,7 @@ export default function NutrientRing({
   color,
   warning = false,
 }: NutrientRingProps) {
+  const t = useTranslations("NutrientRing");
   const percentage = Math.min((current / goal) * 100, 100);
   const isOverLimit = current > goal;
   const displayColor = isOverLimit && warning ? "var(--pku-danger)" : color;
@@ -66,12 +69,12 @@ export default function NutrientRing({
       </div>
       <span className="mt-2 text-sm font-medium text-gray-700">{label}</span>
       <span className="text-xs text-gray-400">
-        목표: {goal}
+        {t("goal")}: {goal}
         {unit}
       </span>
       {isOverLimit && warning && (
         <span className="text-xs text-red-500 font-semibold mt-1">
-          한도 초과!
+          {t("exceeded")}
         </span>
       )}
     </div>

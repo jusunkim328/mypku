@@ -1,17 +1,18 @@
-version: '3.9'
 services:
   mypku-dev:
     image: node:20-alpine
     container_name: mypku-dev
     working_dir: /workspace
 
+    # user: Mac에서는 제거 (Linux uid 호환 문제)
+
     volumes:
       - .:/workspace
       - node_modules:/workspace/node_modules
-      - ~/.claude:/root/.claude
+      - ~/.claude:/home/node/.claude
 
     ports:
-      - "3000:3000"
+      - "3001:3000"  # 호스트:3001 → 컨테이너:3000
 
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
@@ -20,13 +21,14 @@ services:
     stdin_open: true
     tty: true
 
-    command: /bin/sh -c "
+    command: >
+      /bin/sh -c "
       apk add --no-cache bash git curl &&
-      npm install -g bun &&
+      npm install -g bun @anthropic-ai/claude-code &&
       cd /workspace &&
       bun install &&
-      echo '✅ 개발 서버 시작 중...' &&
-      bun run dev --hostname 0.0.0.0
+      echo 'Starting dev server on http://localhost:3000' &&
+      bun dev --hostname 0.0.0.0
       "
 
 volumes:

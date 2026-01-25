@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card } from "@/components/ui";
 import ImageUploader from "@/components/analyze/ImageUploader";
 import AnalysisResult from "@/components/analyze/AnalysisResult";
@@ -28,9 +28,9 @@ async function fetchWithRetry(
         return response;
       }
       // 5xx 에러는 재시도
-      lastError = new Error(`서버 오류: ${response.status}`);
+      lastError = new Error(`Server error: ${response.status}`);
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error("네트워크 오류");
+      lastError = error instanceof Error ? error : new Error("Network error");
     }
 
     if (attempt < maxRetries - 1) {
@@ -39,11 +39,14 @@ async function fetchWithRetry(
     }
   }
 
-  throw lastError || new Error("요청 실패");
+  throw lastError || new Error("Request failed");
 }
 
 export default function AnalyzeClient() {
   const router = useRouter();
+  const t = useTranslations("AnalyzePage");
+  const tCommon = useTranslations("Common");
+  const tMeals = useTranslations("MealTypes");
   const { addMealRecord } = useNutritionStore();
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -85,20 +88,20 @@ export default function AnalyzeClient() {
         setItems(data.items);
         setTotalNutrition(data.totalNutrition);
         setAnalysisState("success");
-        toast.success("음식 분석이 완료되었습니다!");
+        toast.success(t("analysisComplete"));
       } else {
-        const errorMessage = data.error || "분석에 실패했습니다.";
+        const errorMessage = data.error || t("analysisFailed");
         setError(errorMessage);
         setAnalysisState("error");
         toast.error(errorMessage);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "네트워크 오류가 발생했습니다.";
+      const errorMessage = err instanceof Error ? err.message : t("networkError");
       setError(errorMessage);
       setAnalysisState("error");
       toast.error(errorMessage);
     }
-  }, [imageBase64]);
+  }, [imageBase64, t]);
 
   const handleSave = useCallback(() => {
     if (!totalNutrition || items.length === 0) return;
@@ -114,12 +117,12 @@ export default function AnalyzeClient() {
       };
 
       addMealRecord(record);
-      toast.success("식사 기록이 저장되었습니다!");
+      toast.success(t("recordSaved"));
       router.push("/");
     } catch {
-      toast.error("저장에 실패했습니다. 다시 시도해 주세요.");
+      toast.error(t("saveFailed"));
     }
-  }, [totalNutrition, items, selectedMealType, imageBase64, addMealRecord, router]);
+  }, [totalNutrition, items, selectedMealType, imageBase64, addMealRecord, router, t]);
 
   const handleItemUpdate = (id: string, updates: Partial<FoodItem>) => {
     setItems((prev) =>
@@ -146,21 +149,21 @@ export default function AnalyzeClient() {
     setTotalNutrition(newTotal);
   };
 
-  const mealTypes: { value: MealType; label: string }[] = [
-    { value: "breakfast", label: "아침" },
-    { value: "lunch", label: "점심" },
-    { value: "dinner", label: "저녁" },
-    { value: "snack", label: "간식" },
+  const mealTypes: { value: MealType; labelKey: keyof IntlMessages["MealTypes"] }[] = [
+    { value: "breakfast", labelKey: "breakfast" },
+    { value: "lunch", labelKey: "lunch" },
+    { value: "dinner", labelKey: "dinner" },
+    { value: "snack", labelKey: "snack" },
   ];
 
   return (
     <Page>
       <Navbar
-        title="음식 분석"
+        title={t("title")}
         left={
           <Link href="/">
             <Button clear small>
-              뒤로
+              {tCommon("back")}
             </Button>
           </Link>
         }
@@ -181,7 +184,7 @@ export default function AnalyzeClient() {
             loading={analysisState === "loading"}
             className="w-full"
           >
-            {analysisState === "loading" ? "AI 분석 중..." : "AI 분석 시작"}
+            {analysisState === "loading" ? t("analyzing") : t("startAnalysis")}
           </Button>
         )}
 
@@ -190,7 +193,7 @@ export default function AnalyzeClient() {
           <Card className="p-4 bg-red-50">
             <p className="text-red-600 text-sm">{error}</p>
             <Button small outline className="mt-2" onClick={handleAnalyze}>
-              다시 시도
+              {tCommon("retry")}
             </Button>
           </Card>
         )}
@@ -206,7 +209,7 @@ export default function AnalyzeClient() {
 
             {/* 식사 유형 선택 */}
             <Card className="p-4">
-              <h3 className="text-sm font-semibold mb-2">식사 유형</h3>
+              <h3 className="text-sm font-semibold mb-2">{t("mealType")}</h3>
               <div className="flex gap-2">
                 {mealTypes.map((type) => (
                   <Button
@@ -215,7 +218,7 @@ export default function AnalyzeClient() {
                     outline={selectedMealType !== type.value}
                     onClick={() => setSelectedMealType(type.value)}
                   >
-                    {type.label}
+                    {tMeals(type.labelKey)}
                   </Button>
                 ))}
               </div>
@@ -223,7 +226,7 @@ export default function AnalyzeClient() {
 
             {/* 저장 버튼 */}
             <Button large onClick={handleSave} className="w-full">
-              기록 저장
+              {t("saveRecord")}
             </Button>
           </>
         )}
@@ -231,3 +234,13 @@ export default function AnalyzeClient() {
     </Page>
   );
 }
+
+// Type helper for translations
+type IntlMessages = {
+  MealTypes: {
+    breakfast: string;
+    lunch: string;
+    dinner: string;
+    snack: string;
+  };
+};

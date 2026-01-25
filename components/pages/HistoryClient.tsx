@@ -1,19 +1,18 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations, useFormatter } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
 import CoachingMessage from "@/components/dashboard/CoachingMessage";
 
-const mealTypeLabels: Record<string, string> = {
-  breakfast: "아침",
-  lunch: "점심",
-  dinner: "저녁",
-  snack: "간식",
-};
-
 export default function HistoryClient() {
+  const t = useTranslations("HistoryPage");
+  const tCommon = useTranslations("Common");
+  const tMeals = useTranslations("MealTypes");
+  const tNutrients = useTranslations("Nutrients");
+  const format = useFormatter();
   const { mealRecords, removeMealRecord, mode, _hasHydrated } = useNutritionStore();
   const isPKU = mode === "pku";
 
@@ -48,32 +47,34 @@ export default function HistoryClient() {
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (date.toDateString() === today.toDateString()) {
-      return "오늘";
+      return tCommon("today");
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return "어제";
+      return tCommon("yesterday");
     } else {
-      return date.toLocaleDateString("ko-KR", {
-        month: "short",
-        day: "numeric",
-      });
+      return format.dateTime(date, { month: "short", day: "numeric" });
     }
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString("ko-KR", {
+    return format.dateTime(new Date(timestamp), {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
+  const getMealTypeLabel = (mealType: string) => {
+    const key = mealType as keyof IntlMessages["MealTypes"];
+    return tMeals(key);
+  };
+
   return (
     <Page>
       <Navbar
-        title="식사 기록"
+        title={t("title")}
         left={
           <Link href="/">
             <Button clear small>
-              뒤로
+              {tCommon("back")}
             </Button>
           </Link>
         }
@@ -88,13 +89,13 @@ export default function HistoryClient() {
 
         {/* 식사 기록 목록 */}
         <div>
-          <h3 className="text-base font-semibold mb-3">최근 7일 기록</h3>
+          <h3 className="text-base font-semibold mb-3">{t("recentRecords")}</h3>
           {recentRecords.length === 0 ? (
             <Card className="p-6 text-center">
-              <p className="text-gray-500">아직 기록이 없습니다.</p>
+              <p className="text-gray-500">{t("noRecords")}</p>
               <Link href="/analyze">
                 <Button small className="mt-3">
-                  첫 식사 기록하기
+                  {t("recordFirst")}
                 </Button>
               </Link>
             </Card>
@@ -112,7 +113,7 @@ export default function HistoryClient() {
                           {formatTime(record.timestamp)}
                         </span>
                         <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                          {mealTypeLabels[record.mealType]}
+                          {getMealTypeLabel(record.mealType)}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">
@@ -121,11 +122,11 @@ export default function HistoryClient() {
                       <div className="flex gap-3 text-xs text-gray-500 mt-1">
                         {isPKU && (
                           <span className="text-indigo-600 font-medium">
-                            Phe: {record.totalNutrition.phenylalanine_mg}mg
+                            {t("phe")}: {record.totalNutrition.phenylalanine_mg}mg
                           </span>
                         )}
                         <span>{Math.round(record.totalNutrition.calories)}kcal</span>
-                        <span>단백질 {record.totalNutrition.protein_g.toFixed(1)}g</span>
+                        <span>{tNutrients("protein")} {record.totalNutrition.protein_g.toFixed(1)}g</span>
                       </div>
                     </div>
                     <Button
@@ -133,12 +134,12 @@ export default function HistoryClient() {
                       clear
                       className="text-red-500"
                       onClick={() => {
-                        if (confirm("이 기록을 삭제하시겠습니까?")) {
+                        if (confirm(t("deleteConfirm"))) {
                           removeMealRecord(record.id);
                         }
                       }}
                     >
-                      삭제
+                      {tCommon("delete")}
                     </Button>
                   </div>
                 </Card>
@@ -150,3 +151,13 @@ export default function HistoryClient() {
     </Page>
   );
 }
+
+// Type helper for translations
+type IntlMessages = {
+  MealTypes: {
+    breakfast: string;
+    lunch: string;
+    dinner: string;
+    snack: string;
+  };
+};

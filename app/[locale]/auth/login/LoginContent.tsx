@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Page, Card, Button } from "@/components/ui";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/useToast";
+import { useRouter } from "@/i18n/navigation";
 
 export default function LoginContent() {
   const router = useRouter();
   const { isAuthenticated, isLoading, signInWithGoogle } = useAuth();
+  const t = useTranslations("Auth");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -20,7 +22,7 @@ export default function LoginContent() {
     try {
       await signInWithGoogle();
     } catch {
-      toast.error("로그인에 실패했습니다. 다시 시도해 주세요.");
+      toast.error(t("loginFailed"));
     }
   };
 
@@ -45,7 +47,7 @@ export default function LoginContent() {
 
           <h1 className="text-2xl font-bold text-gray-900 mb-2">MyPKU</h1>
           <p className="text-gray-600 text-sm mb-8">
-            AI 기반 맞춤형 식단 관리
+            AI-Powered Diet Management
           </p>
 
           {/* Google 로그인 버튼 */}
@@ -72,7 +74,7 @@ export default function LoginContent() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Google로 계속하기
+            {t("loginWithGoogle")}
           </Button>
 
           {/* 게스트 모드 */}
@@ -82,17 +84,17 @@ export default function LoginContent() {
               onClick={() => router.push("/")}
               className="w-full"
             >
-              로그인 없이 사용하기
+              {t("continueWithoutLogin")}
             </Button>
             <p className="text-xs text-gray-400 mt-2">
-              게스트 모드에서는 데이터가 이 기기에만 저장됩니다.
+              {t("guestModeDesc")}
             </p>
           </div>
         </Card>
 
         {/* 면책조항 */}
         <p className="text-xs text-gray-400 mt-6 text-center max-w-sm">
-          로그인 시 서비스 이용약관 및 개인정보처리방침에 동의하게 됩니다.
+          {t("termsAgreement")}
         </p>
       </div>
     </Page>

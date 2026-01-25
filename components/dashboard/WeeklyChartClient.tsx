@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations, useFormatter, useLocale } from "next-intl";
 import { Card } from "@/components/ui";
 import {
   BarChart,
@@ -12,12 +13,16 @@ import {
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 
 export default function WeeklyChartClient() {
+  const t = useTranslations("WeeklyChart");
+  const tNutrients = useTranslations("Nutrients");
+  const format = useFormatter();
+  const locale = useLocale();
   const { mode, getWeeklyData, dailyGoals } = useNutritionStore();
   const isPKU = mode === "pku";
   const weeklyData = getWeeklyData();
 
   const chartData = weeklyData.map((day) => ({
-    date: new Date(day.date).toLocaleDateString("ko-KR", { weekday: "short" }),
+    date: format.dateTime(new Date(day.date), { weekday: "short" }),
     value: isPKU
       ? day.nutrition.phenylalanine_mg || 0
       : day.nutrition.calories,
@@ -28,11 +33,11 @@ export default function WeeklyChartClient() {
     : dailyGoals.calories;
 
   const unit = isPKU ? "mg" : "kcal";
-  const label = isPKU ? "페닐알라닌" : "칼로리";
+  const label = isPKU ? tNutrients("phenylalanine") : tNutrients("calories");
 
   return (
     <Card className="p-4">
-      <h3 className="text-base font-semibold mb-3">주간 {label} 섭취량</h3>
+      <h3 className="text-base font-semibold mb-3">{t("title", { nutrient: label })}</h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -62,7 +67,7 @@ export default function WeeklyChartClient() {
         </ResponsiveContainer>
       </div>
       <p className="text-xs text-gray-400 text-center mt-2">
-        목표: {goalValue}{unit}
+        {t("goal")}: {goalValue}{unit}
       </p>
     </Card>
   );

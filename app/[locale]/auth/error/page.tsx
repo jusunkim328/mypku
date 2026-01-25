@@ -1,9 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Page, Card, Button } from "@/components/ui";
+import { Link } from "@/i18n/navigation";
 
 export default function AuthErrorPage() {
+  const t = useTranslations("AuthError");
+
   return (
     <Page>
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -25,21 +28,21 @@ export default function AuthErrorPage() {
           </div>
 
           <h1 className="text-xl font-bold text-gray-900 mb-2">
-            인증 오류
+            {t("title")}
           </h1>
           <p className="text-gray-600 text-sm mb-6">
-            로그인 중 문제가 발생했습니다. 다시 시도해 주세요.
+            {t("message")}
           </p>
 
           <div className="flex flex-col gap-2">
             <Link href="/auth/login">
               <Button large className="w-full">
-                다시 로그인
+                {t("loginAgain")}
               </Button>
             </Link>
             <Link href="/">
               <Button outline className="w-full">
-                홈으로 돌아가기
+                {t("goHome")}
               </Button>
             </Link>
           </div>

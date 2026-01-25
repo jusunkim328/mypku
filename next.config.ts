@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
-  // 모든 페이지를 동적으로 렌더링
   output: "standalone",
-
-  // TypeScript 빌드 에러 체크
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -13,4 +11,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+export default withNextIntl(nextConfig);
