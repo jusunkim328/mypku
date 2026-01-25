@@ -67,7 +67,15 @@ export function useAuth(): AuthState & AuthActions {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("[useAuth] Calling getSession...");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log("[useAuth] getSession result:", {
+          session: !!session,
+          user: session?.user?.email,
+          error: sessionError,
+          accessToken: session?.access_token?.substring(0, 20) + "..."
+        });
+
         setSession(session);
         setUser(session?.user ?? null);
 

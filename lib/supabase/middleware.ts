@@ -15,9 +15,12 @@ export async function updateSessionWithResponse(
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll();
+          const cookies = request.cookies.getAll();
+          console.log("[supabase-middleware] getAll cookies:", cookies.map(c => c.name));
+          return cookies;
         },
         setAll(cookiesToSet) {
+          console.log("[supabase-middleware] setAll cookies:", cookiesToSet.map(c => c.name));
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -30,7 +33,8 @@ export async function updateSessionWithResponse(
   );
 
   // 세션 갱신 (사용자가 로그인한 경우)
-  await supabase.auth.getUser();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  console.log("[supabase-middleware] getUser result:", { user: user?.email, error: error?.message });
 
   return response;
 }

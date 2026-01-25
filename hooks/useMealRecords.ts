@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "./useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNutritionStore } from "./useNutritionStore";
 import { uploadMealImage, deleteMealImage } from "@/lib/supabase/storage";
 import { toast } from "./useToast";

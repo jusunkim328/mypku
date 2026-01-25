@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card } from "@/components/ui";
 import ImageUploader from "@/components/analyze/ImageUploader";
 import AnalysisResult from "@/components/analyze/AnalysisResult";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useMealRecords } from "@/hooks/useMealRecords";
 import { toast } from "@/hooks/useToast";
 import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
@@ -47,9 +47,10 @@ export default function AnalyzeClient() {
   const t = useTranslations("AnalyzePage");
   const tCommon = useTranslations("Common");
   const tMeals = useTranslations("MealTypes");
-  const { addMealRecord } = useNutritionStore();
+  const { addMealRecord } = useMealRecords();
 
   const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [analysisState, setAnalysisState] = useState<AnalysisState>("idle");
   const [items, setItems] = useState<FoodItem[]>([]);
   const [totalNutrition, setTotalNutrition] = useState<NutritionData | null>(null);
@@ -103,24 +104,28 @@ export default function AnalyzeClient() {
     }
   }, [imageBase64, t]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!totalNutrition || items.length === 0) return;
 
+    setIsSaving(true);
     try {
-      const record = {
-        id: `meal-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        mealType: selectedMealType,
-        imageBase64: imageBase64 || undefined,
-        items,
-        totalNutrition,
-      };
-
-      addMealRecord(record);
+      await addMealRecord(
+        {
+          timestamp: new Date().toISOString(),
+          mealType: selectedMealType,
+          imageUrl: null,
+          items,
+          totalNutrition,
+          aiConfidence: items[0]?.confidence || null,
+        },
+        imageBase64 || undefined
+      );
       toast.success(t("recordSaved"));
       router.push("/");
     } catch {
       toast.error(t("saveFailed"));
+    } finally {
+      setIsSaving(false);
     }
   }, [totalNutrition, items, selectedMealType, imageBase64, addMealRecord, router, t]);
 
@@ -225,7 +230,7 @@ export default function AnalyzeClient() {
             </Card>
 
             {/* 저장 버튼 */}
-            <Button large onClick={handleSave} className="w-full">
+            <Button large onClick={handleSave} loading={isSaving} className="w-full">
               {t("saveRecord")}
             </Button>
           </>

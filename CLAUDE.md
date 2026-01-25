@@ -71,8 +71,11 @@ messages/                   # 번역 파일
 
 hooks/                      # 커스텀 훅
 ├── useNutritionStore.ts    # Zustand 영양 데이터
-├── useAuth.ts              # Supabase 인증
+├── useMealRecords.ts       # Supabase/localStorage 식사 기록 통합
 └── useToast.ts             # 토스트 알림
+
+contexts/                   # React Context
+└── AuthContext.tsx         # 인증 상태 관리 (앱 전역)
 
 lib/
 ├── gemini.ts               # Gemini API 클라이언트 (서버 전용!)
@@ -121,6 +124,31 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
 ---
 
+## Supabase 인증 아키텍처
+
+### AuthContext 패턴 (필수)
+- `contexts/AuthContext.tsx`: 앱 전역 인증 상태 관리
+- `Providers.tsx`에서 `<AuthProvider>` 래핑
+- 페이지 이동 시에도 인증 상태 유지
+- `useAuth()` 훅은 반드시 `@/contexts/AuthContext`에서 import
+
+### Supabase SSR 쿠키 처리
+- 브라우저 클라이언트: `lib/supabase/client.ts` (싱글톤 패턴)
+- 서버 클라이언트: `lib/supabase/server.ts` (async, cookies() 사용)
+- 미들웨어: `lib/supabase/middleware.ts` (세션 갱신)
+
+### OAuth 콜백 주의사항
+- `/auth/callback`은 미들웨어에서 locale 처리 제외
+- 콜백 후 `/${locale}` 경로로 리다이렉트 필요
+- `exchangeCodeForSession()` 호출 시 쿠키 자동 설정
+
+### Supabase Storage
+- 버킷명: `meal-images` (Public bucket)
+- 경로: `{user_id}/{timestamp}.{extension}`
+- 이미지 업로드: `lib/supabase/storage.ts`의 `uploadMealImage()`
+
+---
+
 ## 현재 상태
 
 ### 완료
@@ -131,8 +159,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 - [x] AI 코칭 메시지
 - [x] Supabase Auth (Google SSO)
 - [x] 다국어 지원 (영어/한국어)
+- [x] Supabase Storage 이미지 저장
+- [x] 로그인/비로그인 데이터 저장 분기 (Supabase DB / localStorage)
 
 ### 진행 중
-- [ ] Supabase Storage 이미지 저장
 - [ ] Vercel 배포 설정
 - [ ] 프로덕션 에러 핸들링

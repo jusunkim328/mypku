@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Page, Card, Button } from "@/components/ui";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
 import { useRouter } from "@/i18n/navigation";
 

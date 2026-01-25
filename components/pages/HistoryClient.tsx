@@ -3,6 +3,7 @@
 import { useTranslations, useFormatter } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
+import { useMealRecords } from "@/hooks/useMealRecords";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
 import CoachingMessage from "@/components/dashboard/CoachingMessage";
@@ -13,11 +14,12 @@ export default function HistoryClient() {
   const tMeals = useTranslations("MealTypes");
   const tNutrients = useTranslations("Nutrients");
   const format = useFormatter();
-  const { mealRecords, removeMealRecord, mode, _hasHydrated } = useNutritionStore();
+  const { mealRecords, removeMealRecord, isLoading } = useMealRecords();
+  const { mode, _hasHydrated } = useNutritionStore();
   const isPKU = mode === "pku";
 
-  // 하이드레이션 대기
-  if (!_hasHydrated) {
+  // 하이드레이션 및 데이터 로딩 대기
+  if (!_hasHydrated || isLoading) {
     return (
       <Page>
         <div className="min-h-screen flex items-center justify-center">
@@ -133,9 +135,9 @@ export default function HistoryClient() {
                       small
                       clear
                       className="text-red-500"
-                      onClick={() => {
+                      onClick={async () => {
                         if (confirm(t("deleteConfirm"))) {
-                          removeMealRecord(record.id);
+                          await removeMealRecord(record.id);
                         }
                       }}
                     >

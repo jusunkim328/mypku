@@ -86,11 +86,18 @@
   },
   "Auth": {
     "login": "Login",
+    "logout": "Logout",
     "loginWithGoogle": "Continue with Google",
     "loginFailed": "Login failed. Please try again.",
+    "logoutSuccess": "Logged out successfully.",
     "continueWithoutLogin": "Use without login",
     "guestModeDesc": "In guest mode, data is only saved on this device.",
-    "termsAgreement": "By logging in, you agree to our Terms of Service and Privacy Policy."
+    "termsAgreement": "By logging in, you agree to our Terms of Service and Privacy Policy.",
+    "account": "Account",
+    "loggedInAs": "Logged in as",
+    "guestMode": "Guest Mode",
+    "guestModeActive": "Data is saved only on this device.",
+    "loginForSync": "Login to sync data across devices"
   },
   "AuthError": {
     "title": "Authentication Error",
