@@ -6,11 +6,16 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card } from "@/components/ui";
 import ImageUploader from "@/components/analyze/ImageUploader";
 import AnalysisResult from "@/components/analyze/AnalysisResult";
+import VoiceInput from "@/components/analyze/VoiceInput";
 import { useMealRecords } from "@/hooks/useMealRecords";
+import { useNotificationStore } from "@/hooks/useNotificationStore";
+import { useStreakStore } from "@/hooks/useStreakStore";
 import { toast } from "@/hooks/useToast";
+import { showStreakCelebration } from "@/lib/notifications";
 import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
 type AnalysisState = "idle" | "loading" | "success" | "error";
+type InputMode = "image" | "voice";
 
 // Exponential Backoff로 재시도
 async function fetchWithRetry(
@@ -47,9 +52,14 @@ export default function AnalyzeClient() {
   const t = useTranslations("AnalyzePage");
   const tCommon = useTranslations("Common");
   const tMeals = useTranslations("MealTypes");
+  const tVoice = useTranslations("VoiceInput");
   const { addMealRecord } = useMealRecords();
+  const { streakMilestones, permission } = useNotificationStore();
+  const { currentStreak } = useStreakStore();
 
+  const [inputMode, setInputMode] = useState<InputMode>("image");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [voiceText, setVoiceText] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [analysisState, setAnalysisState] = useState<AnalysisState>("idle");
   const [items, setItems] = useState<FoodItem[]>([]);
@@ -63,6 +73,56 @@ export default function AnalyzeClient() {
     setItems([]);
     setTotalNutrition(null);
     setError("");
+  };
+
+  // 음성 입력 처리
+  const handleVoiceTranscript = async (text: string) => {
+    setVoiceText(text);
+    setAnalysisState("loading");
+    setError("");
+
+    try {
+      const response = await fetchWithRetry(
+        "/api/voice-analyze",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        },
+        3,
+        1000
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setItems(data.items);
+        setTotalNutrition(data.totalNutrition);
+        setAnalysisState("success");
+        toast.success(t("analysisComplete"));
+      } else {
+        const errorMessage = data.error || t("analysisFailed");
+        setError(errorMessage);
+        setAnalysisState("error");
+        toast.error(errorMessage);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : t("networkError");
+      setError(errorMessage);
+      setAnalysisState("error");
+      toast.error(errorMessage);
+    }
+  };
+
+  // 입력 모드 변경 시 상태 초기화
+  const handleModeChange = (mode: InputMode) => {
+    setInputMode(mode);
+    setAnalysisState("idle");
+    setItems([]);
+    setTotalNutrition(null);
+    setError("");
+    setVoiceText("");
+    setImageBase64(null);
   };
 
   const handleAnalyze = useCallback(async () => {
@@ -121,13 +181,20 @@ export default function AnalyzeClient() {
         imageBase64 || undefined
       );
       toast.success(t("recordSaved"));
+
+      // 스트릭 마일스톤 알림
+      if (streakMilestones && permission === "granted") {
+        const newStreak = currentStreak + 1;
+        showStreakCelebration(newStreak);
+      }
+
       router.push("/");
     } catch {
       toast.error(t("saveFailed"));
     } finally {
       setIsSaving(false);
     }
-  }, [totalNutrition, items, selectedMealType, imageBase64, addMealRecord, router, t]);
+  }, [totalNutrition, items, selectedMealType, imageBase64, addMealRecord, router, t, streakMilestones, permission, currentStreak]);
 
   const handleItemUpdate = (id: string, updates: Partial<FoodItem>) => {
     setItems((prev) =>
@@ -175,14 +242,63 @@ export default function AnalyzeClient() {
       />
 
       <Block className="space-y-4">
-        {/* 이미지 업로더 */}
-        <ImageUploader
-          imageBase64={imageBase64}
-          onImageSelect={handleImageSelect}
-        />
+        {/* 입력 모드 탭 */}
+        <div className="flex rounded-xl bg-gray-100 p-1">
+          <button
+            onClick={() => handleModeChange("image")}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              inputMode === "image"
+                ? "bg-white text-indigo-600 shadow-sm"
+                : "text-gray-600"
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {t("camera")}
+          </button>
+          <button
+            onClick={() => handleModeChange("voice")}
+            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+              inputMode === "voice"
+                ? "bg-white text-indigo-600 shadow-sm"
+                : "text-gray-600"
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+            {tVoice("startRecording").split(" ")[0]}
+          </button>
+        </div>
 
-        {/* 분석 버튼 */}
-        {imageBase64 && analysisState !== "success" && (
+        {/* 이미지 업로더 */}
+        {inputMode === "image" && (
+          <ImageUploader
+            imageBase64={imageBase64}
+            onImageSelect={handleImageSelect}
+          />
+        )}
+
+        {/* 음성 입력 */}
+        {inputMode === "voice" && analysisState !== "success" && (
+          <Card className="p-6">
+            <VoiceInput
+              onTranscript={handleVoiceTranscript}
+              onError={(err) => toast.error(err)}
+              disabled={analysisState === "loading"}
+            />
+            {voiceText && (
+              <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
+                <p className="text-sm text-indigo-800">&ldquo;{voiceText}&rdquo;</p>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* 분석 버튼 (이미지 모드) */}
+        {inputMode === "image" && imageBase64 && analysisState !== "success" && (
           <Button
             large
             onClick={handleAnalyze}

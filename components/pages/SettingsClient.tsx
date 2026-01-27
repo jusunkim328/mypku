@@ -8,6 +8,7 @@ import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
 import type { Locale } from "@/i18n/routing";
+import NotificationSettings from "@/components/settings/NotificationSettings";
 
 const languages: { code: Locale; name: string }[] = [
   { code: "en", name: "English" },
@@ -34,8 +35,8 @@ export default function SettingsClient() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleModeToggle = () => {
-    setMode(isPKU ? "general" : "pku");
+  const handleModeToggle = (checked: boolean) => {
+    setMode(checked ? "pku" : "general");
   };
 
   const handleLanguageChange = (newLocale: Locale) => {
@@ -153,6 +154,9 @@ export default function SettingsClient() {
             {t("pkuModeExplain")}
           </p>
         </Card>
+
+        {/* 알림 설정 */}
+        <NotificationSettings />
 
         {/* 언어 설정 */}
         <Card className="p-4">

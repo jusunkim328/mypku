@@ -21,7 +21,9 @@
     "calories": "칼로리",
     "protein": "단백질",
     "carbs": "탄수화물",
-    "fat": "지방"
+    "fat": "지방",
+    "exchange": "익스체인지",
+    "exchanges": "익스체인지"
   },
   "MealTypes": {
     "breakfast": "아침",
@@ -37,7 +39,9 @@
     "title": "MyPKU",
     "todayIntake": "오늘의 섭취량",
     "takePhoto": "음식 촬영하기",
+    "scanBarcode": "바코드 스캔",
     "viewHistory": "기록 보기",
+    "viewBadges": "배지 보기",
     "goal": "목표"
   },
   "AnalyzePage": {
@@ -131,6 +135,24 @@
     "loading": "차트 로딩 중...",
     "goal": "목표"
   },
+  "Chart": {
+    "day": "일간",
+    "week": "주간",
+    "month": "월간",
+    "dailyTitle": "오늘의 {nutrient}",
+    "weeklyTitle": "주간 {nutrient}",
+    "monthlyTitle": "월간 {nutrient}",
+    "average": "평균",
+    "total": "합계",
+    "trend": "추세"
+  },
+  "Water": {
+    "title": "수분 섭취",
+    "addGlass": "물 추가",
+    "goalReached": "일일 목표 달성!",
+    "remaining": "{count}잔 더 필요",
+    "pkuTip": "충분한 수분 섭취는 아미노산 대사에 도움이 됩니다."
+  },
   "FoodItem": {
     "foodName": "음식 이름",
     "weight": "중량(g)",
@@ -151,5 +173,118 @@
     "generic": "오류가 발생했습니다.",
     "network": "네트워크 오류가 발생했습니다.",
     "server": "서버 오류가 발생했습니다."
+  },
+  "Calendar": {
+    "title": "월간 달력",
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "less": "적음",
+    "more": "많음",
+    "noData": "이 날의 기록이 없습니다"
+  },
+  "DateNavigator": {
+    "selectDate": "날짜 선택",
+    "jumpToDate": "날짜로 이동"
+  },
+  "BarcodeScanner": {
+    "startScan": "스캔 시작",
+    "stopScan": "중지",
+    "manualEntry": "또는 바코드를 직접 입력하세요",
+    "enterBarcode": "바코드 번호 입력",
+    "lookup": "조회",
+    "cameraError": "카메라 접근이 거부되었습니다",
+    "noCameraMessage": "카메라를 사용할 수 없습니다. 바코드를 직접 입력해주세요."
+  },
+  "ScanPage": {
+    "title": "바코드 스캔",
+    "searching": "제품 검색 중...",
+    "productFound": "제품을 찾았습니다!",
+    "productNotFound": "제품을 찾을 수 없습니다",
+    "lookupError": "바코드 조회에 실패했습니다",
+    "timeoutError": "네트워크가 느립니다. 다시 시도해 주세요.",
+    "barcode": "바코드",
+    "servingSize": "섭취량",
+    "nutritionInfo": "영양 정보",
+    "estimated": "추정",
+    "mealType": "식사 유형",
+    "scanAnother": "다른 제품 스캔",
+    "saveRecord": "기록 저장",
+    "recordSaved": "기록이 저장되었습니다!",
+    "saveFailed": "저장에 실패했습니다"
+  },
+  "VoiceInput": {
+    "startRecording": "음성 입력 시작",
+    "stopRecording": "녹음 중지",
+    "listening": "듣는 중...",
+    "processing": "처리 중...",
+    "speakNow": "음식 이름이나 설명을 말해주세요",
+    "notSupported": "이 브라우저에서는 음성 입력을 지원하지 않습니다",
+    "permissionDenied": "마이크 권한이 거부되었습니다"
+  },
+  "Streak": {
+    "days": "일",
+    "dayStreak": "일 연속",
+    "keepGoing": "잘하고 있어요!",
+    "logTodayToKeep": "오늘도 기록하면 연속 기록 유지!",
+    "startNewStreak": "오늘부터 새로운 기록을 시작하세요!",
+    "longest": "최장 기록",
+    "weeklyGoal": "주간 목표",
+    "dayMilestone": "일 달성!"
+  },
+  "Badges": {
+    "title": "업적",
+    "locked": "미달성",
+    "unlocked": "달성",
+    "streak7": "7일 연속",
+    "streak7Desc": "7일 연속 식사 기록",
+    "streak30": "30일 연속",
+    "streak30Desc": "30일 연속 식사 기록",
+    "streak100": "100일 연속",
+    "streak100Desc": "100일 연속 식사 기록",
+    "firstMeal": "첫 식사",
+    "firstMealDesc": "첫 식사 기록 완료",
+    "goalMaster": "목표 달인",
+    "goalMasterDesc": "일주일간 일일 목표 유지",
+    "pkuPro": "PKU 프로",
+    "pkuProDesc": "PKU 모드 30일 사용",
+    "barcodeScanner": "스캐너 프로",
+    "barcodeScannerDesc": "바코드로 10개 제품 스캔",
+    "voiceLogger": "음성 로거",
+    "voiceLoggerDesc": "음성으로 5개 식사 기록"
+  },
+  "ProfilePage": {
+    "title": "내 프로필",
+    "streakSection": "스트릭 진행률",
+    "achievementsSection": "업적"
+  },
+  "FoodsPage": {
+    "title": "PKU 식품 데이터베이스",
+    "searchPlaceholder": "음식을 검색하세요...",
+    "search": "검색",
+    "allFoods": "전체 식품",
+    "lowProtein": "저단백",
+    "noResults": "검색 결과가 없습니다.",
+    "resultsCount": "{count}개 식품",
+    "lowProteinBadge": "저단백",
+    "per100g": "{size} 기준"
+  },
+  "NotificationSettings": {
+    "title": "알림",
+    "notSupported": "이 브라우저에서는 알림을 지원하지 않습니다.",
+    "enablePrompt": "알림을 활성화하여 식사 리마인더와 건강 알림을 받으세요.",
+    "enableNotifications": "알림 활성화",
+    "permissionGranted": "알림이 활성화되었습니다!",
+    "permissionDenied": "알림 권한이 거부되었습니다. 브라우저 설정에서 활성화해주세요.",
+    "permissionDeniedMessage": "알림이 차단되었습니다. 브라우저 설정에서 알림을 활성화해주세요.",
+    "permissionError": "알림 활성화에 실패했습니다.",
+    "notificationsEnabled": "알림이 활성화되었습니다",
+    "mealReminders": "식사 리마인더",
+    "otherNotifications": "건강 알림",
+    "pheWarnings": "Phe 한도 경고",
+    "pheWarningsDesc": "일일 Phe 한도에 근접하면 알림",
+    "goalAchievements": "목표 달성 축하",
+    "goalAchievementsDesc": "일일 목표 달성 시 축하 알림",
+    "streakMilestones": "연속 기록 마일스톤",
+    "streakMilestonesDesc": "연속 기록 달성 시 축하 알림 (7, 14, 30일 이상)"
   }
 }

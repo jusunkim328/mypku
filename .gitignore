@@ -37,3 +37,6 @@ client_secret*.json
 
 # Test files
 public/test/
+
+# Claude Code
+.claude/dev/

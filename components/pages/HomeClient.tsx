@@ -1,13 +1,18 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
+import { showPheWarning } from "@/lib/notifications";
 import NutrientRing from "@/components/dashboard/NutrientRing";
 import DailyGoalCard from "@/components/dashboard/DailyGoalCard";
+import StreakBadge from "@/components/dashboard/StreakBadge";
+import WaterTracker from "@/components/dashboard/WaterTracker";
 import Disclaimer from "@/components/common/Disclaimer";
 
 export default function HomeClient() {
@@ -16,8 +21,11 @@ export default function HomeClient() {
   const tNutrients = useTranslations("Nutrients");
   const tCommon = useTranslations("Common");
   const tAuth = useTranslations("Auth");
-  const { mode, getTodayNutrition, dailyGoals, mealRecords, _hasHydrated } = useNutritionStore();
+  const { mode, getTodayNutrition, dailyGoals, mealRecords, _hasHydrated, getTodayExchanges, getExchangeGoal } = useNutritionStore();
+  const { pheWarnings, permission } = useNotificationStore();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
+
+  const lastWarningRef = useRef<number>(0);
 
   const handleLogout = async () => {
     try {
@@ -28,6 +36,24 @@ export default function HomeClient() {
     }
   };
   const isPKU = mode === "pku";
+
+  // Phe 한도 경고 알림
+  useEffect(() => {
+    if (!isPKU || !pheWarnings || permission !== "granted" || !_hasHydrated) {
+      return;
+    }
+
+    const todayNutrition = getTodayNutrition();
+    const currentPhe = todayNutrition.phenylalanine_mg || 0;
+    const limitPhe = dailyGoals.phenylalanine_mg || 300;
+    const percentage = Math.round((currentPhe / limitPhe) * 100);
+
+    // 80% 또는 100% 도달 시 알림 (중복 방지)
+    if (percentage >= 80 && lastWarningRef.current !== percentage) {
+      showPheWarning(currentPhe, limitPhe);
+      lastWarningRef.current = percentage >= 100 ? 100 : 80;
+    }
+  }, [mealRecords, isPKU, pheWarnings, permission, _hasHydrated, dailyGoals.phenylalanine_mg]);
 
   // 하이드레이션 대기
   if (!_hasHydrated) {
@@ -98,6 +124,8 @@ export default function HomeClient() {
                 unit="mg"
                 color="var(--pku-primary)"
                 warning={true}
+                exchangeValue={getTodayExchanges()}
+                exchangeGoal={getExchangeGoal()}
               />
             ) : (
               <NutrientRing
@@ -125,17 +153,39 @@ export default function HomeClient() {
           </div>
         </Card>
 
+        {/* 스트릭 배지 */}
+        <StreakBadge />
+
+        {/* 배지 보기 버튼 */}
+        <Link href="/profile">
+          <Button outline className="w-full flex items-center justify-center gap-2">
+            <span>🏆</span>
+            {t("viewBadges")}
+          </Button>
+        </Link>
+
         {/* 일일 목표 카드 */}
         <DailyGoalCard />
 
+        {/* 수분 섭취 추적 */}
+        <WaterTracker />
+
         {/* 식사 기록 버튼 */}
-        <div className="flex gap-3">
-          <Link href="/analyze" className="flex-1">
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/analyze" className="col-span-2">
             <Button large className="w-full">
               {t("takePhoto")}
             </Button>
           </Link>
-          <Link href="/history" className="flex-1">
+          <Link href="/scan">
+            <Button large outline className="w-full flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+              {t("scanBarcode")}
+            </Button>
+          </Link>
+          <Link href="/history">
             <Button large outline className="w-full">
               {t("viewHistory")}
             </Button>

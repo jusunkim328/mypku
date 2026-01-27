@@ -9,6 +9,8 @@ export interface NutritionData {
   phenylalanine_mg?: number; // PKU 모드에서만 사용
 }
 
+export type FoodSource = "ai" | "barcode" | "manual" | "voice";
+
 export interface FoodItem {
   id: string;
   name: string;
@@ -16,6 +18,7 @@ export interface FoodItem {
   nutrition: NutritionData;
   confidence: number; // AI 신뢰도 0-1
   userVerified: boolean; // 사용자 수정 여부
+  source?: FoodSource; // 데이터 소스
 }
 
 export interface MealRecord {

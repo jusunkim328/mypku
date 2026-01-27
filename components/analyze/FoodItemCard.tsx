@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card, Button } from "@/components/ui";
+import { useNutritionStore } from "@/hooks/useNutritionStore";
 import type { FoodItem } from "@/types/nutrition";
 
 interface FoodItemCardProps {
@@ -13,6 +14,11 @@ interface FoodItemCardProps {
 export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
   const t = useTranslations("FoodItem");
   const tCommon = useTranslations("Common");
+  const tNutrients = useTranslations("Nutrients");
+  const { mode, getExchanges } = useNutritionStore();
+  const isPKU = mode === "pku";
+  const exchanges = getExchanges(item.nutrition.phenylalanine_mg || 0);
+
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [editWeight, setEditWeight] = useState(item.estimatedWeight_g.toString());
@@ -87,6 +93,13 @@ export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
             <p className={`text-xs ${confidenceColor}`}>
               {t("confidence")}: {confidenceLabel} ({Math.round(item.confidence * 100)}%)
             </p>
+            {isPKU && (
+              <div className="mt-2 inline-block px-2 py-1 bg-indigo-100 rounded-md">
+                <span className="text-xs font-semibold text-indigo-700">
+                  {exchanges} {tNutrients("exchanges")}
+                </span>
+              </div>
+            )}
           </div>
           <Button small clear onClick={() => setIsEditing(true)}>
             {tCommon("edit")}

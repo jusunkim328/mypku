@@ -195,16 +195,19 @@ export function LoadingOverlay({ message = "로딩 중..." }: { message?: string
 export function Toggle({
   checked,
   onChange,
+  disabled = false,
 }: {
   checked: boolean;
-  onChange: () => void;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
-      onClick={onChange}
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
       className={`relative w-12 h-7 rounded-full transition-colors ${
         checked ? "bg-indigo-500" : "bg-gray-300"
-      }`}
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       <div
         className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${

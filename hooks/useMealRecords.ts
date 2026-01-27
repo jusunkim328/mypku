@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNutritionStore } from "./useNutritionStore";
@@ -163,17 +163,19 @@ export function useMealRecords(): UseMealRecordsReturn {
   }, [authLoading, isAuthenticated, fetchRecords]);
 
   // 인증 상태에 따른 데이터 소스 선택
-  const mealRecords: MealRecordWithItems[] = isAuthenticated
-    ? dbRecords
-    : localStore.mealRecords.map((r) => ({
-        id: r.id,
-        timestamp: r.timestamp,
-        mealType: r.mealType,
-        imageUrl: null,
-        items: r.items,
-        totalNutrition: r.totalNutrition,
-        aiConfidence: null,
-      }));
+  const mealRecords: MealRecordWithItems[] = useMemo(() => {
+    return isAuthenticated
+      ? dbRecords
+      : localStore.mealRecords.map((r) => ({
+          id: r.id,
+          timestamp: r.timestamp,
+          mealType: r.mealType,
+          imageUrl: null,
+          items: r.items,
+          totalNutrition: r.totalNutrition,
+          aiConfidence: null,
+        }));
+  }, [isAuthenticated, dbRecords, localStore.mealRecords]);
 
   // 식사 기록 추가
   const addMealRecord = useCallback(

@@ -19,8 +19,9 @@ export default function AnalysisResult({
 }: AnalysisResultProps) {
   const t = useTranslations("AnalyzePage");
   const tNutrients = useTranslations("Nutrients");
-  const { mode } = useNutritionStore();
+  const { mode, getExchanges } = useNutritionStore();
   const isPKU = mode === "pku";
+  const totalExchanges = getExchanges(totalNutrition.phenylalanine_mg || 0);
 
   return (
     <div className="space-y-4">
@@ -31,12 +32,27 @@ export default function AnalysisResult({
         </h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           {isPKU && (
-            <div className="col-span-2 bg-white rounded-lg p-3">
-              <span className="text-gray-600">{t("estimatedPhe")}</span>
-              <p className="text-xl font-bold text-indigo-600">
-                {totalNutrition.phenylalanine_mg}mg
-              </p>
-            </div>
+            <>
+              <div className="col-span-2 bg-white rounded-lg p-3">
+                <span className="text-gray-600">{t("estimatedPhe")}</span>
+                <p className="text-xl font-bold text-indigo-600">
+                  {totalNutrition.phenylalanine_mg}mg
+                </p>
+              </div>
+              <div className="col-span-2 flex items-center gap-2 p-3 bg-indigo-600 rounded-lg">
+                <span className="text-3xl font-bold text-white">
+                  {totalExchanges}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    {tNutrients("exchanges")}
+                  </p>
+                  <p className="text-xs text-indigo-200">
+                    1 Exchange = 50mg Phe
+                  </p>
+                </div>
+              </div>
+            </>
           )}
           <div className="bg-white rounded-lg p-3">
             <span className="text-gray-600">{tNutrients("calories")}</span>

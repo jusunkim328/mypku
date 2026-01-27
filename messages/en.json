@@ -21,7 +21,9 @@
     "calories": "Calories",
     "protein": "Protein",
     "carbs": "Carbs",
-    "fat": "Fat"
+    "fat": "Fat",
+    "exchange": "Exchange",
+    "exchanges": "Exchanges"
   },
   "MealTypes": {
     "breakfast": "Breakfast",
@@ -37,7 +39,9 @@
     "title": "MyPKU",
     "todayIntake": "Today's Intake",
     "takePhoto": "Take Photo",
+    "scanBarcode": "Scan Barcode",
     "viewHistory": "View History",
+    "viewBadges": "View Badges",
     "goal": "Goal"
   },
   "AnalyzePage": {
@@ -131,6 +135,24 @@
     "loading": "Loading chart...",
     "goal": "Goal"
   },
+  "Chart": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "dailyTitle": "Today's {nutrient}",
+    "weeklyTitle": "Weekly {nutrient}",
+    "monthlyTitle": "Monthly {nutrient}",
+    "average": "Average",
+    "total": "Total",
+    "trend": "Trend"
+  },
+  "Water": {
+    "title": "Water Intake",
+    "addGlass": "Add Glass",
+    "goalReached": "Daily goal reached!",
+    "remaining": "{count} glasses to go",
+    "pkuTip": "Staying hydrated helps your body process amino acids effectively."
+  },
   "FoodItem": {
     "foodName": "Food name",
     "weight": "Weight (g)",
@@ -151,5 +173,118 @@
     "generic": "An error occurred.",
     "network": "A network error occurred.",
     "server": "A server error occurred."
+  },
+  "Calendar": {
+    "title": "Monthly Calendar",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "less": "Less",
+    "more": "More",
+    "noData": "No data for this day"
+  },
+  "DateNavigator": {
+    "selectDate": "Select date",
+    "jumpToDate": "Jump to date"
+  },
+  "BarcodeScanner": {
+    "startScan": "Start Scanning",
+    "stopScan": "Stop",
+    "manualEntry": "Or enter barcode manually",
+    "enterBarcode": "Enter barcode number",
+    "lookup": "Lookup",
+    "cameraError": "Camera access denied",
+    "noCameraMessage": "Camera not available. Enter barcode manually."
+  },
+  "ScanPage": {
+    "title": "Barcode Scan",
+    "searching": "Searching product...",
+    "productFound": "Product found!",
+    "productNotFound": "Product not found",
+    "lookupError": "Failed to lookup barcode",
+    "timeoutError": "Network is slow. Please try again.",
+    "barcode": "Barcode",
+    "servingSize": "Serving Size",
+    "nutritionInfo": "Nutrition Information",
+    "estimated": "estimated",
+    "mealType": "Meal Type",
+    "scanAnother": "Scan Another",
+    "saveRecord": "Save Record",
+    "recordSaved": "Record saved!",
+    "saveFailed": "Save failed"
+  },
+  "VoiceInput": {
+    "startRecording": "Start Voice Input",
+    "stopRecording": "Stop Recording",
+    "listening": "Listening...",
+    "processing": "Processing...",
+    "speakNow": "Speak the food name or description",
+    "notSupported": "Voice input not supported in this browser",
+    "permissionDenied": "Microphone permission denied"
+  },
+  "Streak": {
+    "days": "days",
+    "dayStreak": "day streak",
+    "keepGoing": "Keep up the great work!",
+    "logTodayToKeep": "Log today to keep your streak!",
+    "startNewStreak": "Start a new streak today!",
+    "longest": "Longest",
+    "weeklyGoal": "Weekly Goal",
+    "dayMilestone": "Day Milestone!"
+  },
+  "Badges": {
+    "title": "Achievements",
+    "locked": "Locked",
+    "unlocked": "Unlocked",
+    "streak7": "7-Day Streak",
+    "streak7Desc": "Log meals for 7 consecutive days",
+    "streak30": "30-Day Streak",
+    "streak30Desc": "Log meals for 30 consecutive days",
+    "streak100": "100-Day Streak",
+    "streak100Desc": "Log meals for 100 consecutive days",
+    "firstMeal": "First Meal",
+    "firstMealDesc": "Log your first meal",
+    "goalMaster": "Goal Master",
+    "goalMasterDesc": "Stay within daily goal for a week",
+    "pkuPro": "PKU Pro",
+    "pkuProDesc": "Use PKU mode for 30 days",
+    "barcodeScanner": "Scanner Pro",
+    "barcodeScannerDesc": "Scan 10 products with barcode",
+    "voiceLogger": "Voice Logger",
+    "voiceLoggerDesc": "Log 5 meals with voice input"
+  },
+  "ProfilePage": {
+    "title": "My Profile",
+    "streakSection": "Streak Progress",
+    "achievementsSection": "Achievements"
+  },
+  "FoodsPage": {
+    "title": "PKU Food Database",
+    "searchPlaceholder": "Search foods...",
+    "search": "Search",
+    "allFoods": "All Foods",
+    "lowProtein": "Low Protein",
+    "noResults": "No foods found.",
+    "resultsCount": "{count} foods found",
+    "lowProteinBadge": "Low Protein",
+    "per100g": "Per {size}"
+  },
+  "NotificationSettings": {
+    "title": "Notifications",
+    "notSupported": "Notifications are not supported in this browser.",
+    "enablePrompt": "Enable notifications to get meal reminders and health alerts.",
+    "enableNotifications": "Enable Notifications",
+    "permissionGranted": "Notifications enabled!",
+    "permissionDenied": "Notification permission denied. Please enable in browser settings.",
+    "permissionDeniedMessage": "Notifications are blocked. Please enable them in your browser settings.",
+    "permissionError": "Failed to enable notifications.",
+    "notificationsEnabled": "Notifications are enabled",
+    "mealReminders": "Meal Reminders",
+    "otherNotifications": "Health Alerts",
+    "pheWarnings": "Phe Limit Warnings",
+    "pheWarningsDesc": "Alert when approaching daily Phe limit",
+    "goalAchievements": "Goal Achievements",
+    "goalAchievementsDesc": "Celebrate when you meet daily goals",
+    "streakMilestones": "Streak Milestones",
+    "streakMilestonesDesc": "Celebrate logging streaks (7, 14, 30+ days)"
   }
 }
