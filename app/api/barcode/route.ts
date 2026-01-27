@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+// Supabase 서버 클라이언트 (API 라우트용)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Open Food Facts API 응답 타입
 interface OpenFoodFactsProduct {
@@ -52,6 +57,43 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // 1. PKU 식품 DB 우선 조회
+  try {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: pkuFood } = await supabase
+      .from("pku_foods")
+      .select("*")
+      .eq("barcode", barcode)
+      .single();
+
+    if (pkuFood) {
+      console.log(`✓ PKU DB hit: ${barcode}`);
+      return NextResponse.json({
+        found: true,
+        barcode,
+        source: "pku_foods",
+        product: {
+          name: pkuFood.name_ko || pkuFood.name,
+          brand: pkuFood.brand || null,
+          serving_size: pkuFood.serving_size || "100g",
+          image_url: null,
+          categories: pkuFood.category ? [pkuFood.category] : [],
+          nutrition_per_100g: {
+            calories: pkuFood.calories || 0,
+            protein_g: pkuFood.protein_g || 0,
+            carbs_g: pkuFood.carbs_g || 0,
+            fat_g: pkuFood.fat_g || 0,
+            phenylalanine_mg: pkuFood.phenylalanine_mg || 0,
+            phenylalanine_estimated: false, // DB 데이터는 실측치
+          },
+        },
+      });
+    }
+  } catch (dbError) {
+    console.log("PKU DB lookup skipped:", dbError);
+  }
+
+  // 2. Open Food Facts API 폴백
   // 타임아웃 설정 (30초)
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -107,9 +149,36 @@ export async function GET(request: NextRequest) {
       product.product_name ||
       "Unknown Product";
 
+    // 3. 결과를 PKU DB에 캐싱 (백그라운드)
+    try {
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      await supabase.from("pku_foods").upsert(
+        {
+          name: productName,
+          name_ko: product.product_name_ko || null,
+          brand: product.brands || null,
+          barcode: barcode,
+          serving_size: product.serving_size || "100g",
+          phenylalanine_mg,
+          protein_g: Math.round(protein_g * 10) / 10,
+          calories: Math.round(calories),
+          carbs_g: Math.round(carbs_g * 10) / 10,
+          fat_g: Math.round(fat_g * 10) / 10,
+          category: product.categories_tags?.[0] || null,
+          is_low_protein: protein_g < 1,
+          source: "openfoodfacts",
+        } as any,
+        { onConflict: "name,source" }
+      );
+      console.log(`✓ Cached barcode ${barcode} to PKU DB`);
+    } catch (cacheError) {
+      console.log("Cache failed:", cacheError);
+    }
+
     return NextResponse.json({
       found: true,
       barcode,
+      source: "openfoodfacts",
       product: {
         name: productName,
         brand: product.brands || null,

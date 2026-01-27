@@ -24,7 +24,7 @@ export default function SettingsClient() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
-  const { mode, setMode, dailyGoals, setDailyGoals, _hasHydrated } = useNutritionStore();
+  const { mode, setMode, dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useNutritionStore();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
   const isPKU = mode === "pku";
 
@@ -192,6 +192,9 @@ export default function SettingsClient() {
                   }
                   className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
                 />
+                <p className="text-xs text-indigo-600 mt-1">
+                  = {getExchanges(dailyGoals.phenylalanine_mg || 300)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = 50mg)
+                </p>
               </div>
             )}
             <div>
