@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
       product.product_name ||
       "Unknown Product";
 
-    // 3. 결과를 PKU DB에 캐싱 (백그라운드)
+    // 3. Open Food Facts 결과를 PKU DB에 영구 저장 (다음 조회 시 API 호출 없이 DB에서 반환)
     try {
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
       await supabase.from("pku_foods").upsert(
@@ -170,9 +170,9 @@ export async function GET(request: NextRequest) {
         } as any,
         { onConflict: "name,source" }
       );
-      console.log(`✓ Cached barcode ${barcode} to PKU DB`);
-    } catch (cacheError) {
-      console.log("Cache failed:", cacheError);
+      console.log(`✓ Saved barcode ${barcode} to PKU DB for future lookups`);
+    } catch (saveError) {
+      console.log("DB save failed:", saveError);
     }
 
     return NextResponse.json({

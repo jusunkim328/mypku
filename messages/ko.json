@@ -66,7 +66,13 @@
     "requestFailed": "요청 실패",
     "recordSaved": "식사 기록이 저장되었습니다!",
     "saveFailed": "저장에 실패했습니다. 다시 시도해 주세요.",
-    "aiDisclaimer": "* AI 분석 결과는 추정치입니다. 정확한 수치는 실제와 다를 수 있습니다."
+    "aiDisclaimer": "* AI 분석 결과는 추정치입니다. 정확한 수치는 실제와 다를 수 있습니다.",
+    "alternatives": "저Phe 대체 식품 추천",
+    "alternativesDesc": "고Phe 식품 대신 다음 식품을 고려해보세요:",
+    "highPheWarning": "고Phe 식품이 포함되어 있습니다",
+    "noAlternatives": "대체 식품을 찾을 수 없습니다",
+    "manualEntry": "직접 입력",
+    "manualEntryDesc": "PKU 식품 DB에서 음식을 검색하여 추가하세요"
   },
   "HistoryPage": {
     "title": "식사 기록",
@@ -160,7 +166,12 @@
     "confidence": "신뢰도",
     "high": "높음",
     "medium": "보통",
-    "low": "낮음"
+    "low": "낮음",
+    "safe": "안전",
+    "caution": "주의",
+    "avoid": "회피",
+    "alternatives": "대체품",
+    "pkuSafety": "PKU 안전등급"
   },
   "NutrientRing": {
     "goal": "목표",
@@ -266,7 +277,12 @@
     "noResults": "검색 결과가 없습니다.",
     "resultsCount": "{count}개 식품",
     "lowProteinBadge": "저단백",
-    "per100g": "{size} 기준"
+    "per100g": "{size} 기준",
+    "addToMeal": "식사에 추가",
+    "addedToMeal": "식사에 추가되었습니다!",
+    "selectQuantity": "수량 (g)",
+    "selectMealType": "식사 유형",
+    "addFood": "추가"
   },
   "NotificationSettings": {
     "title": "알림",

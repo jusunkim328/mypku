@@ -7,7 +7,9 @@ import { Page, Navbar, Block, Button, Card } from "@/components/ui";
 import ImageUploader from "@/components/analyze/ImageUploader";
 import AnalysisResult from "@/components/analyze/AnalysisResult";
 import VoiceInput from "@/components/analyze/VoiceInput";
+import FoodSearchInput from "@/components/analyze/FoodSearchInput";
 import { useMealRecords } from "@/hooks/useMealRecords";
+import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useStreakStore } from "@/hooks/useStreakStore";
 import { toast } from "@/hooks/useToast";
@@ -15,7 +17,7 @@ import { showStreakCelebration } from "@/lib/notifications";
 import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
 type AnalysisState = "idle" | "loading" | "success" | "error";
-type InputMode = "image" | "voice";
+type InputMode = "image" | "voice" | "manual";
 
 // Exponential Backoff로 재시도
 async function fetchWithRetry(
@@ -54,6 +56,7 @@ export default function AnalyzeClient() {
   const tMeals = useTranslations("MealTypes");
   const tVoice = useTranslations("VoiceInput");
   const { addMealRecord } = useMealRecords();
+  const { mode } = useNutritionStore();
   const { streakMilestones, permission } = useNotificationStore();
   const { currentStreak } = useStreakStore();
 
@@ -87,7 +90,7 @@ export default function AnalyzeClient() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, mode }),
         },
         3,
         1000
@@ -137,7 +140,7 @@ export default function AnalyzeClient() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64 }),
+          body: JSON.stringify({ imageBase64, mode }),
         },
         3,
         1000
@@ -162,7 +165,7 @@ export default function AnalyzeClient() {
       setAnalysisState("error");
       toast.error(errorMessage);
     }
-  }, [imageBase64, t]);
+  }, [imageBase64, mode, t]);
 
   const handleSave = useCallback(async () => {
     if (!totalNutrition || items.length === 0) return;
@@ -246,13 +249,13 @@ export default function AnalyzeClient() {
         <div className="flex rounded-xl bg-gray-100 p-1">
           <button
             onClick={() => handleModeChange("image")}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
               inputMode === "image"
                 ? "bg-white text-indigo-600 shadow-sm"
                 : "text-gray-600"
             }`}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -260,16 +263,29 @@ export default function AnalyzeClient() {
           </button>
           <button
             onClick={() => handleModeChange("voice")}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
               inputMode === "voice"
                 ? "bg-white text-indigo-600 shadow-sm"
                 : "text-gray-600"
             }`}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
             {tVoice("startRecording").split(" ")[0]}
+          </button>
+          <button
+            onClick={() => handleModeChange("manual")}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+              inputMode === "manual"
+                ? "bg-white text-indigo-600 shadow-sm"
+                : "text-gray-600"
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {t("manualEntry")}
           </button>
         </div>
 
@@ -294,6 +310,33 @@ export default function AnalyzeClient() {
                 <p className="text-sm text-indigo-800">&ldquo;{voiceText}&rdquo;</p>
               </div>
             )}
+          </Card>
+        )}
+
+        {/* 수동 입력 */}
+        {inputMode === "manual" && (
+          <Card className="p-4">
+            <p className="text-sm text-gray-600 mb-4">{t("manualEntryDesc")}</p>
+            <FoodSearchInput
+              onFoodSelect={(food) => {
+                const newItems = [...items, food];
+                setItems(newItems);
+                // 총 영양소 계산
+                const newTotal = newItems.reduce(
+                  (acc, item) => ({
+                    calories: acc.calories + item.nutrition.calories,
+                    protein_g: acc.protein_g + item.nutrition.protein_g,
+                    carbs_g: acc.carbs_g + item.nutrition.carbs_g,
+                    fat_g: acc.fat_g + item.nutrition.fat_g,
+                    phenylalanine_mg:
+                      (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
+                  }),
+                  { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
+                );
+                setTotalNutrition(newTotal);
+                setAnalysisState("success");
+              }}
+            />
           </Card>
         )}
 

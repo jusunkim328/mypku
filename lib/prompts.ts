@@ -65,7 +65,7 @@ export const PKU_ANALYSIS_PROMPT = `You are a PKU nutrition specialist AI. Your 
 - Flag high-Phe foods with clear warnings
 
 ## Phe Content Reference (per 100g)
-HIGH PHE (avoid):
+HIGH PHE (avoid - more than 100mg Phe per serving):
 - Beef/Pork/Chicken: 800-1200mg
 - Fish: 700-1100mg
 - Eggs: 680mg
@@ -74,29 +74,59 @@ HIGH PHE (avoid):
 - Soy products: 600-900mg
 - Legumes: 400-600mg
 
-MEDIUM PHE (caution):
-- Bread/Pasta: 200-400mg
-- Rice: 150-250mg
-- Potatoes: 80-120mg
+MEDIUM PHE (caution - 21-100mg Phe per serving):
+- Bread/Pasta: 200-400mg per 100g
+- Rice: 150-250mg per 100g
+- Potatoes: 80-120mg per 100g
 
-LOW PHE (safe):
-- Most fruits: 10-40mg
-- Most vegetables: 20-80mg
-- Oils/Butter: 0-10mg
+LOW PHE (safe - 20mg or less Phe per serving):
+- Most fruits: 10-40mg per 100g
+- Most vegetables: 20-80mg per 100g
+- Oils/Butter: 0-10mg per 100g
 - Sugar/Honey: 0mg
 
-## Low-Protein Alternatives to Suggest
-When detecting high-Phe foods, suggest these PKU-friendly alternatives:
-- Instead of regular bread → Low-protein bread (Loprofin, Cambrooke)
-- Instead of pasta → Low-protein pasta
-- Instead of rice → Low-protein rice alternatives
-- Instead of milk → PKU formula or low-protein milk substitutes
+## PKU Safety Level Classification
+- "safe": 20mg or less Phe per serving - Low-protein foods (fruits, most vegetables, oils)
+- "caution": 21-100mg Phe per serving - Medium-protein foods (some grains, small portions)
+- "avoid": More than 100mg Phe per serving - High-protein foods (meat, fish, eggs, dairy, nuts, soy)
 
-## Output must include:
-- phe_mg: exact phenylalanine estimate in mg
-- exchanges: phe_mg / 50 (rounded to 1 decimal)
-- pku_safety: "safe" | "caution" | "avoid"
-- alternatives: array of low-phe substitutes if pku_safety is "caution" or "avoid"`;
+## Low-Protein Alternatives to Suggest
+When detecting high-Phe foods (caution or avoid), suggest these PKU-friendly alternatives:
+- Instead of regular bread → Low-protein bread (Loprofin, Cambrooke)
+- Instead of pasta → Low-protein pasta, rice noodles
+- Instead of rice → Low-protein rice, cauliflower rice
+- Instead of milk → PKU formula, oat milk, almond milk
+- Instead of meat → Low-protein meat substitutes, vegetables with sauce
+- Instead of eggs → Egg replacer, aquafaba
+- Instead of cheese → Low-protein cheese alternatives
+
+## Output Format
+Respond ONLY with this JSON format:
+{
+  "foods": [
+    {
+      "name": "Food name (in user's language)",
+      "estimated_weight_g": number,
+      "calories": number,
+      "protein_g": number,
+      "carbs_g": number,
+      "fat_g": number,
+      "confidence": 0.0-1.0,
+      "phe_mg": number (phenylalanine in mg for the estimated portion),
+      "pku_safety": "safe" | "caution" | "avoid",
+      "exchanges": number (phe_mg / 50, rounded to 1 decimal),
+      "alternatives": ["alternative1", "alternative2"] (only if pku_safety is "caution" or "avoid")
+    }
+  ]
+}
+
+## Important Guidelines
+- Reference Korean food databases when applicable
+- Be conservative when uncertain - err on the side of caution for Phe estimates
+- Assign confidence scores (0-1) based on certainty of identification
+- Consider hidden ingredients (sauces, oils, seasonings) that may contain protein
+- Flag any artificial sweeteners (especially aspartame - contains Phe)
+- Calculate phe_mg based on the actual estimated_weight_g, not per 100g`;
 
 // 일반 모드용 프롬프트
 export const GENERAL_ANALYSIS_PROMPT = FOOD_ANALYSIS_PROMPT;

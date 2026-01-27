@@ -55,6 +55,7 @@ interface PKUFood {
   id: string;
   name: string;
   name_ko?: string | null;
+  name_de?: string | null;
   brand?: string | null;
   barcode?: string | null;
   serving_size: string;
@@ -65,7 +66,41 @@ interface PKUFood {
   fat_g?: number | null;
   category?: string | null;
   is_low_protein: boolean;
+  is_phe_estimated?: boolean;
   source?: string | null;
+}
+
+// 소스 우선순위 (낮을수록 높은 우선순위)
+const SOURCE_PRIORITY: Record<string, number> = {
+  manual: 1,
+  bls: 2,
+  usda: 3,
+  usda_branded: 4,
+  korea: 5,
+  openfoodfacts: 6,
+};
+
+/**
+ * 검색 결과 정렬 (실측 우선 + 소스 우선순위)
+ * 1. is_phe_estimated = false 우선
+ * 2. source 우선순위 (manual > bls > usda > usda_branded > korea)
+ * 3. phenylalanine_mg 낮은 순
+ */
+function sortByReliability(foods: PKUFood[]): PKUFood[] {
+  return foods.sort((a, b) => {
+    // 1. 실측 데이터 우선 (false = 0, true = 1)
+    const aEstimated = a.is_phe_estimated ? 1 : 0;
+    const bEstimated = b.is_phe_estimated ? 1 : 0;
+    if (aEstimated !== bEstimated) return aEstimated - bEstimated;
+
+    // 2. 소스 우선순위
+    const aPriority = SOURCE_PRIORITY[a.source || ""] || 99;
+    const bPriority = SOURCE_PRIORITY[b.source || ""] || 99;
+    if (aPriority !== bPriority) return aPriority - bPriority;
+
+    // 3. Phe 낮은 순
+    return a.phenylalanine_mg - b.phenylalanine_mg;
+  });
 }
 
 interface ExternalFood {
@@ -118,13 +153,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 1. DB 검색
+    // 1. DB 검색 (limit 여유있게 가져와서 정렬 후 자르기)
     let queryBuilder = supabase
       .from("pku_foods")
       .select("*")
-      .or(`name.ilike.%${query}%,name_ko.ilike.%${query}%`)
-      .order("phenylalanine_mg", { ascending: true })
-      .limit(limit);
+      .or(`name.ilike.%${query}%,name_ko.ilike.%${query}%,name_de.ilike.%${query}%`)
+      .limit(limit * 3); // 정렬 후 자르기 위해 여유있게
 
     if (category) {
       queryBuilder = queryBuilder.eq("category", category);
@@ -144,7 +178,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const foods: PKUFood[] = (dbResults || []) as PKUFood[];
+    // 신뢰도 기반 정렬 적용
+    const sortedFoods = sortByReliability((dbResults || []) as PKUFood[]);
+    const foods = sortedFoods.slice(0, limit);
 
     // DB 결과가 충분하거나 폴백 비활성화 시 반환
     if (foods.length >= limit || !enableFallback) {
@@ -208,16 +244,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 4. 결과 병합 (중복 제거)
+    // 4. 결과 병합 (중복 제거 + 신뢰도 정렬)
     const dbNames = new Set(foods.map((f) => f.name.toLowerCase()));
     const newFoods = externalFoods
       .filter((f) => !dbNames.has(f.name.toLowerCase()))
       .map((f, index) => ({
         ...f,
         id: `external-${Date.now()}-${index}`,
+        is_phe_estimated: true, // 외부 API 결과는 추정값으로 간주
       })) as PKUFood[];
 
-    const merged = [...foods, ...newFoods].slice(0, limit);
+    const merged = sortByReliability([...foods, ...newFoods]).slice(0, limit);
 
     return NextResponse.json({
       foods: merged,

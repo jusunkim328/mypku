@@ -66,7 +66,13 @@
     "requestFailed": "Request failed",
     "recordSaved": "Meal record saved!",
     "saveFailed": "Save failed. Please try again.",
-    "aiDisclaimer": "* AI analysis results are estimates. Actual values may differ."
+    "aiDisclaimer": "* AI analysis results are estimates. Actual values may differ.",
+    "alternatives": "Low-Phe Alternatives",
+    "alternativesDesc": "Consider these lower Phe alternatives:",
+    "highPheWarning": "High Phe foods detected",
+    "noAlternatives": "No alternatives found",
+    "manualEntry": "Manual Entry",
+    "manualEntryDesc": "Search and add foods from the PKU database"
   },
   "HistoryPage": {
     "title": "Meal History",
@@ -160,7 +166,12 @@
     "confidence": "Confidence",
     "high": "High",
     "medium": "Medium",
-    "low": "Low"
+    "low": "Low",
+    "safe": "Safe",
+    "caution": "Caution",
+    "avoid": "Avoid",
+    "alternatives": "Alternatives",
+    "pkuSafety": "PKU Safety Level"
   },
   "NutrientRing": {
     "goal": "Goal",
@@ -266,7 +277,12 @@
     "noResults": "No foods found.",
     "resultsCount": "{count} foods found",
     "lowProteinBadge": "Low Protein",
-    "per100g": "Per {size}"
+    "per100g": "Per {size}",
+    "addToMeal": "Add to Meal",
+    "addedToMeal": "Added to meal!",
+    "selectQuantity": "Quantity (g)",
+    "selectMealType": "Meal Type",
+    "addFood": "Add"
   },
   "NotificationSettings": {
     "title": "Notifications",

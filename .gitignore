@@ -40,3 +40,7 @@ public/test/
 
 # Claude Code
 .claude/dev/
+
+# External data (licenses may vary)
+data/bls/*
+!data/bls/README.md

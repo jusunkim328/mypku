@@ -162,6 +162,8 @@ export interface Database {
           id: string;
           name: string;
           name_ko: string | null;
+          name_de: string | null;
+          name_ru: string | null;
           brand: string | null;
           barcode: string | null;
           serving_size: string;
@@ -181,6 +183,8 @@ export interface Database {
           id?: string;
           name: string;
           name_ko?: string | null;
+          name_de?: string | null;
+          name_ru?: string | null;
           brand?: string | null;
           barcode?: string | null;
           serving_size?: string;
@@ -200,6 +204,8 @@ export interface Database {
           id?: string;
           name?: string;
           name_ko?: string | null;
+          name_de?: string | null;
+          name_ru?: string | null;
           brand?: string | null;
           barcode?: string | null;
           serving_size?: string;

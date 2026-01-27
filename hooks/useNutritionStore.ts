@@ -122,7 +122,7 @@ const getTodayDateStr = (): string => {
 export const useNutritionStore = create<NutritionState>()(
   persist(
     (set, get) => ({
-      mode: "general",
+      mode: "pku",
       setMode: (mode) => set({ mode }),
 
       dailyGoals: DEFAULT_GOALS,

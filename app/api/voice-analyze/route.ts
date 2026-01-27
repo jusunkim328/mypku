@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeFoodByText } from "@/lib/gemini";
+import type { UserMode } from "@/types/nutrition";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { text } = body;
+    const { text, mode = "pku" } = body;
 
     if (!text || typeof text !== "string") {
       return NextResponse.json(
@@ -20,8 +21,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Gemini로 텍스트 분석
-    const result = await analyzeFoodByText(text);
+    // Gemini로 텍스트 분석 (mode에 따라 PKU/일반 스키마 사용)
+    const result = await analyzeFoodByText(text, mode as UserMode);
 
     return NextResponse.json({
       success: true,
