@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -11,6 +11,7 @@ interface VoiceInputProps {
 
 export default function VoiceInput({ onTranscript, onError, disabled }: VoiceInputProps) {
   const t = useTranslations("VoiceInput");
+  const locale = useLocale();
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const [interimTranscript, setInterimTranscript] = useState("");
@@ -37,7 +38,8 @@ export default function VoiceInput({ onTranscript, onError, disabled }: VoiceInp
 
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = navigator.language || "en-US";
+    // 앱의 locale에 맞춰 음성 인식 언어 설정
+    recognition.lang = locale === "ko" ? "ko-KR" : "en-US";
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -86,7 +88,7 @@ export default function VoiceInput({ onTranscript, onError, disabled }: VoiceInp
       console.error("Failed to start speech recognition:", error);
       onError?.(String(error));
     }
-  }, [onTranscript, onError, t]);
+  }, [onTranscript, onError, t, locale]);
 
   // 음성 인식 중지
   const stopListening = useCallback(() => {

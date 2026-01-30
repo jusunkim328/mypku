@@ -14,6 +14,7 @@ import {
   Line,
 } from "recharts";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useMealRecords } from "@/hooks/useMealRecords";
 import PeriodSelector, { type ChartPeriod } from "./PeriodSelector";
 
 export default function WeeklyChartClient() {
@@ -21,13 +22,20 @@ export default function WeeklyChartClient() {
   const tChart = useTranslations("Chart");
   const tNutrients = useTranslations("Nutrients");
   const format = useFormatter();
-  const { mode, getWeeklyData, getMonthlyData, dailyGoals, getTodayNutrition } = useNutritionStore();
+  // 월간 데이터는 로컬 스토어에서, 일간/주간은 인증 상태에 따라 DB 또는 로컬에서
+  const { mode, getMonthlyData, dailyGoals } = useNutritionStore();
+  const { getWeeklyData, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
   const isPKU = mode === "pku";
 
   const [period, setPeriod] = useState<ChartPeriod>("week");
 
   // 기간별 데이터 가져오기
   const chartData = useMemo(() => {
+    // 데이터 로딩 중이면 빈 배열 반환
+    if (recordsLoading && period !== "month") {
+      return [];
+    }
+
     if (period === "day") {
       // 오늘 데이터 - 시간대별 (간단히 전체 합계만)
       const todayNutrition = getTodayNutrition();
@@ -70,7 +78,7 @@ export default function WeeklyChartClient() {
       });
     }
     return result;
-  }, [period, isPKU, getWeeklyData, getMonthlyData, getTodayNutrition, format, tChart]);
+  }, [period, isPKU, getWeeklyData, getMonthlyData, getTodayNutrition, format, tChart, recordsLoading]);
 
   // 평균 및 합계 계산
   const stats = useMemo(() => {
@@ -104,7 +112,7 @@ export default function WeeklyChartClient() {
         <ResponsiveContainer width="100%" height="100%">
           {period === "month" ? (
             // 월간은 라인 차트
-            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 10 }}
@@ -116,7 +124,7 @@ export default function WeeklyChartClient() {
                 tick={{ fontSize: 10 }}
                 tickLine={false}
                 axisLine={false}
-                width={40}
+                width={50}
               />
               <ReferenceLine
                 y={goalValue}
@@ -133,7 +141,7 @@ export default function WeeklyChartClient() {
             </LineChart>
           ) : (
             // 일간/주간은 바 차트
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 12 }}
@@ -144,7 +152,7 @@ export default function WeeklyChartClient() {
                 tick={{ fontSize: 10 }}
                 tickLine={false}
                 axisLine={false}
-                width={40}
+                width={50}
               />
               <ReferenceLine
                 y={goalValue}

@@ -41,6 +41,7 @@
     "takePhoto": "음식 촬영하기",
     "scanBarcode": "바코드 스캔",
     "viewHistory": "기록 보기",
+    "foodDatabase": "식품 DB",
     "viewBadges": "배지 보기",
     "goal": "목표"
   },
@@ -282,7 +283,8 @@
     "addedToMeal": "식사에 추가되었습니다!",
     "selectQuantity": "수량 (g)",
     "selectMealType": "식사 유형",
-    "addFood": "추가"
+    "addFood": "추가",
+    "nutritionPreview": "{quantity}g 기준 영양소:"
   },
   "NotificationSettings": {
     "title": "알림",

@@ -41,6 +41,7 @@
     "takePhoto": "Take Photo",
     "scanBarcode": "Scan Barcode",
     "viewHistory": "View History",
+    "foodDatabase": "Food Database",
     "viewBadges": "View Badges",
     "goal": "Goal"
   },
@@ -282,7 +283,8 @@
     "addedToMeal": "Added to meal!",
     "selectQuantity": "Quantity (g)",
     "selectMealType": "Meal Type",
-    "addFood": "Add"
+    "addFood": "Add",
+    "nutritionPreview": "Nutrition for {quantity}g:"
   },
   "NotificationSettings": {
     "title": "Notifications",

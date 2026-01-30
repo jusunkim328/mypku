@@ -44,3 +44,4 @@ public/test/
 # External data (licenses may vary)
 data/bls/*
 !data/bls/README.md
+temp/

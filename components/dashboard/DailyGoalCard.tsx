@@ -3,14 +3,16 @@
 import { useTranslations } from "next-intl";
 import { Card, Progressbar } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useMealRecords } from "@/hooks/useMealRecords";
 
 export default function DailyGoalCard() {
   const t = useTranslations("DailyGoal");
   const tNutrients = useTranslations("Nutrients");
-  const { mode, getTodayNutrition, dailyGoals, mealRecords } = useNutritionStore();
+  const { mode, dailyGoals } = useNutritionStore();
+  const { getTodayNutrition } = useMealRecords();
   const isPKU = mode === "pku";
 
-  // mealRecords가 변경될 때마다 다시 계산됨
+  // mealRecords가 변경될 때마다 다시 계산됨 (인증 상태에 따라 DB 또는 로컬 데이터)
   const todayNutrition = getTodayNutrition();
 
   const nutrients = [

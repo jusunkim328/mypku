@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Card, Button, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useMealRecords } from "@/hooks/useMealRecords";
 
 const CACHE_KEY = "mypku-coaching-cache";
 
@@ -11,9 +12,10 @@ interface CachedCoaching {
   message: string;
   date: string; // YYYY-MM-DD
   mode: string;
+  locale: string;
 }
 
-function getCachedMessage(currentMode: string): string | null {
+function getCachedMessage(currentMode: string, currentLocale: string): string | null {
   if (typeof window === "undefined") return null;
 
   try {
@@ -23,8 +25,8 @@ function getCachedMessage(currentMode: string): string | null {
     const data: CachedCoaching = JSON.parse(cached);
     const today = new Date().toISOString().split("T")[0];
 
-    // 오늘 날짜 + 같은 모드일 때만 캐시 사용
-    if (data.date === today && data.mode === currentMode) {
+    // 오늘 날짜 + 같은 모드 + 같은 언어일 때만 캐시 사용
+    if (data.date === today && data.mode === currentMode && data.locale === currentLocale) {
       return data.message;
     }
     return null;
@@ -33,20 +35,23 @@ function getCachedMessage(currentMode: string): string | null {
   }
 }
 
-function setCachedMessage(message: string, mode: string): void {
+function setCachedMessage(message: string, mode: string, locale: string): void {
   if (typeof window === "undefined") return;
 
   const data: CachedCoaching = {
     message,
     date: new Date().toISOString().split("T")[0],
     mode,
+    locale,
   };
   localStorage.setItem(CACHE_KEY, JSON.stringify(data));
 }
 
 export default function CoachingMessage() {
   const t = useTranslations("Coaching");
-  const { mode, getWeeklyData, dailyGoals } = useNutritionStore();
+  const locale = useLocale();
+  const { mode, dailyGoals } = useNutritionStore();
+  const { getWeeklyData, isLoading: recordsLoading } = useMealRecords();
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -54,17 +59,20 @@ export default function CoachingMessage() {
 
   // 캐시된 메시지 로드 및 데이터 확인
   useEffect(() => {
+    // 데이터 로딩 중이면 대기
+    if (recordsLoading) return;
+
     const weeklyData = getWeeklyData();
     const dataExists = weeklyData.some((day) => day.nutrition.calories > 0);
     setHasData(dataExists);
 
     if (dataExists) {
-      const cached = getCachedMessage(mode);
+      const cached = getCachedMessage(mode, locale);
       if (cached) {
         setMessage(cached);
       }
     }
-  }, [mode, getWeeklyData]);
+  }, [mode, locale, getWeeklyData, recordsLoading]);
 
   const fetchCoaching = async () => {
     setIsLoading(true);
@@ -78,6 +86,7 @@ export default function CoachingMessage() {
           weeklyData: getWeeklyData(),
           mode,
           dailyGoals,
+          locale,
         }),
       });
 
@@ -85,7 +94,7 @@ export default function CoachingMessage() {
 
       if (data.success) {
         setMessage(data.message);
-        setCachedMessage(data.message, mode);
+        setCachedMessage(data.message, mode, locale);
       } else {
         setError(data.error || t("errorFetch"));
       }
@@ -96,8 +105,8 @@ export default function CoachingMessage() {
     }
   };
 
-  // 데이터가 없으면 표시하지 않음
-  if (!hasData) {
+  // 데이터 로딩 중이거나 데이터가 없으면 표시하지 않음
+  if (recordsLoading || !hasData) {
     return null;
   }
 

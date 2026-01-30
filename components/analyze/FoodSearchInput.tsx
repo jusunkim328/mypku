@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { searchPKUFoods, type PKUFood } from "@/lib/pkuFoodDatabase";
+import { type PKUFood } from "@/lib/pkuFoodDatabase";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
-import type { FoodItem, MealType } from "@/types/nutrition";
+import type { FoodItem } from "@/types/nutrition";
 
 interface FoodSearchInputProps {
   onFoodSelect: (food: FoodItem) => void;
@@ -45,7 +45,7 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 디바운스된 검색
+  // 디바운스된 검색 (API 사용)
   const debouncedSearch = useCallback(async (searchQuery: string) => {
     if (searchQuery.length < 2) {
       setResults([]);
@@ -55,9 +55,16 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
 
     setIsSearching(true);
     try {
-      const foods = await searchPKUFoods({ query: searchQuery, limit: 10 });
-      setResults(foods);
-      setShowDropdown(foods.length > 0);
+      const response = await fetch(`/api/foods/search?q=${encodeURIComponent(searchQuery)}&limit=10`);
+      const data = await response.json();
+
+      if (data.foods) {
+        setResults(data.foods);
+        setShowDropdown(data.foods.length > 0);
+      } else {
+        setResults([]);
+        setShowDropdown(false);
+      }
     } catch (error) {
       console.error("Search error:", error);
       setResults([]);

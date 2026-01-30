@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
+import { useMealRecords } from "@/hooks/useMealRecords";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
 import { showPheWarning } from "@/lib/notifications";
@@ -21,9 +22,10 @@ export default function HomeClient() {
   const tNutrients = useTranslations("Nutrients");
   const tCommon = useTranslations("Common");
   const tAuth = useTranslations("Auth");
-  const { mode, getTodayNutrition, dailyGoals, mealRecords, _hasHydrated, getTodayExchanges, getExchangeGoal } = useNutritionStore();
+  const { mode, dailyGoals, _hasHydrated, getExchanges, getExchangeGoal } = useNutritionStore();
   const { pheWarnings, permission } = useNotificationStore();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
+  const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
 
   const lastWarningRef = useRef<number>(0);
 
@@ -55,8 +57,8 @@ export default function HomeClient() {
     }
   }, [mealRecords, isPKU, pheWarnings, permission, _hasHydrated, dailyGoals.phenylalanine_mg]);
 
-  // 하이드레이션 대기
-  if (!_hasHydrated) {
+  // 하이드레이션 및 데이터 로딩 대기
+  if (!_hasHydrated || recordsLoading) {
     return (
       <Page>
         <div className="min-h-screen flex items-center justify-center">
@@ -66,7 +68,7 @@ export default function HomeClient() {
     );
   }
 
-  // mealRecords가 변경될 때마다 다시 계산됨
+  // mealRecords가 변경될 때마다 다시 계산됨 (인증 상태에 따라 DB 또는 로컬 데이터)
   const todayNutrition = getTodayNutrition();
 
   return (
@@ -124,7 +126,7 @@ export default function HomeClient() {
                 unit="mg"
                 color="var(--pku-primary)"
                 warning={true}
-                exchangeValue={getTodayExchanges()}
+                exchangeValue={getExchanges(todayNutrition.phenylalanine_mg || 0)}
                 exchangeGoal={getExchangeGoal()}
               />
             ) : (
@@ -188,6 +190,14 @@ export default function HomeClient() {
           <Link href="/history">
             <Button large outline className="w-full">
               {t("viewHistory")}
+            </Button>
+          </Link>
+          <Link href="/foods" className="col-span-2">
+            <Button large outline className="w-full flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              {t("foodDatabase")}
             </Button>
           </Link>
         </div>

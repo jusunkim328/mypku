@@ -17,6 +17,72 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const [manualBarcode, setManualBarcode] = useState("");
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
+
+  // 스캐닝 중지 (먼저 정의)
+  const stopScanning = useCallback(() => {
+    setIsScanning(false);
+
+    // 감지 루프 정리
+    if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
+
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
+  // Native BarcodeDetector API 사용
+  const detectWithNativeAPI = useCallback(() => {
+    // @ts-expect-error BarcodeDetector is not in TypeScript types yet
+    const barcodeDetector = new window.BarcodeDetector({
+      formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39"],
+    });
+
+    let isActive = true; // 로컬 플래그로 루프 제어
+
+    const detect = async () => {
+      if (!isActive) return;
+
+      if (videoRef.current && videoRef.current.readyState === 4) {
+        try {
+          const barcodes = await barcodeDetector.detect(videoRef.current);
+          if (barcodes.length > 0) {
+            const barcode = barcodes[0].rawValue;
+            isActive = false;
+            onScan(barcode);
+            stopScanning();
+            return;
+          }
+        } catch (err) {
+          console.error("Detection error:", err);
+        }
+      }
+
+      if (isActive) {
+        animationFrameRef.current = requestAnimationFrame(detect);
+      }
+    };
+
+    detect();
+
+    // cleanup 함수 반환
+    return () => {
+      isActive = false;
+    };
+  }, [onScan, stopScanning]);
 
   // 바코드 감지 시작
   const startScanning = useCallback(async () => {
@@ -39,7 +105,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
 
         // BarcodeDetector API 지원 확인
         if ("BarcodeDetector" in window) {
-          detectWithNativeAPI();
+          cleanupRef.current = detectWithNativeAPI();
         } else {
           // 폴백: 수동 입력 안내
           console.log("BarcodeDetector not supported, using manual input");
@@ -50,55 +116,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
       setHasCamera(false);
       onError?.(t("cameraError"));
     }
-  }, [onError, t]);
-
-  // Native BarcodeDetector API 사용
-  const detectWithNativeAPI = async () => {
-    // @ts-expect-error BarcodeDetector is not in TypeScript types yet
-    const barcodeDetector = new window.BarcodeDetector({
-      formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39"],
-    });
-
-    const detect = async () => {
-      if (videoRef.current && videoRef.current.readyState === 4) {
-        try {
-          const barcodes = await barcodeDetector.detect(videoRef.current);
-          if (barcodes.length > 0) {
-            const barcode = barcodes[0].rawValue;
-            onScan(barcode);
-            stopScanning();
-            return;
-          }
-        } catch (err) {
-          console.error("Detection error:", err);
-        }
-      }
-
-      if (isScanning) {
-        animationFrameRef.current = requestAnimationFrame(detect);
-      }
-    };
-
-    detect();
-  };
-
-  // 스캐닝 중지
-  const stopScanning = useCallback(() => {
-    setIsScanning(false);
-
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  }, []);
+  }, [detectWithNativeAPI, onError, t]);
 
   // 수동 바코드 입력 처리
   const handleManualSubmit = (e: React.FormEvent) => {

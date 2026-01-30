@@ -3,11 +3,11 @@ import { generateCoaching } from "@/lib/gemini";
 
 export async function POST(request: NextRequest) {
   try {
-    const { weeklyData, mode, dailyGoals } = await request.json();
+    const { weeklyData, mode, dailyGoals, locale } = await request.json();
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { success: false, error: "API 키가 설정되지 않았습니다." },
+        { success: false, error: "API key is not configured." },
         { status: 500 }
       );
     }
@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
     const message = await generateCoaching(
       JSON.stringify(weeklyData),
       mode,
-      JSON.stringify(dailyGoals)
+      JSON.stringify(dailyGoals),
+      locale || "en"
     );
 
     return NextResponse.json({

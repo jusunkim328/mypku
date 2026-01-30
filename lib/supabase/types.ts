@@ -176,6 +176,8 @@ export interface Database {
           is_low_protein: boolean;
           is_phe_estimated: boolean;
           source: string | null;
+          barcode_country: string | null;
+          contributed_from: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -197,6 +199,8 @@ export interface Database {
           is_low_protein?: boolean;
           is_phe_estimated?: boolean;
           source?: string | null;
+          barcode_country?: string | null;
+          contributed_from?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -218,6 +222,8 @@ export interface Database {
           is_low_protein?: boolean;
           is_phe_estimated?: boolean;
           source?: string | null;
+          barcode_country?: string | null;
+          contributed_from?: string | null;
           created_at?: string;
           updated_at?: string;
         };

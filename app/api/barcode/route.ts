@@ -23,6 +23,153 @@ interface OpenFoodFactsProduct {
   };
   image_url?: string;
   categories_tags?: string[];
+  // 국가 정보
+  countries?: string;
+  countries_tags?: string[];
+  origins?: string;
+  manufacturing_places?: string;
+}
+
+// 바코드 접두사 → 국가 매핑 (GS1 표준)
+const BARCODE_PREFIX_COUNTRY: Record<string, { code: string; name: string }> = {
+  "00": { code: "us", name: "United States" },
+  "01": { code: "us", name: "United States" },
+  "02": { code: "us", name: "United States" },
+  "03": { code: "us", name: "United States" },
+  "04": { code: "us", name: "United States" },
+  "05": { code: "us", name: "United States" },
+  "06": { code: "us", name: "United States" },
+  "07": { code: "us", name: "United States" },
+  "08": { code: "us", name: "United States" },
+  "09": { code: "us", name: "United States" },
+  "10": { code: "us", name: "United States" },
+  "11": { code: "us", name: "United States" },
+  "12": { code: "us", name: "United States" },
+  "13": { code: "us", name: "United States" },
+  "30": { code: "fr", name: "France" },
+  "31": { code: "fr", name: "France" },
+  "32": { code: "fr", name: "France" },
+  "33": { code: "fr", name: "France" },
+  "34": { code: "fr", name: "France" },
+  "35": { code: "fr", name: "France" },
+  "36": { code: "fr", name: "France" },
+  "37": { code: "fr", name: "France" },
+  "40": { code: "de", name: "Germany" },
+  "41": { code: "de", name: "Germany" },
+  "42": { code: "de", name: "Germany" },
+  "43": { code: "de", name: "Germany" },
+  "44": { code: "de", name: "Germany" },
+  "45": { code: "jp", name: "Japan" },
+  "46": { code: "ru", name: "Russia" },
+  "460": { code: "ru", name: "Russia" },
+  "461": { code: "ru", name: "Russia" },
+  "462": { code: "ru", name: "Russia" },
+  "463": { code: "ru", name: "Russia" },
+  "464": { code: "ru", name: "Russia" },
+  "465": { code: "ru", name: "Russia" },
+  "466": { code: "ru", name: "Russia" },
+  "467": { code: "ru", name: "Russia" },
+  "468": { code: "ru", name: "Russia" },
+  "469": { code: "ru", name: "Russia" },
+  "47": { code: "tw", name: "Taiwan" },
+  "49": { code: "jp", name: "Japan" },
+  "50": { code: "gb", name: "United Kingdom" },
+  "54": { code: "be", name: "Belgium" },
+  "57": { code: "dk", name: "Denmark" },
+  "64": { code: "fi", name: "Finland" },
+  "70": { code: "no", name: "Norway" },
+  "73": { code: "se", name: "Sweden" },
+  "76": { code: "ch", name: "Switzerland" },
+  "80": { code: "it", name: "Italy" },
+  "81": { code: "it", name: "Italy" },
+  "82": { code: "it", name: "Italy" },
+  "83": { code: "it", name: "Italy" },
+  "84": { code: "es", name: "Spain" },
+  "87": { code: "nl", name: "Netherlands" },
+  "880": { code: "kr", name: "South Korea" },
+  "885": { code: "th", name: "Thailand" },
+  "888": { code: "sg", name: "Singapore" },
+  "890": { code: "in", name: "India" },
+  "893": { code: "vn", name: "Vietnam" },
+  "899": { code: "id", name: "Indonesia" },
+  "90": { code: "at", name: "Austria" },
+  "91": { code: "at", name: "Austria" },
+  "93": { code: "au", name: "Australia" },
+  "94": { code: "nz", name: "New Zealand" },
+  "955": { code: "my", name: "Malaysia" },
+  "958": { code: "mo", name: "Macau" },
+  "690": { code: "cn", name: "China" },
+  "691": { code: "cn", name: "China" },
+  "692": { code: "cn", name: "China" },
+  "693": { code: "cn", name: "China" },
+  "694": { code: "cn", name: "China" },
+  "695": { code: "cn", name: "China" },
+  "696": { code: "cn", name: "China" },
+  "697": { code: "cn", name: "China" },
+  "698": { code: "cn", name: "China" },
+  "699": { code: "cn", name: "China" },
+};
+
+// 바코드에서 원산지 국가 추출
+function getOriginCountryFromBarcode(barcode: string): { code: string; name: string } | null {
+  // 3자리 접두사 먼저 확인 (더 구체적)
+  const prefix3 = barcode.substring(0, 3);
+  if (BARCODE_PREFIX_COUNTRY[prefix3]) {
+    return BARCODE_PREFIX_COUNTRY[prefix3];
+  }
+
+  // 2자리 접두사 확인
+  const prefix2 = barcode.substring(0, 2);
+  if (BARCODE_PREFIX_COUNTRY[prefix2]) {
+    return BARCODE_PREFIX_COUNTRY[prefix2];
+  }
+
+  return null;
+}
+
+// Open Food Facts countries_tags에서 국가 코드 추출
+function extractCountryFromTags(countriesTags?: string[]): { code: string; name: string } | null {
+  if (!countriesTags || countriesTags.length === 0) return null;
+
+  // "en:germany" → { code: "de", name: "Germany" }
+  const countryMap: Record<string, { code: string; name: string }> = {
+    "en:germany": { code: "de", name: "Germany" },
+    "en:france": { code: "fr", name: "France" },
+    "en:united-states": { code: "us", name: "United States" },
+    "en:united-kingdom": { code: "gb", name: "United Kingdom" },
+    "en:russia": { code: "ru", name: "Russia" },
+    "en:japan": { code: "jp", name: "Japan" },
+    "en:south-korea": { code: "kr", name: "South Korea" },
+    "en:china": { code: "cn", name: "China" },
+    "en:italy": { code: "it", name: "Italy" },
+    "en:spain": { code: "es", name: "Spain" },
+    "en:australia": { code: "au", name: "Australia" },
+    "en:canada": { code: "ca", name: "Canada" },
+    "en:netherlands": { code: "nl", name: "Netherlands" },
+    "en:belgium": { code: "be", name: "Belgium" },
+    "en:switzerland": { code: "ch", name: "Switzerland" },
+    "en:sweden": { code: "se", name: "Sweden" },
+    "en:norway": { code: "no", name: "Norway" },
+    "en:denmark": { code: "dk", name: "Denmark" },
+    "en:finland": { code: "fi", name: "Finland" },
+    "en:poland": { code: "pl", name: "Poland" },
+    "en:austria": { code: "at", name: "Austria" },
+    "en:thailand": { code: "th", name: "Thailand" },
+    "en:vietnam": { code: "vn", name: "Vietnam" },
+    "en:indonesia": { code: "id", name: "Indonesia" },
+    "en:malaysia": { code: "my", name: "Malaysia" },
+    "en:singapore": { code: "sg", name: "Singapore" },
+    "en:india": { code: "in", name: "India" },
+    "en:taiwan": { code: "tw", name: "Taiwan" },
+  };
+
+  for (const tag of countriesTags) {
+    if (countryMap[tag]) {
+      return countryMap[tag];
+    }
+  }
+
+  return null;
 }
 
 interface OpenFoodFactsResponse {
@@ -78,6 +225,9 @@ export async function GET(request: NextRequest) {
           serving_size: pkuFood.serving_size || "100g",
           image_url: null,
           categories: pkuFood.category ? [pkuFood.category] : [],
+          // 국가 정보 (ISO 코드)
+          barcode_country: pkuFood.barcode_country || null,
+          contributed_from: pkuFood.contributed_from || null,
           nutrition_per_100g: {
             calories: pkuFood.calories || 0,
             protein_g: pkuFood.protein_g || 0,
@@ -112,6 +262,18 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
+    // 404는 "제품 없음"으로 처리 (에러가 아님)
+    if (response.status === 404) {
+      return NextResponse.json(
+        {
+          found: false,
+          barcode,
+          message: "Product not found in Open Food Facts database"
+        },
+        { status: 404 }
+      );
+    }
+
     if (!response.ok) {
       throw new Error(`Open Food Facts API error: ${response.status}`);
     }
@@ -122,6 +284,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           found: false,
+          barcode,
           message: "Product not found in database"
         },
         { status: 404 }
@@ -149,6 +312,10 @@ export async function GET(request: NextRequest) {
       product.product_name ||
       "Unknown Product";
 
+    // 국가 정보 추출 (ISO 코드로 저장)
+    const barcodeCountry = getOriginCountryFromBarcode(barcode);
+    const contributedFrom = extractCountryFromTags(product.countries_tags);
+
     // 3. Open Food Facts 결과를 PKU DB에 영구 저장 (다음 조회 시 API 호출 없이 DB에서 반환)
     try {
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -167,10 +334,13 @@ export async function GET(request: NextRequest) {
           category: product.categories_tags?.[0] || null,
           is_low_protein: protein_g < 1,
           source: "openfoodfacts",
+          // 국가 정보 (ISO 코드)
+          barcode_country: barcodeCountry?.code || null,
+          contributed_from: contributedFrom?.code || null,
         } as any,
         { onConflict: "name,source" }
       );
-      console.log(`✓ Saved barcode ${barcode} to PKU DB for future lookups`);
+      console.log(`✓ Saved barcode ${barcode} to PKU DB (barcode_country: ${barcodeCountry?.code || "unknown"})`);
     } catch (saveError) {
       console.log("DB save failed:", saveError);
     }
@@ -185,6 +355,9 @@ export async function GET(request: NextRequest) {
         serving_size: product.serving_size || "100g",
         image_url: product.image_url || null,
         categories: product.categories_tags || [],
+        // 국가 정보 (ISO 코드)
+        barcode_country: barcodeCountry?.code || null,
+        contributed_from: contributedFrom?.code || null,
         nutrition_per_100g: {
           calories: Math.round(calories),
           protein_g: Math.round(protein_g * 10) / 10,

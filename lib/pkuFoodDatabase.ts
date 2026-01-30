@@ -17,6 +17,9 @@ export interface PKUFood {
   is_low_protein: boolean;
   is_phe_estimated?: boolean; // 페닐알라닌이 단백질 기반 추정치인지 여부
   source: string;
+  // 국가 정보 (ISO 3166-1 alpha-2 코드)
+  barcode_country?: string;   // 바코드 등록 국가 (GS1 접두사 기준)
+  contributed_from?: string;  // Open Food Facts 기여자 국가
 }
 
 export interface FoodSearchOptions {
@@ -104,7 +107,7 @@ export async function searchPKUFoods(options: FoodSearchOptions): Promise<PKUFoo
   const { data, error } = await queryBuilder;
 
   if (error) {
-    console.error("PKU food search error:", error);
+    console.error("PKU food search error:", error.message, error.code, error.details);
     return [];
   }
 

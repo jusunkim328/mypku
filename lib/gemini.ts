@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, GenerativeModel } from "@google/generative-ai";
 import { FOOD_ANALYSIS_PROMPT, PKU_ANALYSIS_PROMPT, calculatePhenylalanine } from "./prompts";
 import type {
   FoodItem,
@@ -11,6 +11,57 @@ import type {
 
 // 서버 사이드에서만 사용 (API Route에서 호출)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+// Exponential Backoff 설정
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelayMs: 1000,  // 1초
+  maxDelayMs: 30000,  // 최대 30초
+};
+
+/**
+ * Exponential Backoff로 재시도하는 유틸리티 함수
+ */
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  operationName: string
+): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // 429 (Rate Limit) 또는 503 (Service Unavailable) 에러만 재시도
+      const isRetryable =
+        lastError.message.includes("429") ||
+        lastError.message.includes("Too Many Requests") ||
+        lastError.message.includes("503") ||
+        lastError.message.includes("Resource exhausted");
+
+      if (!isRetryable || attempt === RETRY_CONFIG.maxRetries) {
+        throw lastError;
+      }
+
+      // Exponential backoff with jitter
+      const delay = Math.min(
+        RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt) + Math.random() * 1000,
+        RETRY_CONFIG.maxDelayMs
+      );
+
+      console.log(
+        `[Gemini] ${operationName} failed (attempt ${attempt + 1}/${RETRY_CONFIG.maxRetries + 1}), ` +
+        `retrying in ${Math.round(delay / 1000)}s...`
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
 
 // Structured Output 스키마 (일반 모드)
 const analysisSchema = {
@@ -92,7 +143,7 @@ export async function analyzeFood(
   const isPKU = mode === "pku";
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash",
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: isPKU ? pkuAnalysisSchema : analysisSchema,
@@ -106,15 +157,18 @@ export async function analyzeFood(
 
   const prompt = isPKU ? PKU_ANALYSIS_PROMPT : FOOD_ANALYSIS_PROMPT;
 
-  const result = await model.generateContent([
-    prompt,
-    {
-      inlineData: {
-        mimeType,
-        data: base64Data,
+  const result = await withRetry(
+    () => model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType,
+          data: base64Data,
+        },
       },
-    },
-  ]);
+    ]),
+    "analyzeFood"
+  );
 
   const response = result.response;
   const text = response.text();
@@ -200,7 +254,7 @@ export async function analyzeFoodByText(
   const isPKU = mode === "pku";
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash",
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: isPKU ? pkuAnalysisSchema : analysisSchema,
@@ -253,7 +307,10 @@ Return a JSON with:
 
   const prompt = isPKU ? pkuTextPrompt : generalTextPrompt;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetry(
+    () => model.generateContent(prompt),
+    "analyzeFoodByText"
+  );
   const response = result.response;
   const text = response.text();
 
@@ -332,45 +389,53 @@ Return a JSON with:
 export async function generateCoaching(
   weeklyData: string,
   mode: string,
-  dailyGoals: string
+  dailyGoals: string,
+  locale: string = "en"
 ): Promise<string> {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-2.0-flash",
   });
 
-  const prompt = `당신은 친근한 영양 코치입니다. 사용자의 주간 영양 섭취 데이터를 분석하고 격려하는 피드백을 제공하세요.
+  const languageInstruction = locale === "ko"
+    ? "응답은 한국어로 작성하세요."
+    : "Write your response in English.";
 
-## 분석 데이터
+  const prompt = `You are a friendly nutrition coach. Analyze the user's weekly nutrition data and provide encouraging feedback.
+
+## Weekly Data
 ${weeklyData}
 
-## 사용자 모드
+## User Mode
 ${mode}
 
-## 일일 목표
+## Daily Goals
 ${dailyGoals}
 
-## 지침
-1. ${mode}가 "pku"인 경우:
-   - 페닐알라닌 섭취량에 특히 주목하세요
-   - 목표치 초과 시 부드럽게 주의를 주세요
-   - 저단백 식품 추천을 포함하세요
+## Instructions
+1. If mode is "pku":
+   - Pay special attention to phenylalanine intake
+   - Gently warn when exceeding the target
+   - Include low-protein food recommendations
 
-2. 일반 모드인 경우:
-   - 칼로리 균형에 집중하세요
-   - 영양소 균형을 칭찬하거나 개선점을 제안하세요
+2. For general mode:
+   - Focus on calorie balance
+   - Praise nutritional balance or suggest improvements
 
-3. 공통:
-   - 긍정적이고 격려하는 톤을 유지하세요
-   - 구체적인 수치를 언급하세요
-   - 2-3문장으로 간결하게 작성하세요
-   - 의료 조언은 하지 마세요
+3. Common guidelines:
+   - Maintain a positive and encouraging tone
+   - Mention specific numbers
+   - Keep it concise (2-3 sentences)
+   - Do not give medical advice
 
-## 중요
-- "환자"라는 표현 대신 "사용자"를 사용하세요
-- 진단이나 처방을 암시하는 표현은 피하세요
+## Important
+- Use "user" instead of "patient"
+- Avoid expressions that imply diagnosis or prescription
 
-응답은 한국어로 작성하고, 일반 텍스트로만 응답하세요 (JSON 아님).`;
+${languageInstruction} Respond in plain text only (not JSON).`;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetry(
+    () => model.generateContent(prompt),
+    "generateCoaching"
+  );
   return result.response.text();
 }

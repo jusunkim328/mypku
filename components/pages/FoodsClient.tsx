@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button, Card } from "@/components/ui";
 import {
@@ -40,6 +40,7 @@ export default function FoodsClient() {
   const tCommon = useTranslations("Common");
   const tNutrients = useTranslations("Nutrients");
   const tMealTypes = useTranslations("MealTypes");
+  const locale = useLocale();
 
   const { getExchanges } = useNutritionStore();
   const { addMealRecord } = useMealRecords();
@@ -236,7 +237,7 @@ export default function FoodsClient() {
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                {getCategoryLabel(category, "ko")}
+                {getCategoryLabel(category, locale)}
               </button>
             ))}
           </div>
@@ -374,7 +375,7 @@ export default function FoodsClient() {
             {/* 계산된 영양소 미리보기 */}
             <div className="bg-indigo-50 rounded-lg p-3 mb-4">
               <p className="text-sm text-indigo-900 font-medium mb-2">
-                {quantity}g 기준 영양소:
+                {t("nutritionPreview", { quantity })}
               </p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
