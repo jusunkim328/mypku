@@ -201,17 +201,57 @@ export default function ScanClient() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("servingSize")}
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    {/* 슬라이더: step 10 → 5 */}
                     <input
                       type="range"
                       min="10"
                       max="500"
-                      step="10"
+                      step="5"
                       value={servingSize}
                       onChange={(e) => setServingSize(Number(e.target.value))}
-                      className="flex-1"
+                      className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                     />
-                    <span className="w-16 text-right font-medium text-gray-900 dark:text-gray-100">{servingSize}g</span>
+                    {/* 숫자 입력 필드 (기존 span → input) */}
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={servingSize}
+                        onChange={(e) => {
+                          // 입력 중에는 범위 제한 없이 자유롭게 입력 허용
+                          const value = parseInt(e.target.value);
+                          if (!isNaN(value) && value >= 0) {
+                            setServingSize(value);
+                          }
+                        }}
+                        onBlur={() => {
+                          // 포커스 잃을 때만 범위 검증 (10~500)
+                          setServingSize(Math.min(500, Math.max(10, servingSize || 10)));
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        min="10"
+                        max="500"
+                        className="w-16 px-2 py-1 text-center border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      />
+                      <span className="text-gray-600 dark:text-gray-400 text-sm">g</span>
+                    </div>
+                  </div>
+
+                  {/* 빠른 선택 버튼 */}
+                  <div className="flex gap-2 mt-2">
+                    {[50, 100, 150, 200].map((val) => (
+                      <button
+                        key={val}
+                        onClick={() => setServingSize(val)}
+                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                          servingSize === val
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        {val}g
+                      </button>
+                    ))}
                   </div>
                 </div>
 
