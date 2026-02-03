@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Camera } from "lucide-react";
+import { Camera, AlertCircle } from "lucide-react";
 
 // 바코드 체크섬 검증
 function validateBarcode(barcode: string): boolean {
@@ -130,6 +130,7 @@ interface BarcodeScannerProps {
 export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps) {
   const t = useTranslations("BarcodeScanner");
   const videoRef = useRef<HTMLVideoElement>(null);
+  const quaggaContainerRef = useRef<HTMLDivElement>(null); // Quagga2용 컨테이너
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [hasCamera, setHasCamera] = useState(true);
@@ -144,6 +145,14 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const [detectedBarcode, setDetectedBarcode] = useState<string | null>(null);
   const [verifyProgress, setVerifyProgress] = useState(0);
   const invalidTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 안내 메시지 상태
+  const [showHint, setShowHint] = useState(false);
+  const hintTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scanStartTimeRef = useRef<number>(0);
+
+  // 감지 방법 표시
+  const [detectionMethod, setDetectionMethod] = useState<"native" | "quagga" | null>(null);
 
   // 스캐닝 중지 (먼저 정의)
   const stopScanning = useCallback(() => {
@@ -169,10 +178,20 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
       videoRef.current.srcObject = null;
     }
 
+    // Quagga 컨테이너 정리
+    if (quaggaContainerRef.current) {
+      quaggaContainerRef.current.innerHTML = "";
+    }
+
     // 타임아웃 정리
     if (invalidTimeoutRef.current) {
       clearTimeout(invalidTimeoutRef.current);
       invalidTimeoutRef.current = null;
+    }
+
+    if (hintTimeoutRef.current) {
+      clearTimeout(hintTimeoutRef.current);
+      hintTimeoutRef.current = null;
     }
 
     // 다중 프레임 검증기 초기화
@@ -182,6 +201,8 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
     setScanStatus("idle");
     setDetectedBarcode(null);
     setVerifyProgress(0);
+    setShowHint(false);
+    setDetectionMethod(null);
   }, []);
 
   // Native BarcodeDetector API 사용
@@ -191,8 +212,9 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
       formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39"],
     });
 
-    let isActive = true; // 로컬 플래그로 루프 제어
+    let isActive = true;
     const validator = validatorRef.current;
+    setDetectionMethod("native");
 
     const detect = async () => {
       if (!isActive) return;
@@ -234,6 +256,8 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
               setScanStatus("verifying");
               setDetectedBarcode(result.currentBarcode);
               setVerifyProgress(result.progress);
+              // 바코드 감지되면 힌트 숨김
+              setShowHint(false);
             }
           } else {
             // 바코드 미감지 - detecting 상태 유지
@@ -259,40 +283,153 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
     };
   }, [onScan, stopScanning, scanStatus]);
 
+  // Quagga2 폴백 사용
+  const detectWithQuagga = useCallback(async () => {
+    const Quagga = (await import("@ericblade/quagga2")).default;
+
+    let isActive = true;
+    const validator = validatorRef.current;
+    setDetectionMethod("quagga");
+
+    // Quagga 초기화 - 컨테이너 div를 target으로 사용
+    const quaggaConfig = {
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: quaggaContainerRef.current!, // 컨테이너 div 사용
+        constraints: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      },
+      decoder: {
+        readers: [
+          "ean_reader",
+          "ean_8_reader",
+          "upc_reader",
+          "upc_e_reader",
+          "code_128_reader",
+          "code_39_reader",
+        ],
+      },
+      locate: true,
+      locator: {
+        patchSize: "medium",
+        halfSample: true,
+      },
+    };
+
+    Quagga.init(
+      quaggaConfig as Parameters<typeof Quagga.init>[0],
+      (err: Error | null) => {
+        if (err) {
+          console.error("Quagga init error:", err);
+          onError?.(t("cameraError"));
+          return;
+        }
+
+        if (isActive) {
+          Quagga.start();
+        }
+      }
+    );
+
+    // 바코드 감지 핸들러
+    const onDetected = (result: { codeResult?: { code?: string | null } }) => {
+      if (!isActive || !result.codeResult?.code) return;
+
+      const rawValue = result.codeResult.code;
+      const validationResult = validator.addResult(rawValue);
+
+      if (!validationResult.isValid) {
+        setScanStatus("invalid");
+        setDetectedBarcode(validationResult.currentBarcode);
+        setVerifyProgress(0);
+
+        if (invalidTimeoutRef.current) {
+          clearTimeout(invalidTimeoutRef.current);
+        }
+        invalidTimeoutRef.current = setTimeout(() => {
+          if (isActive) {
+            setScanStatus("detecting");
+            setDetectedBarcode(null);
+          }
+        }, 1500);
+      } else if (validationResult.consensus) {
+        isActive = false;
+        Quagga.stop();
+        onScan(validationResult.consensus);
+        stopScanning();
+      } else {
+        setScanStatus("verifying");
+        setDetectedBarcode(validationResult.currentBarcode);
+        setVerifyProgress(validationResult.progress);
+        setShowHint(false);
+      }
+    };
+
+    Quagga.onDetected(onDetected);
+
+    // cleanup 함수 반환
+    return () => {
+      isActive = false;
+      Quagga.offDetected(onDetected);
+      Quagga.stop();
+    };
+  }, [onScan, onError, stopScanning, t]);
+
   // 바코드 감지 시작
   const startScanning = useCallback(async () => {
     try {
-      // 카메라 접근 요청 (고해상도로 상향)
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment",
-          width: { ideal: 1920, min: 1280 },
-          height: { ideal: 1080, min: 720 },
-        },
-      });
+      // Native API 지원 확인
+      const hasNativeAPI = "BarcodeDetector" in window;
 
-      streamRef.current = stream;
+      if (hasNativeAPI) {
+        // Native API 사용 - 직접 카메라 스트림 획득
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
+          },
+        });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+          setIsScanning(true);
+          setScanStatus("detecting");
+          scanStartTimeRef.current = Date.now();
+
+          // 5초 후 힌트 표시 타이머 시작
+          hintTimeoutRef.current = setTimeout(() => {
+            setShowHint(true);
+          }, 5000);
+
+          cleanupRef.current = detectWithNativeAPI();
+        }
+      } else {
+        // Quagga2 폴백 사용
         setIsScanning(true);
         setScanStatus("detecting");
+        scanStartTimeRef.current = Date.now();
 
-        // BarcodeDetector API 지원 확인
-        if ("BarcodeDetector" in window) {
-          cleanupRef.current = detectWithNativeAPI();
-        } else {
-          // 폴백: 수동 입력 안내
-          console.log("BarcodeDetector not supported, using manual input");
-        }
+        // 5초 후 힌트 표시 타이머 시작
+        hintTimeoutRef.current = setTimeout(() => {
+          setShowHint(true);
+        }, 5000);
+
+        cleanupRef.current = await detectWithQuagga();
       }
     } catch (err) {
       console.error("Camera access error:", err);
       setHasCamera(false);
       onError?.(t("cameraError"));
     }
-  }, [detectWithNativeAPI, onError, t]);
+  }, [detectWithNativeAPI, detectWithQuagga, onError, t]);
 
   // 수동 바코드 입력 처리
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -310,22 +447,54 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
     };
   }, [stopScanning]);
 
+  // 진행률 인디케이터 렌더링
+  const renderProgressDots = () => {
+    const dots = [];
+    for (let i = 0; i < 3; i++) {
+      dots.push(
+        <span
+          key={i}
+          className={`inline-block w-2.5 h-2.5 rounded-full mx-0.5 transition-all duration-200 ${
+            i < verifyProgress
+              ? "bg-green-500 scale-110"
+              : "bg-white/50"
+          }`}
+        />
+      );
+    }
+    return dots;
+  };
+
   return (
     <div className="space-y-4">
       {/* 카메라 뷰 */}
       {hasCamera && (
         <div className="relative bg-black rounded-xl overflow-hidden aspect-[4/3] md:aspect-video lg:max-w-2xl lg:mx-auto">
+          {/* Native API용 video 엘리먼트 */}
           <video
             ref={videoRef}
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${detectionMethod === "quagga" ? "hidden" : ""}`}
             playsInline
             muted
           />
+
+          {/* Quagga2용 컨테이너 - Quagga가 여기에 video 엘리먼트를 생성 */}
+          <div
+            ref={quaggaContainerRef}
+            id="quagga-container"
+            className={`w-full h-full ${detectionMethod === "quagga" ? "block" : "hidden"}`}
+            style={{
+              position: detectionMethod === "quagga" ? "absolute" : "static",
+              top: 0,
+              left: 0,
+            }}
+          />
+
           <canvas ref={canvasRef} className="hidden" />
 
           {/* 스캔 오버레이 */}
           {isScanning && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               {/* 스캔 프레임 */}
               <div
                 className={`w-64 h-32 border-2 rounded-lg relative transition-colors duration-200 ${
@@ -388,29 +557,66 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
               {/* 상태 피드백 */}
               <div className="mt-4 text-center">
                 {scanStatus === "detecting" && (
-                  <p className="text-white text-sm bg-black/50 px-3 py-1.5 rounded-full">
-                    {t("scanning")}
-                  </p>
+                  <div className="space-y-2">
+                    <p className="text-white text-sm bg-black/50 px-3 py-1.5 rounded-full">
+                      {t("scanning")}
+                    </p>
+                    {/* 진행률 점 표시 (대기 상태) */}
+                    <div className="flex justify-center">
+                      {[0, 1, 2].map((i) => (
+                        <span
+                          key={i}
+                          className="inline-block w-2.5 h-2.5 rounded-full mx-0.5 bg-white/30"
+                        />
+                      ))}
+                    </div>
+                  </div>
                 )}
                 {scanStatus === "verifying" && detectedBarcode && (
-                  <div className="bg-green-500/90 px-3 py-1.5 rounded-full">
+                  <div className="bg-green-500/90 px-4 py-2 rounded-lg space-y-1.5">
                     <p className="text-white text-sm font-medium">
                       {t("verifying")} ({verifyProgress}/3)
                     </p>
-                    <p className="text-white/80 text-xs mt-0.5 font-mono">
+                    {/* 진행률 점 표시 */}
+                    <div className="flex justify-center">
+                      {renderProgressDots()}
+                    </div>
+                    <p className="text-white/80 text-xs font-mono">
                       {detectedBarcode}
                     </p>
                   </div>
                 )}
                 {scanStatus === "invalid" && detectedBarcode && (
-                  <div className="bg-red-500/90 px-3 py-1.5 rounded-full">
+                  <div className="bg-red-500/90 px-4 py-2 rounded-lg space-y-1">
                     <p className="text-white text-sm font-medium">{t("invalidBarcode")}</p>
-                    <p className="text-white/80 text-xs mt-0.5 font-mono">
+                    <p className="text-white/80 text-xs font-mono">
                       {detectedBarcode}
                     </p>
                   </div>
                 )}
               </div>
+
+              {/* 안내 메시지 (5초 후 표시) */}
+              {showHint && scanStatus === "detecting" && (
+                <div className="absolute bottom-20 left-4 right-4 bg-yellow-500/90 text-black text-sm px-4 py-3 rounded-lg flex items-start gap-2 pointer-events-auto">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">{t("hintTitle")}</p>
+                    <ul className="text-xs mt-1 space-y-0.5 opacity-90">
+                      <li>• {t("hint1")}</li>
+                      <li>• {t("hint2")}</li>
+                      <li>• {t("hint3")}</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* 감지 방법 표시 (개발용, 작은 텍스트) */}
+              {detectionMethod && (
+                <div className="absolute top-2 left-2 text-white/50 text-xs bg-black/30 px-2 py-0.5 rounded">
+                  {detectionMethod === "native" ? "Native API" : "Quagga2"}
+                </div>
+              )}
             </div>
           )}
 
@@ -431,7 +637,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
           {isScanning && (
             <button
               onClick={stopScanning}
-              className="absolute bottom-4 right-4 px-4 py-2 bg-red-500 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors"
+              className="absolute bottom-4 right-4 px-4 py-2 bg-red-500 text-white rounded-full text-sm font-medium hover:bg-red-600 transition-colors z-10"
             >
               {t("stopScan")}
             </button>
@@ -469,8 +675,8 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
         </form>
       </div>
 
-      {/* 스캔 애니메이션 스타일 */}
-      <style jsx>{`
+      {/* 스캔 애니메이션 스타일 + Quagga 비디오 스타일 */}
+      <style jsx global>{`
         @keyframes scan {
           0%, 100% {
             transform: translateY(0);
@@ -481,6 +687,24 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
         }
         .animate-scan {
           animation: scan 2s ease-in-out infinite;
+        }
+        /* Quagga가 생성하는 요소 스타일링 */
+        #quagga-container {
+          position: relative;
+        }
+        #quagga-container video {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+        }
+        #quagga-container canvas {
+          display: none !important;
+        }
+        #quagga-container .drawingBuffer {
+          display: none !important;
         }
       `}</style>
     </div>

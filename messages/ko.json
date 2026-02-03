@@ -210,7 +210,11 @@
     "noCameraMessage": "카메라를 사용할 수 없습니다. 바코드를 직접 입력해주세요.",
     "scanning": "바코드를 찾고 있습니다...",
     "verifying": "확인 중",
-    "invalidBarcode": "잘못된 바코드"
+    "invalidBarcode": "잘못된 바코드",
+    "hintTitle": "스캔이 안 되나요?",
+    "hint1": "바코드를 프레임 중앙에 맞춰주세요",
+    "hint2": "조명이 충분한지 확인해주세요",
+    "hint3": "바코드가 가려지지 않았는지 확인해주세요"
   },
   "ScanPage": {
     "title": "바코드 스캔",

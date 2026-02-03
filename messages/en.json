@@ -210,7 +210,11 @@
     "noCameraMessage": "Camera not available. Enter barcode manually.",
     "scanning": "Looking for barcode...",
     "verifying": "Verifying",
-    "invalidBarcode": "Invalid barcode"
+    "invalidBarcode": "Invalid barcode",
+    "hintTitle": "Having trouble scanning?",
+    "hint1": "Center the barcode in the frame",
+    "hint2": "Ensure adequate lighting",
+    "hint3": "Make sure barcode is not obstructed"
   },
   "ScanPage": {
     "title": "Barcode Scan",
