@@ -218,7 +218,12 @@
     "hintTitle": "스캔이 안 되나요?",
     "hint1": "바코드를 프레임 중앙에 맞춰주세요",
     "hint2": "조명이 충분한지 확인해주세요",
-    "hint3": "바코드가 가려지지 않았는지 확인해주세요"
+    "hint3": "바코드가 가려지지 않았는지 확인해주세요",
+    "photoUploadTitle": "바코드가 잘 안 읽히나요?",
+    "photoUploadButton": "사진으로 인식",
+    "photoUploadHint": "곡면 용기나 손상된 바코드도 인식 가능",
+    "photoUploading": "인식 중...",
+    "photoOcrFailed": "이미지에서 바코드를 읽지 못했습니다"
   },
   "ScanPage": {
     "title": "바코드 스캔",

@@ -143,7 +143,7 @@ export async function analyzeFood(
   const isPKU = mode === "pku";
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: isPKU ? pkuAnalysisSchema : analysisSchema,
@@ -254,7 +254,7 @@ export async function analyzeFoodByText(
   const isPKU = mode === "pku";
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: isPKU ? pkuAnalysisSchema : analysisSchema,
@@ -386,6 +386,54 @@ Return a JSON with:
   }
 }
 
+// 바코드 OCR 프롬프트
+const BARCODE_OCR_PROMPT = `You are a barcode number extractor.
+
+Look at this image and find the barcode numbers printed below the barcode bars.
+
+Rules:
+1. Return ONLY the numeric digits (no spaces, hyphens, or other characters)
+2. Common formats: EAN-13 (13 digits), EAN-8 (8 digits), UPC-A (12 digits)
+3. If multiple barcodes exist, return the most prominent one
+4. If no barcode numbers are visible, return "NOT_FOUND"
+
+Return format: Just the numbers, nothing else.`;
+
+/**
+ * 이미지에서 바코드 숫자를 OCR로 추출
+ * 곡면 용기나 손상된 바코드에서 숫자만 읽을 때 사용
+ */
+export async function extractBarcodeFromImage(
+  imageBase64: string
+): Promise<string | null> {
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+  // Base64에서 MIME 타입 추출
+  const mimeMatch = imageBase64.match(/^data:(.+);base64,/);
+  const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+  const base64Data = imageBase64.replace(/^data:.+;base64,/, "");
+
+  const result = await withRetry(
+    () =>
+      model.generateContent([
+        BARCODE_OCR_PROMPT,
+        {
+          inlineData: {
+            mimeType,
+            data: base64Data,
+          },
+        },
+      ]),
+    "extractBarcode"
+  );
+
+  const text = result.response.text().trim();
+
+  // 숫자만 추출 (8-14자리)
+  const match = text.match(/^\d{8,14}$/);
+  return match ? match[0] : null;
+}
+
 export async function generateCoaching(
   weeklyData: string,
   mode: string,
@@ -393,7 +441,7 @@ export async function generateCoaching(
   locale: string = "en"
 ): Promise<string> {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
   });
 
   const languageInstruction = locale === "ko"

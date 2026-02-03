@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Camera, AlertCircle } from "lucide-react";
+import { Camera, AlertCircle, Loader2, ImageIcon } from "lucide-react";
 
 // 바코드 체크섬 검증
 function validateBarcode(barcode: string): boolean {
@@ -134,6 +134,8 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const [isScanning, setIsScanning] = useState(false);
   const [hasCamera, setHasCamera] = useState(true);
   const [manualBarcode, setManualBarcode] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -436,6 +438,66 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
     }
   }, [detectWithNativeAPI, detectWithZxingWasm, onError, t]);
 
+  // 이미지 리사이즈 함수 (기존 ImageUploader 패턴)
+  const resizeImage = (file: File, maxSize = 1024): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let { width, height } = img;
+          if (width > height && width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          } else if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.8));
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 사진 업로드로 바코드 OCR 처리
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 스캔 중이면 중지
+    if (isScanning) stopScanning();
+
+    setIsUploading(true);
+
+    try {
+      const base64 = await resizeImage(file);
+      const res = await fetch("/api/barcode-ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64 }),
+      });
+      const data = await res.json();
+
+      if (data.success && data.barcode) {
+        onScan(data.barcode);
+      } else {
+        onError?.(t("photoOcrFailed"));
+      }
+    } catch (err) {
+      console.error("OCR error:", err);
+      onError?.(t("photoOcrFailed"));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   // 수동 바코드 입력 처리
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -671,6 +733,50 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
           <p className="text-gray-600 dark:text-gray-400">{t("noCameraMessage")}</p>
         </div>
       )}
+
+      {/* 사진으로 바코드 인식 */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 lg:max-w-2xl lg:mx-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t("photoUploadTitle")}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {t("photoUploadHint")}
+            </p>
+          </div>
+          <label className="cursor-pointer">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleImageUpload}
+              className="hidden"
+              disabled={isUploading}
+            />
+            <span
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                isUploading
+                  ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-wait"
+                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+              }`}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t("photoUploading")}
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4" />
+                  {t("photoUploadButton")}
+                </>
+              )}
+            </span>
+          </label>
+        </div>
+      </div>
 
       {/* 수동 바코드 입력 */}
       <div className="bg-white dark:bg-gray-900 rounded-xl p-4 md:p-5 lg:p-6 shadow-sm dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-800 lg:max-w-2xl lg:mx-auto">
