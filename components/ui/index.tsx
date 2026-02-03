@@ -3,6 +3,9 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
 
+// NumberInput 컴포넌트 re-export
+export { NumberInput } from "./NumberInput";
+
 // Page 컴포넌트
 export function Page({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (

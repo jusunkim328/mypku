@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, NumberInput } from "@/components/ui";
 import { ChevronLeft, Plus } from "lucide-react";
 import {
   searchPKUFoods,
@@ -343,13 +343,13 @@ export default function FoodsClient() {
                 {t("selectQuantity")}
               </label>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
+                <NumberInput
                   value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
+                  onChange={setQuantity}
+                  min={1}
+                  max={2000}
+                  defaultValue={100}
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  min="1"
-                  max="2000"
                 />
                 <span className="text-gray-600 dark:text-gray-400">g</span>
               </div>

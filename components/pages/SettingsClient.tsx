@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useTheme } from "next-themes";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { Page, Navbar, Block, Button, Card, Toggle, List, ListItem, Preloader } from "@/components/ui";
+import { Page, Navbar, Block, Button, Card, Toggle, List, ListItem, Preloader, NumberInput } from "@/components/ui";
 import { Sun, Monitor, Moon, User } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
 import type { Locale } from "@/i18n/routing";
+import type { DailyGoals } from "@/types/nutrition";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 
 const languages: { code: Locale; name: string }[] = [
@@ -97,6 +98,60 @@ export default function SettingsClient() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Daily Goals 드래프트 상태 (입력 중 로컬 상태만 변경, 저장 버튼으로 DB 반영)
+  const [draftGoals, setDraftGoals] = useState<DailyGoals>(dailyGoals);
+  const [isSavingGoals, setIsSavingGoals] = useState(false);
+
+  // 실제 값 비교로 변경 감지 (값을 되돌리면 버튼 숨김)
+  const hasGoalsChanges = useMemo(() => {
+    return (
+      draftGoals.calories !== dailyGoals.calories ||
+      draftGoals.protein_g !== dailyGoals.protein_g ||
+      draftGoals.carbs_g !== dailyGoals.carbs_g ||
+      draftGoals.fat_g !== dailyGoals.fat_g ||
+      draftGoals.phenylalanine_mg !== dailyGoals.phenylalanine_mg
+    );
+  }, [draftGoals, dailyGoals]);
+
+  // dailyGoals가 변경되면 (로그인 시 DB 동기화 등) 드래프트도 업데이트
+  useEffect(() => {
+    setDraftGoals(dailyGoals);
+  }, [dailyGoals]);
+
+  // 페이지 이탈 경고 (저장하지 않은 변경사항 있을 때)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasGoalsChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasGoalsChanges]);
+
+  // 브라우저 뒤로가기 버튼 경고
+  useEffect(() => {
+    if (!hasGoalsChanges) return;
+
+    // 현재 상태를 히스토리에 푸시 (뒤로가기 감지용)
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = () => {
+      const confirmed = window.confirm(t("unsavedChangesWarning"));
+      if (confirmed) {
+        // 사용자가 확인 → 뒤로가기 허용
+        window.history.back();
+      } else {
+        // 사용자가 취소 → 현재 페이지 유지
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [hasGoalsChanges, t]);
+
   const handleModeToggle = async (checked: boolean) => {
     await setMode(checked ? "pku" : "general");
   };
@@ -111,6 +166,34 @@ export default function SettingsClient() {
       toast.success(tAuth("logoutSuccess"));
     } catch {
       toast.error(tAuth("loginFailed"));
+    }
+  };
+
+  // Daily Goals 저장 핸들러
+  const handleSaveGoals = async () => {
+    setIsSavingGoals(true);
+    try {
+      await setDailyGoals(draftGoals);
+      toast.success(t("goalsSaved"));
+    } catch {
+      toast.error(t("saveFailed"));
+    } finally {
+      setIsSavingGoals(false);
+    }
+  };
+
+  // Daily Goals 취소 핸들러
+  const handleCancelGoals = () => {
+    setDraftGoals(dailyGoals);
+  };
+
+  // 앱 내부 네비게이션 경고 (Link 클릭 시)
+  const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (hasGoalsChanges) {
+      const confirmed = window.confirm(t("unsavedChangesWarning"));
+      if (!confirmed) {
+        e.preventDefault();
+      }
     }
   };
 
@@ -130,7 +213,7 @@ export default function SettingsClient() {
       <Navbar
         title={t("title")}
         left={
-          <Link href="/">
+          <Link href="/" onClick={handleNavigation}>
             <Button clear small>
               {tCommon("back")}
             </Button>
@@ -261,18 +344,16 @@ export default function SettingsClient() {
                 <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                   {tNutrients("phenylalanine")} (mg)
                 </label>
-                <input
-                  type="number"
-                  value={dailyGoals.phenylalanine_mg || 300}
-                  onChange={(e) =>
-                    setDailyGoals({
-                      phenylalanine_mg: parseInt(e.target.value) || 300,
-                    })
-                  }
+                <NumberInput
+                  value={draftGoals.phenylalanine_mg || 300}
+                  onChange={(value) => setDraftGoals((prev) => ({ ...prev, phenylalanine_mg: value }))}
+                  min={50}
+                  max={1000}
+                  defaultValue={300}
                   className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
                 />
                 <p className="text-xs text-primary-600 dark:text-primary-400 mt-1.5 font-medium">
-                  = {getExchanges(dailyGoals.phenylalanine_mg || 300)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = 50mg)
+                  = {getExchanges(draftGoals.phenylalanine_mg || 300)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = 50mg)
                 </p>
               </div>
             )}
@@ -280,12 +361,12 @@ export default function SettingsClient() {
               <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("calories")} (kcal)
               </label>
-              <input
-                type="number"
-                value={dailyGoals.calories}
-                onChange={(e) =>
-                  setDailyGoals({ calories: parseInt(e.target.value) || 2000 })
-                }
+              <NumberInput
+                value={draftGoals.calories}
+                onChange={(value) => setDraftGoals((prev) => ({ ...prev, calories: value }))}
+                min={500}
+                max={5000}
+                defaultValue={2000}
                 className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
               />
             </div>
@@ -293,12 +374,12 @@ export default function SettingsClient() {
               <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("protein")} (g)
               </label>
-              <input
-                type="number"
-                value={dailyGoals.protein_g}
-                onChange={(e) =>
-                  setDailyGoals({ protein_g: parseInt(e.target.value) || 50 })
-                }
+              <NumberInput
+                value={draftGoals.protein_g}
+                onChange={(value) => setDraftGoals((prev) => ({ ...prev, protein_g: value }))}
+                min={10}
+                max={200}
+                defaultValue={50}
                 className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
               />
             </div>
@@ -306,12 +387,12 @@ export default function SettingsClient() {
               <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("carbs")} (g)
               </label>
-              <input
-                type="number"
-                value={dailyGoals.carbs_g}
-                onChange={(e) =>
-                  setDailyGoals({ carbs_g: parseInt(e.target.value) || 250 })
-                }
+              <NumberInput
+                value={draftGoals.carbs_g}
+                onChange={(value) => setDraftGoals((prev) => ({ ...prev, carbs_g: value }))}
+                min={50}
+                max={500}
+                defaultValue={250}
                 className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
               />
             </div>
@@ -319,16 +400,27 @@ export default function SettingsClient() {
               <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("fat")} (g)
               </label>
-              <input
-                type="number"
-                value={dailyGoals.fat_g}
-                onChange={(e) =>
-                  setDailyGoals({ fat_g: parseInt(e.target.value) || 65 })
-                }
+              <NumberInput
+                value={draftGoals.fat_g}
+                onChange={(value) => setDraftGoals((prev) => ({ ...prev, fat_g: value }))}
+                min={10}
+                max={200}
+                defaultValue={65}
                 className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
               />
             </div>
           </div>
+          {/* 저장/취소 버튼 */}
+          {hasGoalsChanges && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+              <Button outline onClick={handleCancelGoals}>
+                {tCommon("cancel")}
+              </Button>
+              <Button onClick={handleSaveGoals} disabled={isSavingGoals}>
+                {isSavingGoals ? tCommon("loading") : tCommon("save")}
+              </Button>
+            </div>
+          )}
         </Card>
 
         {/* 앱 정보 */}

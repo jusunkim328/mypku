@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { type PKUFood } from "@/lib/pkuFoodDatabase";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { NumberInput } from "@/components/ui";
 import type { FoodItem } from "@/types/nutrition";
 
 interface FoodSearchInputProps {
@@ -221,13 +222,13 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
               {t("selectQuantity")}
             </label>
             <div className="flex items-center gap-2">
-              <input
-                type="number"
+              <NumberInput
                 value={weight}
-                onChange={(e) => setWeight(Math.max(1, parseInt(e.target.value) || 0))}
+                onChange={setWeight}
+                min={1}
+                max={2000}
+                defaultValue={100}
                 className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                min="1"
-                max="2000"
               />
               <span className="text-indigo-700 dark:text-indigo-300">g</span>
             </div>

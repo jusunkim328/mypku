@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import type { UserMode, DailyGoals } from "@/types/nutrition";
@@ -34,15 +34,27 @@ export function useUserSettings() {
 
   // dailyGoals: 로그인 시 Supabase 우선, 비로그인 시 localStorage
   // DB에서 nullable 필드들이므로 기본값 적용
-  const dailyGoals: DailyGoals = isAuthenticated && dbGoals
-    ? {
+  // useMemo로 메모이제이션하여 불필요한 리렌더링 방지
+  const dailyGoals: DailyGoals = useMemo(() => {
+    if (isAuthenticated && dbGoals) {
+      return {
         calories: dbGoals.calories ?? 2000,
         protein_g: dbGoals.protein_g ?? 50,
         carbs_g: dbGoals.carbs_g ?? 250,
         fat_g: dbGoals.fat_g ?? 65,
         phenylalanine_mg: dbGoals.phenylalanine_mg ?? 300,
-      }
-    : localStore.dailyGoals;
+      };
+    }
+    return localStore.dailyGoals;
+  }, [
+    isAuthenticated,
+    dbGoals?.calories,
+    dbGoals?.protein_g,
+    dbGoals?.carbs_g,
+    dbGoals?.fat_g,
+    dbGoals?.phenylalanine_mg,
+    localStore.dailyGoals,
+  ]);
 
   // mode 변경
   const setMode = useCallback(async (newMode: UserMode) => {

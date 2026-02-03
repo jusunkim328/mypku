@@ -94,7 +94,10 @@
     "version": "MyPKU v0.1.0",
     "hackathon": "Gemini 3 Hackathon Project",
     "language": "Language",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "goalsSaved": "Daily goals saved!",
+    "saveFailed": "Save failed. Please try again.",
+    "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave?"
   },
   "Auth": {
     "login": "Login",
