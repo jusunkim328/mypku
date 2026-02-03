@@ -92,6 +92,12 @@ PWA: Serwist (Service Worker)
 - `hooks/useStreakStore.ts`: 연속 기록 추적
 - `hooks/useBadgeStore.ts`: 뱃지/업적
 
+### 사용자 설정 동기화 패턴
+- `hooks/useUserSettings.ts`: 로그인/비로그인 상태에 따른 데이터 소스 통합
+- `contexts/AuthContext.tsx`: profile, dailyGoals 상태 관리 + Supabase 동기화
+- 로그인 시 Supabase 우선, 비로그인 시 localStorage 사용
+- DB nullable 필드는 기본값 적용 (`dbGoals.calories ?? 2000`)
+
 ### PKU 식품 DB
 - `lib/pkuFoodDatabase.ts`: PKU 식품 검색, 바코드 조회, 외부 API 폴백
 - `lib/foodDataApis.ts`: 외부 식품 API 연동 (USDA, 식약처)
@@ -132,11 +138,26 @@ pku_foods         # PKU 식품 DB (외부 API 캐싱)
 
 ### 타입 정의
 - `types/nutrition.ts`: `NutritionData`, `FoodItem`, `MealRecord`, `PKUSafetyLevel`
-- `lib/supabase/types.ts`: Supabase 테이블 타입
+- `lib/supabase/types.ts`: Supabase 테이블 타입 (MCP 자동 생성)
+
+### Supabase 타입 자동 생성
+DB 스키마 변경 시 Supabase MCP로 타입 재생성:
+```
+mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwhhhgvsussyx")
+```
+- 자동 생성된 타입에는 `__InternalSupabase` 섹션이 포함되어 타입 추론이 정확함
+- 수동 타입 정의 시 `.from().update()` 등에서 `never` 타입 에러 발생 가능
 
 ### 에러 처리
 - API 재시도는 Exponential Backoff 방식 사용 (`lib/pkuFoodDatabase.ts` 참조)
 - Rate limit (429) 발생 시 지수적 대기 시간 증가
+- Supabase 쿼리 타임아웃: AbortController + `.abortSignal()` 사용
+  ```typescript
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  await supabase.from("profiles").select("*").abortSignal(controller.signal);
+  clearTimeout(timeout);
+  ```
 
 ### 면책조항
 - 모든 페이지에 `<Disclaimer />` 컴포넌트 표시 필수
@@ -172,3 +193,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ### 진행 중
 - [ ] Vercel 배포 설정
 - [ ] 프로덕션 에러 핸들링
+- [ ] localStorage → Supabase 마이그레이션 (첫 로그인 시)
+- [ ] waterGoal/waterIntakes Supabase 동기화
+- [ ] 오프라인 동기화 큐 (IndexedDB 기반)

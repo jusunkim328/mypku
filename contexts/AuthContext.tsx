@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "@/hooks/useToast";
 import type { User, Session } from "@supabase/supabase-js";
 import type { Profile, DailyGoals as DBDailyGoals } from "@/lib/supabase/types";
 
@@ -45,17 +46,18 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// 타임아웃 래퍼 (PromiseLike 지원 - Supabase PostgrestBuilder 호환)
-async function withTimeout<T>(
-  promiseLike: PromiseLike<T>,
-  timeoutMs: number = 10000
-): Promise<T> {
-  return Promise.race([
-    Promise.resolve(promiseLike),
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error("Request timeout")), timeoutMs)
-    ),
-  ]);
+// AbortController 기반 타임아웃 헬퍼
+function createTimeoutController(timeoutMs: number = 10000): {
+  signal: AbortSignal;
+  cleanup: () => void;
+} {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  return {
+    signal: controller.signal,
+    cleanup: () => clearTimeout(timeoutId),
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -71,51 +73,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 프로필 가져오기 (의존성 없음)
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
-    console.log("[AuthContext] fetchProfile 시작:", userId);
+    const { signal, cleanup } = createTimeoutController(10000);
+
     try {
-      const { data, error } = await withTimeout(
-        supabaseRef.current
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .single()
-      );
+      const { data, error } = await supabaseRef.current
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .abortSignal(signal)
+        .single();
 
       if (error) {
         console.error("[AuthContext] 프로필 조회 실패:", error);
         return null;
       }
 
-      console.log("[AuthContext] fetchProfile 성공:", data);
       return data as Profile;
     } catch (error) {
-      console.error("[AuthContext] 프로필 조회 에러:", error);
+      // AbortError는 타임아웃으로 인한 정상적인 취소
+      if (error instanceof Error && error.name === "AbortError") {
+        console.error("[AuthContext] 프로필 조회 타임아웃");
+      } else {
+        console.error("[AuthContext] 프로필 조회 에러:", error);
+      }
       return null;
+    } finally {
+      cleanup();
     }
   }, []);
 
   // 일일 목표 가져오기 (의존성 없음)
   const fetchDailyGoals = useCallback(async (userId: string): Promise<DBDailyGoals | null> => {
-    console.log("[AuthContext] fetchDailyGoals 시작:", userId);
+    const { signal, cleanup } = createTimeoutController(10000);
+
     try {
-      const { data, error } = await withTimeout(
-        supabaseRef.current
-          .from("daily_goals")
-          .select("*")
-          .eq("user_id", userId)
-          .single()
-      );
+      const { data, error } = await supabaseRef.current
+        .from("daily_goals")
+        .select("*")
+        .eq("user_id", userId)
+        .abortSignal(signal)
+        .single();
 
       if (error) {
         console.error("[AuthContext] 일일 목표 조회 실패:", error);
         return null;
       }
 
-      console.log("[AuthContext] fetchDailyGoals 성공:", data);
       return data as DBDailyGoals;
     } catch (error) {
-      console.error("[AuthContext] 일일 목표 조회 에러:", error);
+      // AbortError는 타임아웃으로 인한 정상적인 취소
+      if (error instanceof Error && error.name === "AbortError") {
+        console.error("[AuthContext] 일일 목표 조회 타임아웃");
+      } else {
+        console.error("[AuthContext] 일일 목표 조회 에러:", error);
+      }
       return null;
+    } finally {
+      cleanup();
     }
   }, []);
 
@@ -142,8 +156,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 인증 상태 변화 구독
     const { data: { subscription } } = supabaseRef.current.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("[AuthContext] onAuthStateChange:", event, session?.user?.email);
-
         if (!isMounted) return;
 
         setSession(session);
@@ -152,7 +164,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // SIGNED_IN은 토큰이 아직 준비되지 않은 상태일 수 있으므로 스킵
         // INITIAL_SESSION, TOKEN_REFRESHED, SIGNED_OUT에서만 데이터 로드
         if (event === "SIGNED_IN") {
-          console.log("[AuthContext] SIGNED_IN 스킵 (INITIAL_SESSION 대기)");
           return;
         }
 
@@ -213,8 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       await withRetry(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from("profiles")
           .update(updates)
           .eq("id", user.id);
@@ -226,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile((prev) => prev ? { ...prev, ...updates } : null);
     } catch (error) {
       console.error("[AuthContext] 프로필 업데이트 실패:", error);
+      toast.error("설정 저장에 실패했습니다. 다시 시도해 주세요.");
       throw error;
     }
   }, [user, supabase]);
@@ -236,8 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       await withRetry(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from("daily_goals")
           .update(goals)
           .eq("user_id", user.id);
@@ -249,6 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setDailyGoals((prev) => prev ? { ...prev, ...goals } : null);
     } catch (error) {
       console.error("[AuthContext] 일일 목표 업데이트 실패:", error);
+      toast.error("목표 저장에 실패했습니다. 다시 시도해 주세요.");
       throw error;
     }
   }, [user, supabase]);

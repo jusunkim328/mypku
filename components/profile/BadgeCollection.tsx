@@ -82,7 +82,7 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
         <h4
           className={`
             mt-2 text-center text-sm font-medium
-            ${isUnlocked ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}
+            ${isUnlocked ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-400"}
           `}
         >
           {t(badge.titleKey as keyof IntlMessages["Badges"])}

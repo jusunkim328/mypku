@@ -11,9 +11,9 @@ async function searchPKUFoodByName(
 ): Promise<{
   phenylalanine_mg: number;
   protein_g: number;
-  calories?: number;
-  carbs_g?: number;
-  fat_g?: number;
+  calories: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
 } | null> {
   try {
     const supabase = await createClient();

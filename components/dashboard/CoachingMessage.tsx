@@ -126,7 +126,7 @@ export default function CoachingMessage() {
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">
               {t("title")}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("noDataYet")}
             </p>
           </div>

@@ -94,7 +94,7 @@ export default function DailyGoalCard() {
               />
               {isOver && nutrient.warning && (
                 <p className="text-xs text-red-500 dark:text-red-400 mt-1 font-medium animate-pulse">
-                  {t("exceeded") || "Limit exceeded!"}
+                  {t("exceeded")}
                 </p>
               )}
             </div>

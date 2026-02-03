@@ -127,7 +127,8 @@
     "content": "This service is not a medical device and cannot diagnose or treat diseases. Please consult a doctor for important medical decisions. AI analysis results are estimates and for reference only."
   },
   "DailyGoal": {
-    "title": "Daily Goal Progress"
+    "title": "Daily Goal Progress",
+    "exceeded": "Limit exceeded!"
   },
   "Coaching": {
     "title": "AI Coach Feedback",

@@ -258,7 +258,7 @@ export default function SettingsClient() {
           <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
             {isPKU && (
               <div>
-                <label className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                   {tNutrients("phenylalanine")} (mg)
                 </label>
                 <input
@@ -277,7 +277,7 @@ export default function SettingsClient() {
               </div>
             )}
             <div>
-              <label className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("calories")} (kcal)
               </label>
               <input
@@ -290,7 +290,7 @@ export default function SettingsClient() {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("protein")} (g)
               </label>
               <input
@@ -303,7 +303,7 @@ export default function SettingsClient() {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("carbs")} (g)
               </label>
               <input
@@ -316,7 +316,7 @@ export default function SettingsClient() {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("fat")} (g)
               </label>
               <input

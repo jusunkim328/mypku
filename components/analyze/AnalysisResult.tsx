@@ -192,21 +192,21 @@ export default function AnalysisResult({
                   {alternatives.map((food) => (
                     <div
                       key={food.id}
-                      className="bg-white rounded-lg p-3 flex items-center justify-between"
+                      className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between"
                     >
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {food.name_ko || food.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {food.serving_size}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-green-600">
+                        <p className="text-sm font-bold text-green-600 dark:text-green-400">
                           {food.phenylalanine_mg}mg
                         </p>
-                        <p className="text-xs text-gray-500">Phe</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Phe</p>
                       </div>
                     </div>
                   ))}

@@ -151,7 +151,7 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
           }}
           onFocus={() => results.length > 0 && setShowDropdown(true)}
           placeholder={t("searchPlaceholder")}
-          className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
 
         {/* 로딩 인디케이터 */}
@@ -165,28 +165,28 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
         {showDropdown && (
           <div
             ref={dropdownRef}
-            className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-64 overflow-y-auto"
+            className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 max-h-64 overflow-y-auto"
           >
             {results.map((food) => (
               <button
                 key={food.id}
                 onClick={() => handleSelectFood(food)}
-                className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b last:border-b-0 transition-colors"
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
                       {food.name_ko || food.name}
                     </p>
                     {food.brand && (
-                      <p className="text-xs text-gray-500">{food.brand}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{food.brand}</p>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-indigo-600">
+                    <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
                       {food.phenylalanine_mg}mg
                     </p>
-                    <p className="text-xs text-gray-500">Phe/100g</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Phe/100g</p>
                   </div>
                 </div>
               </button>
@@ -197,19 +197,19 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
 
       {/* 선택된 식품 상세 */}
       {selectedFood && (
-        <div className="bg-indigo-50 rounded-lg p-4 space-y-4">
+        <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-4 space-y-4">
           <div className="flex justify-between items-start">
             <div>
-              <h4 className="font-semibold text-indigo-900">
+              <h4 className="font-semibold text-indigo-900 dark:text-indigo-100">
                 {selectedFood.name_ko || selectedFood.name}
               </h4>
               {selectedFood.brand && (
-                <p className="text-sm text-indigo-700">{selectedFood.brand}</p>
+                <p className="text-sm text-indigo-700 dark:text-indigo-300">{selectedFood.brand}</p>
               )}
             </div>
             <button
               onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <X className="w-5 h-5" />
             </button>
@@ -217,7 +217,7 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
 
           {/* 수량 입력 */}
           <div>
-            <label className="block text-sm font-medium text-indigo-800 mb-2">
+            <label className="block text-sm font-medium text-indigo-800 dark:text-indigo-200 mb-2">
               {t("selectQuantity")}
             </label>
             <div className="flex items-center gap-2">
@@ -225,11 +225,11 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
                 type="number"
                 value={weight}
                 onChange={(e) => setWeight(Math.max(1, parseInt(e.target.value) || 0))}
-                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 min="1"
                 max="2000"
               />
-              <span className="text-indigo-700">g</span>
+              <span className="text-indigo-700 dark:text-indigo-300">g</span>
             </div>
             {/* 빠른 선택 버튼 */}
             <div className="flex gap-2 mt-2">
@@ -240,7 +240,7 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                     weight === val
                       ? "bg-indigo-600 text-white"
-                      : "bg-white text-indigo-700 hover:bg-indigo-100"
+                      : "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-gray-600"
                   }`}
                 >
                   {val}g
@@ -250,35 +250,35 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
           </div>
 
           {/* 영양소 미리보기 */}
-          <div className="bg-white rounded-lg p-3">
-            <p className="text-sm text-indigo-800 font-medium mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+            <p className="text-sm text-indigo-800 dark:text-indigo-200 font-medium mb-2">
               {weight}g 영양소:
             </p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-indigo-600 font-bold">
+                <span className="text-indigo-600 dark:text-indigo-400 font-bold">
                   {Math.round(selectedFood.phenylalanine_mg * weight / 100)}mg
                 </span>
-                <span className="text-gray-600 ml-1">Phe</span>
+                <span className="text-gray-600 dark:text-gray-400 ml-1">Phe</span>
               </div>
               <div>
-                <span className="font-semibold">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
                   {getExchanges(selectedFood.phenylalanine_mg * weight / 100)}
                 </span>
-                <span className="text-gray-600 ml-1">{tNutrients("exchanges")}</span>
+                <span className="text-gray-600 dark:text-gray-400 ml-1">{tNutrients("exchanges")}</span>
               </div>
               <div>
-                <span className="font-semibold">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
                   {(selectedFood.protein_g * weight / 100).toFixed(1)}g
                 </span>
-                <span className="text-gray-600 ml-1">{tNutrients("protein")}</span>
+                <span className="text-gray-600 dark:text-gray-400 ml-1">{tNutrients("protein")}</span>
               </div>
               {selectedFood.calories && (
                 <div>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {Math.round(selectedFood.calories * weight / 100)}
                   </span>
-                  <span className="text-gray-600 ml-1">kcal</span>
+                  <span className="text-gray-600 dark:text-gray-400 ml-1">kcal</span>
                 </div>
               )}
             </div>

@@ -45,8 +45,8 @@ export default function LoginContent() {
             <span className="text-3xl text-white font-bold">P</span>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">MyPKU</h1>
-          <p className="text-gray-600 text-sm mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">MyPKU</h1>
+          <p className="text-gray-600 dark:text-gray-300 text-sm mb-8">
             AI-Powered Diet Management
           </p>
 
@@ -78,7 +78,7 @@ export default function LoginContent() {
           </Button>
 
           {/* 게스트 모드 */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
+          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
             <Button
               outline
               onClick={() => router.push("/")}

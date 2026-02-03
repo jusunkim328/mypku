@@ -38,11 +38,11 @@ export default class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
           <Card className="max-w-md w-full p-6 text-center animate-scale-in">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
-                className="w-8 h-8 text-red-500"
+                className="w-8 h-8 text-red-500 dark:text-red-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -55,18 +55,18 @@ export default class ErrorBoundary extends Component<Props, State> {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               오류가 발생했습니다
             </h2>
-            <p className="text-gray-600 text-sm mb-4">
+            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
               일시적인 문제가 발생했습니다. 다시 시도해 주세요.
             </p>
             {process.env.NODE_ENV === "development" && this.state.error && (
-              <details className="text-left bg-gray-100 rounded-lg p-3 mb-4 text-xs">
-                <summary className="cursor-pointer text-gray-700 font-medium">
+              <details className="text-left bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4 text-xs">
+                <summary className="cursor-pointer text-gray-700 dark:text-gray-300 font-medium">
                   오류 상세 정보
                 </summary>
-                <pre className="mt-2 text-red-600 overflow-auto">
+                <pre className="mt-2 text-red-600 dark:text-red-400 overflow-auto">
                   {this.state.error.message}
                 </pre>
               </details>

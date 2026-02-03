@@ -27,18 +27,20 @@ export function useUserSettings() {
   const localStore = useNutritionStore();
 
   // mode: 로그인 시 Supabase 우선, 비로그인 시 localStorage
+  // DB에서 mode는 string | null로 저장되므로 UserMode로 단언
   const mode: UserMode = isAuthenticated && profile?.mode
-    ? profile.mode
+    ? (profile.mode as UserMode)
     : localStore.mode;
 
   // dailyGoals: 로그인 시 Supabase 우선, 비로그인 시 localStorage
+  // DB에서 nullable 필드들이므로 기본값 적용
   const dailyGoals: DailyGoals = isAuthenticated && dbGoals
     ? {
-        calories: dbGoals.calories,
-        protein_g: dbGoals.protein_g,
-        carbs_g: dbGoals.carbs_g,
-        fat_g: dbGoals.fat_g,
-        phenylalanine_mg: dbGoals.phenylalanine_mg,
+        calories: dbGoals.calories ?? 2000,
+        protein_g: dbGoals.protein_g ?? 50,
+        carbs_g: dbGoals.carbs_g ?? 250,
+        fat_g: dbGoals.fat_g ?? 65,
+        phenylalanine_mg: dbGoals.phenylalanine_mg ?? 300,
       }
     : localStore.dailyGoals;
 
