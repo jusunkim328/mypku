@@ -45,13 +45,13 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// 타임아웃 래퍼
+// 타임아웃 래퍼 (PromiseLike 지원 - Supabase PostgrestBuilder 호환)
 async function withTimeout<T>(
-  promise: Promise<T>,
+  promiseLike: PromiseLike<T>,
   timeoutMs: number = 10000
 ): Promise<T> {
   return Promise.race([
-    promise,
+    Promise.resolve(promiseLike),
     new Promise<T>((_, reject) =>
       setTimeout(() => reject(new Error("Request timeout")), timeoutMs)
     ),
