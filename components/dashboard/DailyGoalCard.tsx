@@ -2,13 +2,13 @@
 
 import { useTranslations } from "next-intl";
 import { Card, Progressbar } from "@/components/ui";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
 
 export default function DailyGoalCard() {
   const t = useTranslations("DailyGoal");
   const tNutrients = useTranslations("Nutrients");
-  const { mode, dailyGoals } = useNutritionStore();
+  const { mode, dailyGoals } = useUserSettings();
   const { getTodayNutrition } = useMealRecords();
   const isPKU = mode === "pku";
 

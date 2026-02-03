@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, AlertTriangle, X } from "lucide-react";
 import { Card, Button } from "@/components/ui";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import type { FoodItem, PKUSafetyLevel } from "@/types/nutrition";
 
 interface FoodItemCardProps {
@@ -43,7 +43,7 @@ export default function FoodItemCard({ item, onUpdate }: FoodItemCardProps) {
   const t = useTranslations("FoodItem");
   const tCommon = useTranslations("Common");
   const tNutrients = useTranslations("Nutrients");
-  const { mode, getExchanges } = useNutritionStore();
+  const { mode, getExchanges } = useUserSettings();
   const isPKU = mode === "pku";
 
   // AI가 반환한 exchanges 사용, 없으면 계산

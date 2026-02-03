@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Toggle, List, ListItem, Preloader } from "@/components/ui";
 import { Sun, Monitor, Moon, User } from "lucide-react";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
 import type { Locale } from "@/i18n/routing";
@@ -86,7 +86,7 @@ export default function SettingsClient() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
-  const { mode, setMode, dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useNutritionStore();
+  const { mode, setMode, dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useUserSettings();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
   const isPKU = mode === "pku";
 
@@ -97,8 +97,8 @@ export default function SettingsClient() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleModeToggle = (checked: boolean) => {
-    setMode(checked ? "pku" : "general");
+  const handleModeToggle = async (checked: boolean) => {
+    await setMode(checked ? "pku" : "general");
   };
 
   const handleLanguageChange = (newLocale: Locale) => {

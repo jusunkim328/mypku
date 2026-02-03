@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { ChevronDown } from "lucide-react";
 import { useMealRecords } from "@/hooks/useMealRecords";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
 import CoachingMessage from "@/components/dashboard/CoachingMessage";
 import CalendarView from "@/components/dashboard/CalendarView";
@@ -19,7 +19,7 @@ export default function HistoryClient() {
   const tNutrients = useTranslations("Nutrients");
   const format = useFormatter();
   const { mealRecords, removeMealRecord, isLoading } = useMealRecords();
-  const { mode, _hasHydrated } = useNutritionStore();
+  const { mode, _hasHydrated } = useUserSettings();
   const isPKU = mode === "pku";
 
   // 날짜 선택 상태

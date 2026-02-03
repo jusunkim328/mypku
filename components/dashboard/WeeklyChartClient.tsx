@@ -13,6 +13,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import PeriodSelector, { type ChartPeriod } from "./PeriodSelector";
@@ -22,8 +23,10 @@ export default function WeeklyChartClient() {
   const tChart = useTranslations("Chart");
   const tNutrients = useTranslations("Nutrients");
   const format = useFormatter();
-  // 월간 데이터는 로컬 스토어에서, 일간/주간은 인증 상태에 따라 DB 또는 로컬에서
-  const { mode, getMonthlyData, dailyGoals } = useNutritionStore();
+  // mode, dailyGoals는 Supabase 동기화 (로그인 시)
+  const { mode, dailyGoals } = useUserSettings();
+  // 월간 데이터는 로컬 스토어에서 (Phase 1)
+  const { getMonthlyData } = useNutritionStore();
   const { getWeeklyData, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
   const isPKU = mode === "pku";
 

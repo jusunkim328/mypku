@@ -9,7 +9,7 @@ import AnalysisResult from "@/components/analyze/AnalysisResult";
 import VoiceInput from "@/components/analyze/VoiceInput";
 import FoodSearchInput from "@/components/analyze/FoodSearchInput";
 import { useMealRecords } from "@/hooks/useMealRecords";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useStreakStore } from "@/hooks/useStreakStore";
 import { toast } from "@/hooks/useToast";
@@ -56,7 +56,7 @@ export default function AnalyzeClient() {
   const tMeals = useTranslations("MealTypes");
   const tVoice = useTranslations("VoiceInput");
   const { addMealRecord } = useMealRecords();
-  const { mode } = useNutritionStore();
+  const { mode } = useUserSettings();
   const { streakMilestones, permission } = useNotificationStore();
   const { currentStreak } = useStreakStore();
 

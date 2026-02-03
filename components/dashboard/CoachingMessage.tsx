@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Card, Button, Preloader } from "@/components/ui";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
 
 const CACHE_KEY = "mypku-coaching-cache";
@@ -50,7 +50,7 @@ function setCachedMessage(message: string, mode: string, locale: string): void {
 export default function CoachingMessage() {
   const t = useTranslations("Coaching");
   const locale = useLocale();
-  const { mode, dailyGoals } = useNutritionStore();
+  const { mode, dailyGoals } = useUserSettings();
   const { getWeeklyData, isLoading: recordsLoading } = useMealRecords();
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);

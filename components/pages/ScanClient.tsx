@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import BarcodeScanner from "@/components/scan/BarcodeScanner";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { toast } from "@/hooks/useToast";
 import type { NutritionData, MealType } from "@/types/nutrition";
@@ -39,7 +39,7 @@ export default function ScanClient() {
   const tMeals = useTranslations("MealTypes");
   const tNutrients = useTranslations("Nutrients");
 
-  const { mode, _hasHydrated } = useNutritionStore();
+  const { mode, _hasHydrated } = useUserSettings();
   const { addMealRecord } = useMealRecords();
   const isPKU = mode === "pku";
 

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Page, Block, Button, Card, Preloader } from "@/components/ui";
 import { ScanBarcode, Database, Settings } from "lucide-react";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +21,7 @@ export default function HomeClient() {
   const tModes = useTranslations("Modes");
   const tNutrients = useTranslations("Nutrients");
   const tCommon = useTranslations("Common");
-  const { mode, dailyGoals, _hasHydrated, getExchanges, getExchangeGoal } = useNutritionStore();
+  const { mode, dailyGoals, _hasHydrated, getExchanges, getExchangeGoal } = useUserSettings();
   const { pheWarnings, permission } = useNotificationStore();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();

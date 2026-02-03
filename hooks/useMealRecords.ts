@@ -183,16 +183,19 @@ export function useMealRecords(): UseMealRecordsReturn {
       record: Omit<MealRecordWithItems, "id">,
       imageBase64?: string
     ) => {
+      // 로컬 스토어에 항상 저장 (오프라인 백업)
+      const localRecord = {
+        id: `meal-${Date.now()}`,
+        timestamp: record.timestamp,
+        mealType: record.mealType,
+        imageBase64,
+        items: record.items,
+        totalNutrition: record.totalNutrition,
+      };
+
       if (!isAuthenticated) {
-        // 로컬 스토어에 저장
-        localStore.addMealRecord({
-          id: `meal-${Date.now()}`,
-          timestamp: record.timestamp,
-          mealType: record.mealType,
-          imageBase64,
-          items: record.items,
-          totalNutrition: record.totalNutrition,
-        });
+        // 비로그인: 로컬 스토어에만 저장
+        localStore.addMealRecord(localRecord);
         return;
       }
 
@@ -245,8 +248,22 @@ export function useMealRecords(): UseMealRecordsReturn {
         toast.success("식사 기록이 저장되었습니다!");
       } catch (error) {
         console.error("식사 기록 저장 실패:", error);
-        toast.error("식사 기록 저장에 실패했습니다.");
-        throw error;
+
+        // 네트워크 에러 시 로컬에 백업 저장
+        const isNetworkError =
+          error instanceof Error &&
+          (error.message.includes("network") ||
+            error.message.includes("connection") ||
+            error.message.includes("fetch"));
+
+        if (isNetworkError || !navigator.onLine) {
+          // 오프라인: 로컬에 저장하고 나중에 동기화
+          localStore.addMealRecord(localRecord);
+          toast.warning("오프라인 상태입니다. 기록이 로컬에 저장되었습니다.");
+        } else {
+          toast.error("식사 기록 저장에 실패했습니다.");
+          throw error;
+        }
       }
     },
     [isAuthenticated, user, supabase, localStore, fetchRecords]

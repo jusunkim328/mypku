@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { type PKUFood } from "@/lib/pkuFoodDatabase";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import type { FoodItem } from "@/types/nutrition";
 
 interface FoodSearchInputProps {
@@ -33,7 +33,7 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
   const tCommon = useTranslations("Common");
   const tNutrients = useTranslations("Nutrients");
 
-  const { getExchanges } = useNutritionStore();
+  const { getExchanges } = useUserSettings();
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PKUFood[]>([]);

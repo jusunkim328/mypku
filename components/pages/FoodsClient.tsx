@@ -14,7 +14,7 @@ import {
   type PKUFood,
   type FoodCategory,
 } from "@/lib/pkuFoodDatabase";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { toast } from "@/hooks/useToast";
 import type { MealType, FoodItem } from "@/types/nutrition";
@@ -43,7 +43,7 @@ export default function FoodsClient() {
   const tMealTypes = useTranslations("MealTypes");
   const locale = useLocale();
 
-  const { getExchanges } = useNutritionStore();
+  const { getExchanges } = useUserSettings();
   const { addMealRecord } = useMealRecords();
 
   const [searchQuery, setSearchQuery] = useState("");

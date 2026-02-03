@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useBadgeStore, type Badge, type BadgeStats } from "@/hooks/useBadgeStore";
 import { useStreakStore } from "@/hooks/useStreakStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface BadgeCollectionProps {
   showAll?: boolean;
@@ -16,7 +16,7 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
   const { badges, checkAndUnlockBadges, getUnlockedBadges, getLockedBadges, _hasHydrated } = useBadgeStore();
   const { currentStreak, longestStreak, totalLoggingDays } = useStreakStore();
   const { mealRecords } = useMealRecords();
-  const { mode } = useNutritionStore();
+  const { mode } = useUserSettings();
 
   // 배지 달성 조건 체크
   useEffect(() => {

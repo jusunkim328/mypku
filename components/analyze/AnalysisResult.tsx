@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui";
 import FoodItemCard from "./FoodItemCard";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { getFoodsByPheRange, type PKUFood } from "@/lib/pkuFoodDatabase";
 import type { FoodItem, NutritionData } from "@/types/nutrition";
 
@@ -21,7 +21,7 @@ export default function AnalysisResult({
 }: AnalysisResultProps) {
   const t = useTranslations("AnalyzePage");
   const tNutrients = useTranslations("Nutrients");
-  const { mode, getExchanges } = useNutritionStore();
+  const { mode, getExchanges } = useUserSettings();
   const isPKU = mode === "pku";
 
   // AI가 반환한 총 exchanges 계산 (있으면 사용, 없으면 기존 방식)

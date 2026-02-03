@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface WaterTrackerProps {
   compact?: boolean;
@@ -10,7 +10,7 @@ interface WaterTrackerProps {
 
 export default function WaterTracker({ compact = false }: WaterTrackerProps) {
   const t = useTranslations("Water");
-  const { waterGoal, getTodayWaterIntake, addWaterGlass, removeWaterGlass } = useNutritionStore();
+  const { waterGoal, getTodayWaterIntake, addWaterGlass, removeWaterGlass } = useUserSettings();
 
   const todayIntake = getTodayWaterIntake();
   const percentage = Math.min((todayIntake / waterGoal) * 100, 100);

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import type { NutritionData } from "@/types/nutrition";
 
@@ -14,7 +15,10 @@ interface CalendarViewProps {
 export default function CalendarView({ onDateSelect, selectedDate }: CalendarViewProps) {
   const t = useTranslations("Calendar");
   const tCommon = useTranslations("Common");
-  const { mode, dailyGoals, getMonthlyData } = useNutritionStore();
+  // mode, dailyGoals는 Supabase 동기화 (로그인 시)
+  const { mode, dailyGoals } = useUserSettings();
+  // 월간 데이터는 로컬 스토어에서 (Phase 1)
+  const { getMonthlyData } = useNutritionStore();
 
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = selectedDate || new Date();
