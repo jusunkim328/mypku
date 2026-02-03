@@ -59,7 +59,7 @@ class ConsensusValidator {
   private readonly windowSize: number;
   private lastInvalidBarcode: string | null = null;
 
-  constructor(minConsensus = 3, windowSize = 5) {
+  constructor(minConsensus = 2, windowSize = 4) {
     this.minConsensus = minConsensus;
     this.windowSize = windowSize;
   }
@@ -130,7 +130,6 @@ interface BarcodeScannerProps {
 export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps) {
   const t = useTranslations("BarcodeScanner");
   const videoRef = useRef<HTMLVideoElement>(null);
-  const quaggaContainerRef = useRef<HTMLDivElement>(null); // Quagga2용 컨테이너
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [hasCamera, setHasCamera] = useState(true);
@@ -138,6 +137,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  // zxing-wasm은 정확도가 높아서 2회 검증으로 충분
   const validatorRef = useRef<ConsensusValidator>(new ConsensusValidator(2, 4));
 
   // 스캔 피드백 상태
@@ -155,7 +155,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const [hintClickedOn, setHintClickedOn] = useState(false);
 
   // 감지 방법 표시
-  const [detectionMethod, setDetectionMethod] = useState<"native" | "quagga" | null>(null);
+  const [detectionMethod, setDetectionMethod] = useState<"native" | "zxing-wasm" | null>(null);
 
   // 스캐닝 중지 (먼저 정의)
   const stopScanning = useCallback(() => {
@@ -179,11 +179,6 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
 
     if (videoRef.current) {
       videoRef.current.srcObject = null;
-    }
-
-    // Quagga 컨테이너 정리
-    if (quaggaContainerRef.current) {
-      quaggaContainerRef.current.innerHTML = "";
     }
 
     // 타임아웃 정리
@@ -287,100 +282,107 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
     };
   }, [onScan, stopScanning, scanStatus]);
 
-  // Quagga2 폴백 사용
-  const detectWithQuagga = useCallback(async () => {
-    const Quagga = (await import("@ericblade/quagga2")).default;
+  // zxing-wasm 폴백 사용 (Safari 최적화)
+  const detectWithZxingWasm = useCallback(async () => {
+    const { readBarcodesFromImageData, setZXingModuleOverrides } = await import("zxing-wasm/reader");
+
+    // WASM 모듈 로드 (CDN에서)
+    setZXingModuleOverrides({
+      locateFile: (path: string, prefix: string) => {
+        if (path.endsWith(".wasm")) {
+          return `https://cdn.jsdelivr.net/npm/zxing-wasm@2/dist/reader/${path}`;
+        }
+        return prefix + path;
+      },
+    });
 
     let isActive = true;
     const validator = validatorRef.current;
-    setDetectionMethod("quagga");
+    setDetectionMethod("zxing-wasm");
 
-    // Quagga 초기화 - 컨테이너 div를 target으로 사용
-    const quaggaConfig = {
-      inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        target: quaggaContainerRef.current!, // 컨테이너 div 사용
-        constraints: {
-          facingMode: "environment",
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-        },
+    // 카메라 스트림 획득
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
       },
-      frequency: 20, // 초당 20회 스캔 (기본값 10)
-      decoder: {
-        readers: [
-          "ean_reader",      // EAN-13
-          "ean_8_reader",    // EAN-8
-          "upc_reader",      // UPC-A
-        ],
-      },
-      locate: true,
-      locator: {
-        patchSize: "small", // medium → small (더 빠름)
-        halfSample: true,
-      },
-      numOfWorkers: navigator.hardwareConcurrency || 2, // 병렬 처리
-    };
+    });
+    streamRef.current = stream;
 
-    Quagga.init(
-      quaggaConfig as Parameters<typeof Quagga.init>[0],
-      (err: Error | null) => {
-        if (err) {
-          console.error("Quagga init error:", err);
-          onError?.(t("cameraError"));
-          return;
-        }
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      await videoRef.current.play();
+    }
 
-        if (isActive) {
-          Quagga.start();
-        }
-      }
-    );
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
 
-    // 바코드 감지 핸들러
-    const onDetected = (result: { codeResult?: { code?: string | null } }) => {
-      if (!isActive || !result.codeResult?.code) return;
+    const detect = async () => {
+      if (!isActive || !videoRef.current) return;
 
-      const rawValue = result.codeResult.code;
-      const validationResult = validator.addResult(rawValue);
+      const video = videoRef.current;
+      if (video.readyState === 4) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
 
-      if (!validationResult.isValid) {
-        setScanStatus("invalid");
-        setDetectedBarcode(validationResult.currentBarcode);
-        setVerifyProgress(0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-        if (invalidTimeoutRef.current) {
-          clearTimeout(invalidTimeoutRef.current);
-        }
-        invalidTimeoutRef.current = setTimeout(() => {
-          if (isActive) {
-            setScanStatus("detecting");
-            setDetectedBarcode(null);
+        try {
+          const results = await readBarcodesFromImageData(imageData, {
+            formats: ["EAN-13", "EAN-8", "UPC-A"],
+            tryHarder: true,
+          });
+
+          if (results.length > 0 && results[0].text) {
+            const rawValue = results[0].text;
+            console.log("[zxing-wasm] Detected:", rawValue);
+            const validationResult = validator.addResult(rawValue);
+
+            if (!validationResult.isValid) {
+              setScanStatus("invalid");
+              setDetectedBarcode(validationResult.currentBarcode);
+              setVerifyProgress(0);
+
+              if (invalidTimeoutRef.current) {
+                clearTimeout(invalidTimeoutRef.current);
+              }
+              invalidTimeoutRef.current = setTimeout(() => {
+                if (isActive) {
+                  setScanStatus("detecting");
+                  setDetectedBarcode(null);
+                }
+              }, 1500);
+            } else if (validationResult.consensus) {
+              isActive = false;
+              onScan(validationResult.consensus);
+              stopScanning();
+              return;
+            } else {
+              setScanStatus("verifying");
+              setDetectedBarcode(validationResult.currentBarcode);
+              setVerifyProgress(validationResult.progress);
+              setShowHint(false);
+            }
           }
-        }, 1500);
-      } else if (validationResult.consensus) {
-        isActive = false;
-        Quagga.stop();
-        onScan(validationResult.consensus);
-        stopScanning();
-      } else {
-        setScanStatus("verifying");
-        setDetectedBarcode(validationResult.currentBarcode);
-        setVerifyProgress(validationResult.progress);
-        setShowHint(false);
+        } catch (err) {
+          console.error("[zxing-wasm] Detection error:", err);
+        }
+      }
+
+      if (isActive) {
+        // 10fps로 스캔 (100ms 간격)
+        setTimeout(() => requestAnimationFrame(detect), 100);
       }
     };
 
-    Quagga.onDetected(onDetected);
+    detect();
 
-    // cleanup 함수 반환
     return () => {
       isActive = false;
-      Quagga.offDetected(onDetected);
-      Quagga.stop();
     };
-  }, [onScan, onError, stopScanning, t]);
+  }, [onScan, stopScanning]);
 
   // 바코드 감지 시작
   const startScanning = useCallback(async () => {
@@ -415,7 +417,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
           cleanupRef.current = detectWithNativeAPI();
         }
       } else {
-        // Quagga2 폴백 사용
+        // zxing-wasm 폴백 사용
         setIsScanning(true);
         setScanStatus("detecting");
         scanStartTimeRef.current = Date.now();
@@ -425,14 +427,14 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
           setShowHint(true);
         }, 10000);
 
-        cleanupRef.current = await detectWithQuagga();
+        cleanupRef.current = await detectWithZxingWasm();
       }
     } catch (err) {
       console.error("Camera access error:", err);
       setHasCamera(false);
       onError?.(t("cameraError"));
     }
-  }, [detectWithNativeAPI, detectWithQuagga, onError, t]);
+  }, [detectWithNativeAPI, detectWithZxingWasm, onError, t]);
 
   // 수동 바코드 입력 처리
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -450,7 +452,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
     };
   }, [stopScanning]);
 
-  // 진행률 인디케이터 렌더링
+  // 진행률 인디케이터 렌더링 (2회 검증)
   const renderProgressDots = () => {
     const dots = [];
     for (let i = 0; i < 2; i++) {
@@ -473,24 +475,12 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
       {/* 카메라 뷰 */}
       {hasCamera && (
         <div className="relative bg-black rounded-xl overflow-hidden aspect-[4/3] md:aspect-video lg:max-w-2xl lg:mx-auto">
-          {/* Native API용 video 엘리먼트 */}
+          {/* video 엘리먼트 */}
           <video
             ref={videoRef}
-            className={`w-full h-full object-cover ${detectionMethod === "quagga" ? "hidden" : ""}`}
+            className="w-full h-full object-cover"
             playsInline
             muted
-          />
-
-          {/* Quagga2용 컨테이너 - Quagga가 여기에 video 엘리먼트를 생성 */}
-          <div
-            ref={quaggaContainerRef}
-            id="quagga-container"
-            className={`w-full h-full ${detectionMethod === "quagga" ? "block" : "hidden"}`}
-            style={{
-              position: detectionMethod === "quagga" ? "absolute" : "static",
-              top: 0,
-              left: 0,
-            }}
           />
 
           <canvas ref={canvasRef} className="hidden" />
@@ -643,7 +633,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
               {/* 감지 방법 표시 (개발용, 작은 텍스트) */}
               {detectionMethod && (
                 <div className="absolute top-2 left-2 text-white/50 text-xs bg-black/30 px-2 py-0.5 rounded">
-                  {detectionMethod === "native" ? "Native API" : "Quagga2"}
+                  {detectionMethod === "native" ? "Native API" : "zxing-wasm"}
                 </div>
               )}
             </div>
@@ -704,7 +694,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
         </form>
       </div>
 
-      {/* 스캔 애니메이션 스타일 + Quagga 비디오 스타일 */}
+      {/* 스캔 애니메이션 스타일 */}
       <style jsx global>{`
         @keyframes scan {
           0%, 100% {
@@ -716,24 +706,6 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
         }
         .animate-scan {
           animation: scan 2s ease-in-out infinite;
-        }
-        /* Quagga가 생성하는 요소 스타일링 */
-        #quagga-container {
-          position: relative;
-        }
-        #quagga-container video {
-          width: 100% !important;
-          height: 100% !important;
-          object-fit: cover !important;
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-        }
-        #quagga-container canvas {
-          display: none !important;
-        }
-        #quagga-container .drawingBuffer {
-          display: none !important;
         }
       `}</style>
     </div>
