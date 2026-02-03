@@ -138,7 +138,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
-  const validatorRef = useRef<ConsensusValidator>(new ConsensusValidator(3, 5));
+  const validatorRef = useRef<ConsensusValidator>(new ConsensusValidator(2, 4));
 
   // 스캔 피드백 상태
   const [scanStatus, setScanStatus] = useState<ScanStatus>("idle");
@@ -150,6 +150,9 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const [showHint, setShowHint] = useState(false);
   const hintTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scanStartTimeRef = useRef<number>(0);
+
+  // 사용자가 힌트 버튼을 클릭하여 활성화했는지
+  const [hintClickedOn, setHintClickedOn] = useState(false);
 
   // 감지 방법 표시
   const [detectionMethod, setDetectionMethod] = useState<"native" | "quagga" | null>(null);
@@ -203,6 +206,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
     setVerifyProgress(0);
     setShowHint(false);
     setDetectionMethod(null);
+    setHintClickedOn(false);
   }, []);
 
   // Native BarcodeDetector API 사용
@@ -299,25 +303,24 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
         target: quaggaContainerRef.current!, // 컨테이너 div 사용
         constraints: {
           facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 640 },
+          height: { ideal: 480 },
         },
       },
+      frequency: 20, // 초당 20회 스캔 (기본값 10)
       decoder: {
         readers: [
-          "ean_reader",
-          "ean_8_reader",
-          "upc_reader",
-          "upc_e_reader",
-          "code_128_reader",
-          "code_39_reader",
+          "ean_reader",      // EAN-13
+          "ean_8_reader",    // EAN-8
+          "upc_reader",      // UPC-A
         ],
       },
       locate: true,
       locator: {
-        patchSize: "medium",
+        patchSize: "small", // medium → small (더 빠름)
         halfSample: true,
       },
+      numOfWorkers: navigator.hardwareConcurrency || 2, // 병렬 처리
     };
 
     Quagga.init(
@@ -404,10 +407,10 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
           setScanStatus("detecting");
           scanStartTimeRef.current = Date.now();
 
-          // 5초 후 힌트 표시 타이머 시작
+          // 10초 후 힌트 자동 표시 타이머 시작
           hintTimeoutRef.current = setTimeout(() => {
             setShowHint(true);
-          }, 5000);
+          }, 10000);
 
           cleanupRef.current = detectWithNativeAPI();
         }
@@ -417,10 +420,10 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
         setScanStatus("detecting");
         scanStartTimeRef.current = Date.now();
 
-        // 5초 후 힌트 표시 타이머 시작
+        // 10초 후 힌트 자동 표시 타이머 시작
         hintTimeoutRef.current = setTimeout(() => {
           setShowHint(true);
-        }, 5000);
+        }, 10000);
 
         cleanupRef.current = await detectWithQuagga();
       }
@@ -450,7 +453,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   // 진행률 인디케이터 렌더링
   const renderProgressDots = () => {
     const dots = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       dots.push(
         <span
           key={i}
@@ -563,7 +566,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
                     </p>
                     {/* 진행률 점 표시 (대기 상태) */}
                     <div className="flex justify-center">
-                      {[0, 1, 2].map((i) => (
+                      {[0, 1].map((i) => (
                         <span
                           key={i}
                           className="inline-block w-2.5 h-2.5 rounded-full mx-0.5 bg-white/30"
@@ -575,7 +578,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
                 {scanStatus === "verifying" && detectedBarcode && (
                   <div className="bg-green-500/90 px-4 py-2 rounded-lg space-y-1.5">
                     <p className="text-white text-sm font-medium">
-                      {t("verifying")} ({verifyProgress}/3)
+                      {t("verifying")} ({verifyProgress}/2)
                     </p>
                     {/* 진행률 점 표시 */}
                     <div className="flex justify-center">
@@ -596,9 +599,9 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
                 )}
               </div>
 
-              {/* 안내 메시지 (5초 후 표시) */}
-              {showHint && scanStatus === "detecting" && (
-                <div className="absolute bottom-20 left-4 right-4 bg-yellow-500/90 text-black text-sm px-4 py-3 rounded-lg flex items-start gap-2 pointer-events-auto">
+              {/* 안내 메시지 (10초 후 자동 표시 또는 정보 버튼 클릭 시) */}
+              {(showHint || hintClickedOn) && scanStatus === "detecting" && (
+                <div className="absolute bottom-14 left-4 right-4 bg-yellow-500/90 text-black text-sm px-4 py-3 rounded-lg flex items-start gap-2 pointer-events-auto">
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium">{t("hintTitle")}</p>
@@ -608,6 +611,32 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
                       <li>• {t("hint3")}</li>
                     </ul>
                   </div>
+                </div>
+              )}
+
+              {/* 정보 버튼 (스캔 중 항상 표시) */}
+              {isScanning && scanStatus === "detecting" && (
+                <div className="absolute top-2 right-2 z-10 pointer-events-auto">
+                  <button
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors shadow-lg ${
+                      showHint || hintClickedOn
+                        ? "bg-yellow-400 text-black"
+                        : "bg-yellow-500/90 text-black hover:bg-yellow-400"
+                    }`}
+                    onClick={() => {
+                      if (showHint || hintClickedOn) {
+                        // 힌트가 표시 중이면 둘 다 끄기
+                        setShowHint(false);
+                        setHintClickedOn(false);
+                      } else {
+                        // 힌트가 숨겨져 있으면 클릭으로 켜기
+                        setHintClickedOn(true);
+                      }
+                    }}
+                    aria-label="Toggle scanning hints"
+                  >
+                    <AlertCircle className="w-5 h-5" />
+                  </button>
                 </div>
               )}
 
