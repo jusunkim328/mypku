@@ -3,12 +3,12 @@
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
+import { Page, Block, Button, Card, Preloader } from "@/components/ui";
+import { ScanBarcode, Database, Settings } from "lucide-react";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/useToast";
 import { showPheWarning } from "@/lib/notifications";
 import NutrientRing from "@/components/dashboard/NutrientRing";
 import DailyGoalCard from "@/components/dashboard/DailyGoalCard";
@@ -21,22 +21,12 @@ export default function HomeClient() {
   const tModes = useTranslations("Modes");
   const tNutrients = useTranslations("Nutrients");
   const tCommon = useTranslations("Common");
-  const tAuth = useTranslations("Auth");
   const { mode, dailyGoals, _hasHydrated, getExchanges, getExchangeGoal } = useNutritionStore();
   const { pheWarnings, permission } = useNotificationStore();
-  const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
 
   const lastWarningRef = useRef<number>(0);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success(tAuth("logoutSuccess"));
-    } catch {
-      toast.error(tAuth("loginFailed"));
-    }
-  };
   const isPKU = mode === "pku";
 
   // Phe 한도 경고 알림
@@ -73,51 +63,62 @@ export default function HomeClient() {
 
   return (
     <Page>
-      <Navbar
-        title={t("title")}
-        subtitle={isPKU ? tModes("pku") : tModes("general")}
-        right={
-          <div className="flex items-center gap-2">
-            {!authLoading && (
-              isAuthenticated ? (
-                <>
-                  {user?.user_metadata?.avatar_url ? (
-                    <img
-                      src={user.user_metadata.avatar_url}
-                      alt="Profile"
-                      className="w-7 h-7 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-medium">
-                      {user?.email?.[0]?.toUpperCase() || "U"}
-                    </div>
-                  )}
-                  <Button clear small onClick={handleLogout} className="text-red-500">
-                    {tAuth("logout")}
-                  </Button>
-                </>
-              ) : (
-                <Link href="/auth/login">
-                  <Button clear small>
-                    {tAuth("login")}
-                  </Button>
-                </Link>
-              )
-            )}
-            <Link href="/settings">
-              <Button clear small>
-                {tCommon("settings")}
-              </Button>
-            </Link>
+      {/* 커스텀 헤더 - 왼쪽 정렬 레이아웃 */}
+      <header className="sticky top-0 z-50 glass border-b border-gray-200/50 dark:border-gray-700/50">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 py-3 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            {/* 왼쪽: 타이틀 */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-lg">P</span>
+              </div>
+              <div>
+                <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">
+                  {t("title")}
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {isPKU ? tModes("pku") : tModes("general")}
+                </p>
+              </div>
+            </div>
+
+            {/* 오른쪽: 프로필/설정 */}
+            <div className="flex items-center gap-2">
+              {!authLoading && (
+                isAuthenticated ? (
+                  <Link href="/settings">
+                    {user?.user_metadata?.avatar_url ? (
+                      <img
+                        src={user.user_metadata.avatar_url}
+                        alt="Settings"
+                        className="w-9 h-9 rounded-full ring-2 ring-primary-200 dark:ring-primary-700 hover:ring-primary-400 dark:hover:ring-primary-500 transition-all cursor-pointer"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 hover:from-primary-500 hover:to-primary-700 flex items-center justify-center text-white text-sm font-semibold transition-all cursor-pointer">
+                        {user?.email?.[0]?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                  </Link>
+                ) : (
+                  <Link href="/settings">
+                    <button className="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      <Settings className="w-5 h-5" />
+                    </button>
+                  </Link>
+                )
+              )}
+            </div>
           </div>
-        }
-      />
+        </div>
+      </header>
 
       <Block className="space-y-4">
         {/* 오늘의 영양소 요약 */}
-        <Card className="p-4">
-          <h2 className="text-lg font-semibold mb-4">{t("todayIntake")}</h2>
-          <div className="flex justify-around">
+        <Card className="p-5 md:p-6 lg:p-8" elevated>
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-5 md:mb-6">
+            {t("todayIntake")}
+          </h2>
+          <div className="flex justify-around md:justify-center md:gap-8 lg:gap-12">
             {isPKU ? (
               <NutrientRing
                 label={tNutrients("phenylalanine")}
@@ -173,30 +174,26 @@ export default function HomeClient() {
         <WaterTracker />
 
         {/* 식사 기록 버튼 */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/analyze" className="col-span-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <Link href="/analyze" className="col-span-2 md:col-span-4">
             <Button large className="w-full">
               {t("takePhoto")}
             </Button>
           </Link>
-          <Link href="/scan">
+          <Link href="/scan" className="md:col-span-2">
             <Button large outline className="w-full flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-              </svg>
+              <ScanBarcode className="w-5 h-5" />
               {t("scanBarcode")}
             </Button>
           </Link>
-          <Link href="/history">
+          <Link href="/history" className="md:col-span-2">
             <Button large outline className="w-full">
               {t("viewHistory")}
             </Button>
           </Link>
-          <Link href="/foods" className="col-span-2">
+          <Link href="/foods" className="col-span-2 md:col-span-4">
             <Button large outline className="w-full flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+              <Database className="w-5 h-5" />
               {t("foodDatabase")}
             </Button>
           </Link>

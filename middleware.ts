@@ -34,7 +34,9 @@ export const config = {
      * - _next/image (이미지 최적화)
      * - favicon.ico (파비콘)
      * - 이미지 파일 (svg, png, jpg, etc.)
+     * - sw.js (서비스 워커)
+     * - manifest.json (PWA 매니페스트)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

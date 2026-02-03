@@ -167,7 +167,7 @@ export default function ScanClient() {
         {isLoading && (
           <Card className="p-6 text-center">
             <Preloader />
-            <p className="mt-2 text-gray-600">{t("searching")}</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">{t("searching")}</p>
           </Card>
         )}
 
@@ -186,11 +186,11 @@ export default function ScanClient() {
                     />
                   )}
                   <div className="flex-1">
-                    <h3 className="font-semibold">{scanResult.product.name}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">{scanResult.product.name}</h3>
                     {scanResult.product.brand && (
-                      <p className="text-sm text-gray-500">{scanResult.product.brand}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{scanResult.product.brand}</p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       {t("barcode")}: {scanResult.barcode}
                     </p>
                   </div>
@@ -198,7 +198,7 @@ export default function ScanClient() {
 
                 {/* 서빙 사이즈 조절 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("servingSize")}
                   </label>
                   <div className="flex items-center gap-2">
@@ -211,40 +211,40 @@ export default function ScanClient() {
                       onChange={(e) => setServingSize(Number(e.target.value))}
                       className="flex-1"
                     />
-                    <span className="w-16 text-right font-medium">{servingSize}g</span>
+                    <span className="w-16 text-right font-medium text-gray-900 dark:text-gray-100">{servingSize}g</span>
                   </div>
                 </div>
 
                 {/* 영양 정보 */}
                 {calculatedNutrition && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <h4 className="text-sm font-medium mb-2">{t("nutritionInfo")}</h4>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{t("nutritionInfo")}</h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       {isPKU && (
-                        <div className="col-span-2 bg-indigo-100 rounded p-2">
-                          <span className="text-indigo-700 font-medium">
+                        <div className="col-span-2 bg-indigo-100 dark:bg-indigo-900/40 rounded p-2">
+                          <span className="text-indigo-700 dark:text-indigo-300 font-medium">
                             {tNutrients("phenylalanine")}: {calculatedNutrition.phenylalanine_mg}mg
                           </span>
                           {scanResult.product.nutrition_per_100g.phenylalanine_estimated && (
-                            <span className="text-xs text-indigo-500 ml-2">({t("estimated")})</span>
+                            <span className="text-xs text-indigo-500 dark:text-indigo-400 ml-2">({t("estimated")})</span>
                           )}
                         </div>
                       )}
                       <div>
-                        <span className="text-gray-500">{tNutrients("calories")}:</span>{" "}
-                        <span className="font-medium">{calculatedNutrition.calories}kcal</span>
+                        <span className="text-gray-500 dark:text-gray-400">{tNutrients("calories")}:</span>{" "}
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{calculatedNutrition.calories}kcal</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{tNutrients("protein")}:</span>{" "}
-                        <span className="font-medium">{calculatedNutrition.protein_g}g</span>
+                        <span className="text-gray-500 dark:text-gray-400">{tNutrients("protein")}:</span>{" "}
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{calculatedNutrition.protein_g}g</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{tNutrients("carbs")}:</span>{" "}
-                        <span className="font-medium">{calculatedNutrition.carbs_g}g</span>
+                        <span className="text-gray-500 dark:text-gray-400">{tNutrients("carbs")}:</span>{" "}
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{calculatedNutrition.carbs_g}g</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{tNutrients("fat")}:</span>{" "}
-                        <span className="font-medium">{calculatedNutrition.fat_g}g</span>
+                        <span className="text-gray-500 dark:text-gray-400">{tNutrients("fat")}:</span>{" "}
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{calculatedNutrition.fat_g}g</span>
                       </div>
                     </div>
                   </div>
@@ -252,7 +252,7 @@ export default function ScanClient() {
 
                 {/* 식사 유형 선택 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("mealType")}
                   </label>
                   <div className="flex gap-2">
@@ -263,7 +263,7 @@ export default function ScanClient() {
                         className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                           mealType === type
                             ? "bg-indigo-600 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                         }`}
                       >
                         {tMeals(type)}
@@ -288,11 +288,11 @@ export default function ScanClient() {
               </Card>
             ) : (
               <Card className="p-6 text-center">
-                <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-gray-600 mb-2">{t("productNotFound")}</p>
-                <p className="text-sm text-gray-400 mb-4">
+                <p className="text-gray-600 dark:text-gray-400 mb-2">{t("productNotFound")}</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
                   {t("barcode")}: {scanResult.barcode}
                 </p>
                 <Button onClick={() => setScanResult(null)}>

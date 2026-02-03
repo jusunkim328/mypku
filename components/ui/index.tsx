@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
+import { Loader2 } from "lucide-react";
 
 // Page 컴포넌트
 export function Page({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`min-h-screen bg-gray-50 animate-fade-in ${className}`}>
-      <div className="max-w-2xl mx-auto">
+    <div className={`min-h-screen bg-gradient-warm bg-pattern-dots animate-fade-in ${className}`}>
+      <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto">
         {children}
       </div>
     </div>
@@ -26,14 +27,14 @@ export function Navbar({
   right?: React.ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
-      <div className="flex items-center justify-between">
-        <div className="w-16">{left}</div>
+    <header className="sticky top-0 z-50 glass border-b border-gray-200/50 dark:border-gray-700/50 px-4 py-3 md:px-6 lg:px-8">
+      <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto flex items-center justify-between">
+        <div className="w-16 md:w-20">{left}</div>
         <div className="flex-1 text-center">
-          <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+          <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h1>
+          {subtitle && <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
         </div>
-        <div className="w-16 text-right">{right}</div>
+        <div className="w-16 md:w-20 text-right">{right}</div>
       </div>
     </header>
   );
@@ -41,7 +42,7 @@ export function Navbar({
 
 // Block 컴포넌트
 export function Block({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`p-4 ${className}`}>{children}</div>;
+  return <div className={`p-4 md:p-6 lg:p-8 ${className}`}>{children}</div>;
 }
 
 // Card 컴포넌트
@@ -49,13 +50,24 @@ export function Card({
   children,
   className = "",
   animate = true,
+  elevated = false,
 }: {
   children: React.ReactNode;
   className?: string;
   animate?: boolean;
+  elevated?: boolean;
 }) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm ${animate ? "animate-fade-in-up" : ""} ${className}`}>
+    <div
+      className={`
+        bg-white dark:bg-gray-900/80 rounded-2xl
+        ${elevated ? "card-elevated" : "shadow-soft"}
+        border border-gray-100 dark:border-gray-800
+        hover:shadow-soft-lg transition-all duration-200
+        ${animate ? "animate-fade-in-up" : ""}
+        ${className}
+      `}
+    >
       {children}
     </div>
   );
@@ -87,25 +99,29 @@ export function Button({
   className?: string;
   type?: "button" | "submit" | "reset";
 }) {
-  const baseClasses = "font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98]";
-  const sizeClasses = large ? "px-6 py-3 text-base" : small ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm";
+  const baseClasses = `
+    font-semibold rounded-xl transition-all duration-200
+    focus:outline-none focus:ring-2 focus:ring-offset-2
+    active:scale-[0.98] disabled:active:scale-100
+  `;
+  const sizeClasses = large ? "px-6 py-3 text-base" : small ? "px-3 py-1.5 text-sm" : "px-4 py-2.5 text-sm";
 
   let variantClasses = "";
   if (clear) {
     variantClasses = danger
-      ? "text-red-600 hover:text-red-700 bg-transparent focus:ring-red-500"
-      : "text-indigo-600 hover:text-indigo-700 bg-transparent focus:ring-indigo-500";
+      ? "text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20 focus:ring-red-500"
+      : "text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 bg-transparent hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:ring-primary-500";
   } else if (outline) {
     variantClasses = danger
-      ? "border-2 border-red-500 text-red-600 hover:bg-red-50 focus:ring-red-500"
-      : "border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500";
+      ? "border-2 border-red-400 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:ring-red-500"
+      : "border-2 border-primary-400 dark:border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 focus:ring-primary-500";
   } else {
     variantClasses = danger
-      ? "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500"
-      : "bg-indigo-500 text-white hover:bg-indigo-600 focus:ring-indigo-500";
+      ? "bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white shadow-md hover:shadow-lg focus:ring-red-500"
+      : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md hover:shadow-lg focus:ring-primary-500";
   }
 
-  const disabledClasses = (disabled || loading) ? "opacity-50 cursor-not-allowed active:scale-100" : "";
+  const disabledClasses = (disabled || loading) ? "opacity-50 cursor-not-allowed" : "";
 
   return (
     <button
@@ -114,12 +130,7 @@ export function Button({
       disabled={disabled || loading}
       className={`${baseClasses} ${sizeClasses} ${variantClasses} ${disabledClasses} ${className} inline-flex items-center justify-center gap-2`}
     >
-      {loading && (
-        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-      )}
+      {loading && <Loader2 className="animate-spin h-4 w-4" />}
       {children}
     </button>
   );
@@ -128,7 +139,7 @@ export function Button({
 // Preloader 컴포넌트
 export function Preloader({ className = "" }: { className?: string }) {
   return (
-    <div className={`animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 w-5 h-5 ${className}`} />
+    <div className={`animate-spin rounded-full border-2 border-gray-300 dark:border-gray-600 border-t-primary-500 w-6 h-6 ${className}`} />
   );
 }
 
@@ -140,7 +151,7 @@ export function Spinner({ size = "md", className = "" }: { size?: "sm" | "md" | 
     lg: "w-16 h-16 border-4",
   };
   return (
-    <div className={`animate-spin rounded-full border-gray-300 border-t-indigo-600 ${sizeClasses[size]} ${className}`} />
+    <div className={`animate-spin rounded-full border-gray-300 dark:border-gray-600 border-t-primary-500 ${sizeClasses[size]} ${className}`} />
   );
 }
 
@@ -152,7 +163,7 @@ export function Skeleton({ className = "", variant = "text" }: { className?: str
     rectangular: "rounded-lg",
   };
   return (
-    <div className={`animate-pulse bg-gray-200 ${variantClasses[variant]} ${className}`} />
+    <div className={`skeleton ${variantClasses[variant]} ${className}`} />
   );
 }
 
@@ -182,10 +193,10 @@ export function SkeletonCard({ className = "" }: { className?: string }) {
 // 로딩 오버레이
 export function LoadingOverlay({ message = "로딩 중..." }: { message?: string }) {
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 flex flex-col items-center gap-3 shadow-xl">
+    <div className="fixed inset-0 bg-black/30 dark:bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 flex flex-col items-center gap-3 shadow-elevated">
         <Spinner size="lg" />
-        <p className="text-gray-600 font-medium">{message}</p>
+        <p className="text-gray-600 dark:text-gray-300 font-medium">{message}</p>
       </div>
     </div>
   );
@@ -205,14 +216,22 @@ export function Toggle({
     <button
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`relative w-12 h-7 rounded-full transition-colors ${
-        checked ? "bg-indigo-500" : "bg-gray-300"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      className={`
+        relative w-12 h-7 rounded-full transition-all duration-300
+        ${checked
+          ? "bg-gradient-to-r from-primary-500 to-primary-600"
+          : "bg-gray-300 dark:bg-gray-600"
+        }
+        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+      `}
     >
       <div
-        className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
+        className={`
+          absolute top-1 w-5 h-5 bg-white rounded-full shadow-md
+          transition-transform duration-300 ease-out
+          ${checked ? "translate-x-6" : "translate-x-1"}
+        `}
       />
     </button>
   );
@@ -220,7 +239,7 @@ export function Toggle({
 
 // List 컴포넌트
 export function List({ children, className = "" }: { children: React.ReactNode; className?: string; strongIos?: boolean; insetIos?: boolean }) {
-  return <div className={`divide-y divide-gray-100 ${className}`}>{children}</div>;
+  return <div className={`divide-y divide-gray-100 dark:divide-gray-800 ${className}`}>{children}</div>;
 }
 
 // ListItem 컴포넌트
@@ -236,8 +255,8 @@ export function ListItem({
   return (
     <div className="flex items-center justify-between py-3">
       <div>
-        <p className="text-base font-medium text-gray-900">{title}</p>
-        {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+        <p className="text-base font-medium text-gray-900 dark:text-gray-100">{title}</p>
+        {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
       </div>
       {after && <div>{after}</div>}
     </div>
@@ -249,24 +268,74 @@ export function Progressbar({
   progress,
   className = "",
   warning = false,
+  showGlow = false,
 }: {
   progress: number;
   className?: string;
   warning?: boolean;
+  showGlow?: boolean;
 }) {
   const isOver = progress > 1;
-  const barColor = isOver && warning
-    ? "bg-red-500"
-    : isOver
-      ? "bg-amber-500"
-      : "bg-indigo-500";
+  const clampedProgress = Math.min(progress, 1);
+
+  const getBarStyle = () => {
+    if (isOver && warning) {
+      return "bg-gradient-to-r from-red-500 to-rose-500";
+    } else if (isOver) {
+      return "bg-gradient-to-r from-amber-400 to-orange-500";
+    }
+    return "bg-gradient-to-r from-primary-400 to-primary-600";
+  };
 
   return (
-    <div className={`h-2 bg-gray-200 rounded-full overflow-hidden ${className}`}>
+    <div className={`h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ${className}`}>
       <div
-        className={`h-full ${barColor} rounded-full transition-all duration-300`}
-        style={{ width: `${Math.min(progress * 100, 100)}%` }}
+        className={`
+          h-full rounded-full transition-all duration-500 ease-out
+          ${getBarStyle()}
+          ${showGlow && !isOver ? "animate-progress-pulse" : ""}
+        `}
+        style={{ width: `${clampedProgress * 100}%` }}
       />
     </div>
+  );
+}
+
+// Input 컴포넌트
+export function Input({
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  disabled = false,
+  className = "",
+}: {
+  type?: string;
+  value: string | number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      disabled={disabled}
+      className={`
+        w-full px-4 py-2.5 rounded-xl text-sm
+        bg-white dark:bg-gray-800
+        border border-gray-300 dark:border-gray-600
+        text-gray-900 dark:text-gray-100
+        placeholder-gray-400 dark:placeholder-gray-500
+        focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+        dark:focus:border-primary-400 dark:focus:ring-primary-400/20
+        transition-all duration-200
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${className}
+      `}
+    />
   );
 }

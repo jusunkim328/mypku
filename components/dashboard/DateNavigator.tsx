@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 interface DateNavigatorProps {
   selectedDate: Date;
@@ -86,34 +87,30 @@ export default function DateNavigator({ selectedDate, onDateChange }: DateNaviga
   };
 
   return (
-    <div className="flex items-center justify-between bg-white rounded-xl shadow-sm p-3">
+    <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl shadow-sm dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-800 p-3">
       {/* 이전 날 */}
       <button
         onClick={goToPreviousDay}
-        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-700 dark:text-gray-300"
         aria-label="Previous day"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
+        <ChevronLeft className="w-5 h-5" />
       </button>
 
       {/* 현재 날짜 */}
       <div className="flex items-center gap-2" ref={datePickerRef}>
         <button
           onClick={() => setShowDatePicker(!showDatePicker)}
-          className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
-          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span className="font-medium">{formatDate(selectedDate)}</span>
+          <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <span className="font-medium text-gray-900 dark:text-gray-100">{formatDate(selectedDate)}</span>
         </button>
 
         {!isToday(selectedDate) && (
           <button
             onClick={goToToday}
-            className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors"
+            className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-colors"
           >
             {tCommon("today")}
           </button>
@@ -121,7 +118,7 @@ export default function DateNavigator({ selectedDate, onDateChange }: DateNaviga
 
         {/* 날짜 선택기 드롭다운 */}
         {showDatePicker && (
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-lg border p-2 z-50">
+          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 rounded-xl shadow-lg dark:shadow-gray-900/50 border border-gray-200 dark:border-gray-700 p-2 z-50">
             <input
               type="date"
               value={selectedDate.toISOString().split("T")[0]}
@@ -133,7 +130,7 @@ export default function DateNavigator({ selectedDate, onDateChange }: DateNaviga
                   setShowDatePicker(false);
                 }
               }}
-              className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         )}
@@ -145,14 +142,12 @@ export default function DateNavigator({ selectedDate, onDateChange }: DateNaviga
         disabled={isToday(selectedDate)}
         className={`p-2 rounded-full transition-colors ${
           isToday(selectedDate)
-            ? "text-gray-300 cursor-not-allowed"
-            : "hover:bg-gray-100"
+            ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
         }`}
         aria-label="Next day"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
+        <ChevronRight className="w-5 h-5" />
       </button>
     </div>
   );

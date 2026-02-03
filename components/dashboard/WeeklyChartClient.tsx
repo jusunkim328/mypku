@@ -98,17 +98,17 @@ export default function WeeklyChartClient() {
   const titleKey = period === "day" ? "dailyTitle" : period === "week" ? "weeklyTitle" : "monthlyTitle";
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 md:p-5 lg:p-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-semibold">
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
           {tChart(titleKey as keyof IntlMessages["Chart"], { nutrient: label })}
         </h3>
         <PeriodSelector selectedPeriod={period} onPeriodChange={setPeriod} />
       </div>
 
       {/* 차트 */}
-      <div className="h-48">
+      <div className="h-48 md:h-56 lg:h-64 xl:h-72">
         <ResponsiveContainer width="100%" height="100%">
           {period === "month" ? (
             // 월간은 라인 차트
@@ -170,7 +170,7 @@ export default function WeeklyChartClient() {
       </div>
 
       {/* 통계 */}
-      <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
+      <div className="flex justify-between items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
         <span>
           {t("goal")}: {goalValue}{unit}
         </span>

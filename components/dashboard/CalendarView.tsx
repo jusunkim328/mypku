@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import type { NutritionData } from "@/types/nutrition";
 
@@ -61,20 +62,20 @@ export default function CalendarView({ onDateSelect, selectedDate }: CalendarVie
 
   // 히트맵 색상 계산 (0-100% 기준)
   const getHeatmapColor = (nutrition: NutritionData | undefined): string => {
-    if (!nutrition) return "bg-gray-100";
+    if (!nutrition) return "bg-gray-100 dark:bg-gray-800";
 
     const value = isPKU
       ? nutrition.phenylalanine_mg || 0
       : nutrition.calories;
     const percentage = (value / goalValue) * 100;
 
-    if (percentage === 0) return "bg-gray-100";
-    if (percentage <= 25) return "bg-green-100";
-    if (percentage <= 50) return "bg-green-200";
-    if (percentage <= 75) return "bg-green-300";
-    if (percentage <= 100) return "bg-green-400";
-    if (percentage <= 125) return "bg-yellow-300";
-    return "bg-red-300"; // 초과
+    if (percentage === 0) return "bg-gray-100 dark:bg-gray-800";
+    if (percentage <= 25) return "bg-green-100 dark:bg-green-900/40";
+    if (percentage <= 50) return "bg-green-200 dark:bg-green-800/50";
+    if (percentage <= 75) return "bg-green-300 dark:bg-green-700/60";
+    if (percentage <= 100) return "bg-green-400 dark:bg-green-600/70";
+    if (percentage <= 125) return "bg-yellow-300 dark:bg-yellow-700/60";
+    return "bg-red-300 dark:bg-red-700/60"; // 초과
   };
 
   // 날짜가 오늘인지 확인
@@ -121,51 +122,47 @@ export default function CalendarView({ onDateSelect, selectedDate }: CalendarVie
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-800 p-4 md:p-5 lg:p-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={goToPreviousMonth}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-700 dark:text-gray-300"
           aria-label={t("previousMonth")}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
           </h3>
           <button
             onClick={goToToday}
-            className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors"
+            className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-900/60 transition-colors"
           >
             {tCommon("today")}
           </button>
         </div>
         <button
           onClick={goToNextMonth}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-700 dark:text-gray-300"
           aria-label={t("nextMonth")}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
       {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
         {weekDays.map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
+          <div key={day} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-2">
             {day}
           </div>
         ))}
       </div>
 
       {/* 달력 그리드 */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1 md:gap-2">
         {calendarDays.map((date, index) => {
           if (!date) {
             return <div key={`empty-${index}`} className="aspect-square" />;
@@ -185,16 +182,16 @@ export default function CalendarView({ onDateSelect, selectedDate }: CalendarVie
                 aspect-square rounded-lg flex flex-col items-center justify-center
                 transition-all text-sm relative
                 ${heatmapColor}
-                ${today ? "ring-2 ring-indigo-500" : ""}
-                ${selected ? "ring-2 ring-indigo-700 bg-indigo-50" : ""}
+                ${today ? "ring-2 ring-indigo-500 dark:ring-indigo-400" : ""}
+                ${selected ? "ring-2 ring-indigo-700 dark:ring-indigo-400 bg-indigo-50 dark:bg-indigo-900/30" : ""}
                 hover:opacity-80
               `}
             >
-              <span className={`font-medium ${today ? "text-indigo-700" : ""}`}>
+              <span className={`font-medium ${today ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-100"}`}>
                 {date.getDate()}
               </span>
               {nutrition && (
-                <span className="text-[10px] text-gray-600">
+                <span className="text-[10px] text-gray-600 dark:text-gray-400">
                   {isPKU
                     ? `${Math.round(nutrition.phenylalanine_mg || 0)}`
                     : `${Math.round(nutrition.calories)}`}
@@ -206,16 +203,16 @@ export default function CalendarView({ onDateSelect, selectedDate }: CalendarVie
       </div>
 
       {/* 범례 */}
-      <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">
+      <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <span>{t("less")}</span>
         <div className="flex gap-1">
-          <div className="w-4 h-4 rounded bg-gray-100" />
-          <div className="w-4 h-4 rounded bg-green-100" />
-          <div className="w-4 h-4 rounded bg-green-200" />
-          <div className="w-4 h-4 rounded bg-green-300" />
-          <div className="w-4 h-4 rounded bg-green-400" />
-          <div className="w-4 h-4 rounded bg-yellow-300" />
-          <div className="w-4 h-4 rounded bg-red-300" />
+          <div className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-800" />
+          <div className="w-4 h-4 rounded bg-green-100 dark:bg-green-900/40" />
+          <div className="w-4 h-4 rounded bg-green-200 dark:bg-green-800/50" />
+          <div className="w-4 h-4 rounded bg-green-300 dark:bg-green-700/60" />
+          <div className="w-4 h-4 rounded bg-green-400 dark:bg-green-600/70" />
+          <div className="w-4 h-4 rounded bg-yellow-300 dark:bg-yellow-700/60" />
+          <div className="w-4 h-4 rounded bg-red-300 dark:bg-red-700/60" />
         </div>
         <span>{t("more")}</span>
       </div>

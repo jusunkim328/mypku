@@ -45,3 +45,7 @@ public/test/
 data/bls/*
 !data/bls/README.md
 temp/
+
+# Service Worker (generated)
+public/sw.js
+public/sw.js.map

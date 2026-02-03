@@ -63,8 +63,8 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
           relative p-3 rounded-xl border-2 transition-all
           ${
             isUnlocked
-              ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300"
-              : "bg-gray-50 border-gray-200"
+              ? "bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/30 dark:to-orange-900/30 border-yellow-300 dark:border-yellow-600"
+              : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
           }
         `}
       >
@@ -72,7 +72,7 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
         <div
           className={`
             w-12 h-12 mx-auto rounded-full flex items-center justify-center text-2xl
-            ${isUnlocked ? "bg-yellow-100" : "bg-gray-200 grayscale opacity-50"}
+            ${isUnlocked ? "bg-yellow-100 dark:bg-yellow-800/50" : "bg-gray-200 dark:bg-gray-600 grayscale opacity-50"}
           `}
         >
           {badge.icon}
@@ -82,14 +82,14 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
         <h4
           className={`
             mt-2 text-center text-sm font-medium
-            ${isUnlocked ? "text-gray-900" : "text-gray-400"}
+            ${isUnlocked ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"}
           `}
         >
           {t(badge.titleKey as keyof IntlMessages["Badges"])}
         </h4>
 
         {/* 설명 또는 진행률 */}
-        <p className="mt-1 text-center text-xs text-gray-500">
+        <p className="mt-1 text-center text-xs text-gray-500 dark:text-gray-400">
           {isUnlocked
             ? t("unlocked")
             : badge.progress !== undefined
@@ -99,9 +99,9 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
 
         {/* 진행률 바 (잠긴 배지) */}
         {!isUnlocked && badge.progress !== undefined && (
-          <div className="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+          <div className="mt-2 h-1 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-400 transition-all"
+              className="h-full bg-indigo-400 dark:bg-indigo-500 transition-all"
               style={{ width: `${badge.progress}%` }}
             />
           </div>
@@ -109,7 +109,7 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
 
         {/* 잠금 해제 날짜 */}
         {isUnlocked && badge.unlockedAt && (
-          <p className="mt-1 text-center text-xs text-yellow-600">
+          <p className="mt-1 text-center text-xs text-yellow-600 dark:text-yellow-400">
             {new Date(badge.unlockedAt).toLocaleDateString()}
           </p>
         )}
@@ -118,15 +118,15 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-700 p-4 md:p-5 lg:p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">{t("title")}</h3>
-        <span className="text-sm text-gray-500">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("title")}</h3>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {unlockedBadges.length}/{Object.keys(badges).length}
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
         {displayBadges.map((badge) => (
           <BadgeCard key={badge.id} badge={badge} />
         ))}

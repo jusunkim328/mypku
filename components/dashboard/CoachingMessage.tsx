@@ -105,35 +105,60 @@ export default function CoachingMessage() {
     }
   };
 
-  // 데이터 로딩 중이거나 데이터가 없으면 표시하지 않음
-  if (recordsLoading || !hasData) {
-    return null;
+  // 데이터 로딩 중
+  if (recordsLoading) {
+    return (
+      <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40">
+        <div className="flex items-center justify-center py-4">
+          <Preloader className="!w-6 !h-6" />
+        </div>
+      </Card>
+    );
+  }
+
+  // 데이터가 없을 때
+  if (!hasData) {
+    return (
+      <Card className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/40 dark:to-slate-900/40">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl opacity-50">🤖</div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">
+              {t("title")}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              {t("noDataYet")}
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   return (
-    <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50">
+    <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40">
       <div className="flex items-start gap-3">
         <div className="text-2xl">🤖</div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-indigo-900 mb-1">
+          <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-1">
             {t("title")}
           </h3>
           {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
               <Preloader className="!w-4 !h-4" />
               {t("analyzing")}
             </div>
           ) : error ? (
-            <div className="text-sm text-red-600">
+            <div className="text-sm text-red-600 dark:text-red-400">
               {error}
               <Button small clear onClick={fetchCoaching} className="ml-2">
                 {t("retry")}
               </Button>
             </div>
           ) : message ? (
-            <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{message}</p>
           ) : (
-            <p className="text-sm text-gray-500">{t("promptText")}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t("promptText")}</p>
           )}
         </div>
       </div>

@@ -85,6 +85,7 @@
   },
   "SettingsPage": {
     "title": "설정",
+    "theme": "테마",
     "appMode": "앱 모드",
     "pkuModeDesc": "페닐알라닌 추적 활성화",
     "pkuModeExplain": "PKU 모드에서는 페닐알라닌 섭취량을 우선 표시하고, 일일 목표를 300mg으로 설정합니다.",
@@ -135,7 +136,8 @@
     "getFeedback": "피드백 받기",
     "promptText": "AI 코치에게 피드백을 받아보세요.",
     "errorFetch": "코칭 메시지를 가져올 수 없습니다.",
-    "networkError": "네트워크 오류가 발생했습니다."
+    "networkError": "네트워크 오류가 발생했습니다.",
+    "noDataYet": "식사 기록을 남기면 AI 코치가 맞춤 피드백을 드려요."
   },
   "WeeklyChart": {
     "title": "주간 {nutrient} 섭취량",
@@ -205,7 +207,10 @@
     "enterBarcode": "바코드 번호 입력",
     "lookup": "조회",
     "cameraError": "카메라 접근이 거부되었습니다",
-    "noCameraMessage": "카메라를 사용할 수 없습니다. 바코드를 직접 입력해주세요."
+    "noCameraMessage": "카메라를 사용할 수 없습니다. 바코드를 직접 입력해주세요.",
+    "scanning": "바코드를 찾고 있습니다...",
+    "verifying": "확인 중",
+    "invalidBarcode": "잘못된 바코드"
   },
   "ScanPage": {
     "title": "바코드 스캔",
@@ -304,5 +309,20 @@
     "goalAchievementsDesc": "일일 목표 달성 시 축하 알림",
     "streakMilestones": "연속 기록 마일스톤",
     "streakMilestonesDesc": "연속 기록 달성 시 축하 알림 (7, 14, 30일 이상)"
+  },
+  "Offline": {
+    "title": "오프라인 상태입니다",
+    "message": "인터넷 연결을 확인하고 다시 시도해 주세요.",
+    "availableOffline": "오프라인에서 사용 가능:",
+    "feature1": "캐시된 식사 기록 보기",
+    "feature2": "저장된 식품 DB 검색",
+    "feature3": "이전에 로드한 페이지 접근",
+    "retry": "다시 시도"
+  },
+  "PWA": {
+    "updateAvailable": "업데이트 사용 가능",
+    "updateMessage": "MyPKU의 새 버전이 준비되었습니다. 지금 업데이트하세요.",
+    "updateNow": "지금 업데이트",
+    "later": "나중에"
   }
 }

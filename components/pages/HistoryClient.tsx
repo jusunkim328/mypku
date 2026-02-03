@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
+import { ChevronDown } from "lucide-react";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
@@ -107,107 +108,121 @@ export default function HistoryClient() {
         }
       />
 
-      <Block className="space-y-4">
-        {/* 날짜 네비게이터 */}
-        <div className="relative">
-          <DateNavigator
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-          />
-          <button
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="absolute right-12 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Toggle calendar"
-          >
-            <svg
-              className={`w-5 h-5 transition-transform ${showCalendar ? "rotate-180" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+      <Block className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
+        {/* 메인 컨텐츠 영역 (lg: 왼쪽 2컬럼) */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* 날짜 네비게이터 */}
+          <div className="relative">
+            <DateNavigator
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+            />
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="absolute right-12 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              aria-label="Toggle calendar"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+              <ChevronDown
+                className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${showCalendar ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
 
-        {/* 월간 달력 (토글) */}
-        {showCalendar && (
-          <CalendarView
-            selectedDate={selectedDate}
-            onDateSelect={(date) => {
-              setSelectedDate(date);
-              setShowCalendar(false);
-            }}
-          />
-        )}
+          {/* 월간 달력 (토글) */}
+          {showCalendar && (
+            <CalendarView
+              selectedDate={selectedDate}
+              onDateSelect={(date) => {
+                setSelectedDate(date);
+                setShowCalendar(false);
+              }}
+            />
+          )}
 
-        {/* AI 코칭 메시지 */}
-        <CoachingMessage />
+          {/* 주간 차트 */}
+          <WeeklyChart />
 
-        {/* 주간 차트 */}
-        <WeeklyChart />
-
-        {/* 선택된 날짜의 식사 기록 목록 */}
-        <div>
-          <h3 className="text-base font-semibold mb-3">
-            {formatDate(selectedDate.toISOString())} {t("recentRecords")}
-          </h3>
-          {selectedDateRecords.length === 0 ? (
-            <Card className="p-6 text-center">
-              <p className="text-gray-500">{t("noRecords")}</p>
-              <Link href="/analyze">
-                <Button small className="mt-3">
-                  {t("recordFirst")}
-                </Button>
-              </Link>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {selectedDateRecords.map((record) => (
-                <Card key={record.id} className="p-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {formatDate(record.timestamp)}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {formatTime(record.timestamp)}
-                        </span>
-                        <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
-                          {getMealTypeLabel(record.mealType)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {record.items.map((i) => i.name).join(", ")}
-                      </p>
-                      <div className="flex gap-3 text-xs text-gray-500 mt-1">
-                        {isPKU && (
-                          <span className="text-indigo-600 font-medium">
-                            {t("phe")}: {record.totalNutrition.phenylalanine_mg}mg
-                          </span>
-                        )}
-                        <span>{Math.round(record.totalNutrition.calories)}kcal</span>
-                        <span>{tNutrients("protein")} {record.totalNutrition.protein_g.toFixed(1)}g</span>
+          {/* 선택된 날짜의 식사 기록 목록 */}
+          <div>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+              {formatDate(selectedDate.toISOString())} {t("recentRecords")}
+            </h3>
+            {selectedDateRecords.length === 0 ? (
+              <Card className="p-6 text-center">
+                <p className="text-gray-500 dark:text-gray-400">{t("noRecords")}</p>
+                <Link href="/analyze">
+                  <Button small className="mt-3">
+                    {t("recordFirst")}
+                  </Button>
+                </Link>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {selectedDateRecords.map((record, index) => (
+                  <Card
+                    key={record.id}
+                    className="p-4"
+                    animate={true}
+                  >
+                    <div
+                      className="animate-fade-in-up"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {formatDate(record.timestamp)}
+                            </span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                              {formatTime(record.timestamp)}
+                            </span>
+                            <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">
+                              {getMealTypeLabel(record.mealType)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5">
+                            {record.items.map((i) => i.name).join(", ")}
+                          </p>
+                          <div className="flex gap-3 text-xs mt-2">
+                            {isPKU && (
+                              <span className="text-primary-600 dark:text-primary-400 font-semibold">
+                                {t("phe")}: {record.totalNutrition.phenylalanine_mg}mg
+                              </span>
+                            )}
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {Math.round(record.totalNutrition.calories)}kcal
+                            </span>
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {tNutrients("protein")} {record.totalNutrition.protein_g.toFixed(1)}g
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          small
+                          clear
+                          danger
+                          onClick={async () => {
+                            if (confirm(t("deleteConfirm"))) {
+                              await removeMealRecord(record.id);
+                            }
+                          }}
+                        >
+                          {tCommon("delete")}
+                        </Button>
                       </div>
                     </div>
-                    <Button
-                      small
-                      clear
-                      className="text-red-500"
-                      onClick={async () => {
-                        if (confirm(t("deleteConfirm"))) {
-                          await removeMealRecord(record.id);
-                        }
-                      }}
-                    >
-                      {tCommon("delete")}
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 사이드바 영역 (lg: 오른쪽 1컬럼) */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* AI 코칭 메시지 */}
+          <CoachingMessage />
         </div>
       </Block>
     </Page>

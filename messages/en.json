@@ -85,6 +85,7 @@
   },
   "SettingsPage": {
     "title": "Settings",
+    "theme": "Theme",
     "appMode": "App Mode",
     "pkuModeDesc": "Enable phenylalanine tracking",
     "pkuModeExplain": "In PKU mode, phenylalanine intake is prioritized and the daily goal is set to 300mg.",
@@ -135,7 +136,8 @@
     "getFeedback": "Get Feedback",
     "promptText": "Get feedback from AI coach.",
     "errorFetch": "Unable to get coaching message.",
-    "networkError": "A network error occurred."
+    "networkError": "A network error occurred.",
+    "noDataYet": "Log your meals to get personalized feedback from AI coach."
   },
   "WeeklyChart": {
     "title": "Weekly {nutrient} Intake",
@@ -205,7 +207,10 @@
     "enterBarcode": "Enter barcode number",
     "lookup": "Lookup",
     "cameraError": "Camera access denied",
-    "noCameraMessage": "Camera not available. Enter barcode manually."
+    "noCameraMessage": "Camera not available. Enter barcode manually.",
+    "scanning": "Looking for barcode...",
+    "verifying": "Verifying",
+    "invalidBarcode": "Invalid barcode"
   },
   "ScanPage": {
     "title": "Barcode Scan",
@@ -304,5 +309,20 @@
     "goalAchievementsDesc": "Celebrate when you meet daily goals",
     "streakMilestones": "Streak Milestones",
     "streakMilestonesDesc": "Celebrate logging streaks (7, 14, 30+ days)"
+  },
+  "Offline": {
+    "title": "You're Offline",
+    "message": "Please check your internet connection and try again.",
+    "availableOffline": "Available offline:",
+    "feature1": "View cached meal history",
+    "feature2": "Browse saved food database",
+    "feature3": "Access previously loaded pages",
+    "retry": "Try Again"
+  },
+  "PWA": {
+    "updateAvailable": "Update Available",
+    "updateMessage": "A new version of MyPKU is ready. Update now for the best experience.",
+    "updateNow": "Update Now",
+    "later": "Later"
   }
 }

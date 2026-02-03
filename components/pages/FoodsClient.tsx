@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button, Card } from "@/components/ui";
+import { ChevronLeft, Plus } from "lucide-react";
 import {
   searchPKUFoods,
   getLowProteinFoods,
@@ -168,27 +169,25 @@ export default function FoodsClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
       {/* 헤더 */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-3 flex items-center gap-3">
           <Link
             href="/"
-            className="text-indigo-600 hover:text-indigo-700 transition-colors"
+            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
           >
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+            <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <ChevronLeft className="w-5 h-5" />
               <span className="font-medium">{tCommon("back")}</span>
             </button>
           </Link>
-          <h1 className="text-xl font-bold flex-1">{t("title")}</h1>
+          <h1 className="text-xl font-bold flex-1 text-gray-900 dark:text-gray-100">{t("title")}</h1>
         </div>
       </header>
 
       {/* 컨텐츠 */}
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
         {/* 검색 */}
         <Card className="p-4">
           <div className="flex gap-2 mb-3">
@@ -198,7 +197,7 @@ export default function FoodsClient() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder={t("searchPlaceholder")}
-              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
             />
             <Button onClick={handleSearch} disabled={isLoading}>
               {t("search")}
@@ -212,7 +211,7 @@ export default function FoodsClient() {
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === "all"
                   ? "bg-indigo-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               {t("allFoods")}
@@ -222,7 +221,7 @@ export default function FoodsClient() {
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === "low-protein"
                   ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               {t("lowProtein")}
@@ -234,7 +233,7 @@ export default function FoodsClient() {
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category
                     ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
               >
                 {getCategoryLabel(category, locale)}
@@ -246,63 +245,64 @@ export default function FoodsClient() {
         {/* 결과 */}
         {isLoading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">{tCommon("loading")}</p>
+            <p className="text-gray-500 dark:text-gray-400">{tCommon("loading")}</p>
           </div>
         ) : foods.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">{t("noResults")}</p>
+            <p className="text-gray-500 dark:text-gray-400">{t("noResults")}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {t("resultsCount", { count: foods.length })}
             </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {foods.map((food) => (
-              <Card key={food.id} className="p-4">
+              <Card key={food.id} className="p-4 md:p-5">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                         {food.name_ko || food.name}
                       </h3>
                       {food.is_low_protein && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">
                           {t("lowProteinBadge")}
                         </span>
                       )}
                     </div>
 
                     {food.brand && (
-                      <p className="text-sm text-gray-500">{food.brand}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{food.brand}</p>
                     )}
 
                     {/* 영양 정보 */}
                     <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-indigo-600 font-bold">
+                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">
                           {food.phenylalanine_mg}mg
                         </span>
-                        <span className="text-gray-600">Phe</span>
+                        <span className="text-gray-600 dark:text-gray-400">Phe</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
                           {getExchanges(food.phenylalanine_mg)}
                         </span>
-                        <span className="text-gray-600">{tNutrients("exchanges")}</span>
+                        <span className="text-gray-600 dark:text-gray-400">{tNutrients("exchanges")}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{food.protein_g}g</span>
-                        <span className="text-gray-600">{tNutrients("protein")}</span>
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">{food.protein_g}g</span>
+                        <span className="text-gray-600 dark:text-gray-400">{tNutrients("protein")}</span>
                       </div>
                       {food.calories && (
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{food.calories}</span>
-                          <span className="text-gray-600">kcal</span>
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">{food.calories}</span>
+                          <span className="text-gray-600 dark:text-gray-400">kcal</span>
                         </div>
                       )}
                     </div>
 
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                       {t("per100g", { size: food.serving_size })}
                     </p>
                   </div>
@@ -310,16 +310,15 @@ export default function FoodsClient() {
                   {/* 추가 버튼 */}
                   <button
                     onClick={() => handleOpenAddModal(food)}
-                    className="ml-3 flex-shrink-0 p-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition-colors"
+                    className="ml-3 flex-shrink-0 p-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors"
                     title={t("addToMeal")}
                   >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
+                    <Plus className="w-5 h-5" />
                   </button>
                 </div>
               </Card>
             ))}
+            </div>
           </div>
         )}
       </main>
@@ -327,20 +326,20 @@ export default function FoodsClient() {
       {/* 식사에 추가 모달 */}
       {showAddModal && selectedFood && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-sm p-5 shadow-xl">
-            <h3 className="text-lg font-bold mb-4">{t("addToMeal")}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-sm p-5 shadow-xl">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{t("addToMeal")}</h3>
 
             {/* 선택된 식품 정보 */}
-            <div className="bg-gray-50 rounded-lg p-3 mb-4">
-              <p className="font-semibold">{selectedFood.name_ko || selectedFood.name}</p>
-              <p className="text-sm text-gray-600 mt-1">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-4">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{selectedFood.name_ko || selectedFood.name}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Phe: {selectedFood.phenylalanine_mg}mg / 100g
               </p>
             </div>
 
             {/* 수량 입력 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t("selectQuantity")}
               </label>
               <div className="flex items-center gap-2">
@@ -348,11 +347,11 @@ export default function FoodsClient() {
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
-                  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   min="1"
                   max="2000"
                 />
-                <span className="text-gray-600">g</span>
+                <span className="text-gray-600 dark:text-gray-400">g</span>
               </div>
               {/* 빠른 선택 버튼 */}
               <div className="flex gap-2 mt-2">
@@ -363,7 +362,7 @@ export default function FoodsClient() {
                     className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                       quantity === val
                         ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500"
                     }`}
                   >
                     {val}g
@@ -373,29 +372,29 @@ export default function FoodsClient() {
             </div>
 
             {/* 계산된 영양소 미리보기 */}
-            <div className="bg-indigo-50 rounded-lg p-3 mb-4">
-              <p className="text-sm text-indigo-900 font-medium mb-2">
+            <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-3 mb-4">
+              <p className="text-sm text-indigo-900 dark:text-indigo-200 font-medium mb-2">
                 {t("nutritionPreview", { quantity })}
               </p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-indigo-600 font-bold">
+                  <span className="text-indigo-600 dark:text-indigo-400 font-bold">
                     {Math.round(selectedFood.phenylalanine_mg * quantity / 100)}mg
                   </span>
-                  <span className="text-gray-600 ml-1">Phe</span>
+                  <span className="text-gray-600 dark:text-gray-400 ml-1">Phe</span>
                 </div>
                 <div>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {(selectedFood.protein_g * quantity / 100).toFixed(1)}g
                   </span>
-                  <span className="text-gray-600 ml-1">{tNutrients("protein")}</span>
+                  <span className="text-gray-600 dark:text-gray-400 ml-1">{tNutrients("protein")}</span>
                 </div>
                 {selectedFood.calories && (
                   <div>
-                    <span className="font-semibold">
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
                       {Math.round(selectedFood.calories * quantity / 100)}
                     </span>
-                    <span className="text-gray-600 ml-1">kcal</span>
+                    <span className="text-gray-600 dark:text-gray-400 ml-1">kcal</span>
                   </div>
                 )}
               </div>
@@ -403,7 +402,7 @@ export default function FoodsClient() {
 
             {/* 식사 유형 선택 */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t("selectMealType")}
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -414,7 +413,7 @@ export default function FoodsClient() {
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       mealType === type
                         ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500"
                     }`}
                   >
                     {tMealTypes(type)}

@@ -1,17 +1,115 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   CSS Variables - Light Mode (Default)
+   ============================================ */
 :root {
-  --pku-primary: #6366f1;
-  --pku-secondary: #8b5cf6;
+  /* Primary - Sage Green (건강, 신뢰) */
+  --pku-primary-50: #f0fdf4;
+  --pku-primary-100: #dcfce7;
+  --pku-primary-200: #bbf7d0;
+  --pku-primary-300: #86efac;
+  --pku-primary-400: #4ade80;
+  --pku-primary-500: #22c55e;
+  --pku-primary-600: #16a34a;
+  --pku-primary-700: #15803d;
+
+  /* Accent - Warm Coral (활력, 따뜻함) */
+  --pku-accent-50: #fff7ed;
+  --pku-accent-100: #ffedd5;
+  --pku-accent-200: #fed7aa;
+  --pku-accent-300: #fdba74;
+  --pku-accent-400: #fb923c;
+  --pku-accent-500: #f97316;
+  --pku-accent-600: #ea580c;
+  --pku-accent-700: #c2410c;
+
+  /* Semantic Colors */
+  --pku-success: #10b981;
   --pku-warning: #f59e0b;
   --pku-danger: #ef4444;
-  --pku-success: #10b981;
+  --pku-info: #3b82f6;
+
+  /* Legacy compatibility */
+  --pku-primary: #22c55e;
+  --pku-secondary: #f97316;
+
+  /* Background & Surface */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #9ca3af;
+
+  /* Border */
+  --border-primary: #e5e7eb;
+  --border-secondary: #f3f4f6;
 }
 
+/* ============================================
+   CSS Variables - Dark Mode
+   ============================================ */
+.dark {
+  /* Primary - Sage Green (다크모드 조정) */
+  --pku-primary-50: #052e16;
+  --pku-primary-100: #14532d;
+  --pku-primary-200: #166534;
+  --pku-primary-300: #15803d;
+  --pku-primary-400: #16a34a;
+  --pku-primary-500: #22c55e;
+  --pku-primary-600: #4ade80;
+  --pku-primary-700: #86efac;
+
+  /* Accent - Warm Coral (다크모드 조정) */
+  --pku-accent-50: #431407;
+  --pku-accent-100: #7c2d12;
+  --pku-accent-200: #9a3412;
+  --pku-accent-300: #c2410c;
+  --pku-accent-400: #ea580c;
+  --pku-accent-500: #f97316;
+  --pku-accent-600: #fb923c;
+  --pku-accent-700: #fdba74;
+
+  /* Semantic Colors (다크모드) */
+  --pku-success: #34d399;
+  --pku-warning: #fbbf24;
+  --pku-danger: #f87171;
+  --pku-info: #60a5fa;
+
+  /* Legacy compatibility */
+  --pku-primary: #4ade80;
+  --pku-secondary: #fb923c;
+
+  /* Background & Surface */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+
+  /* Text */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #64748b;
+
+  /* Border */
+  --border-primary: #334155;
+  --border-secondary: #1e293b;
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 모바일 터치 최적화 */
@@ -19,10 +117,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 스크롤바 스타일링 */
+/* ============================================
+   Scrollbar Styles
+   ============================================ */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -30,18 +130,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 2px;
+  background: var(--text-tertiary);
+  border-radius: 3px;
 }
 
-/* 애니메이션 키프레임 */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ============================================
+   Animation Keyframes
+   ============================================ */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
@@ -77,6 +179,17 @@ body {
   }
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes slideInRight {
   from {
     opacity: 0;
@@ -99,25 +212,71 @@ body {
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
   }
   50% {
-    opacity: 0.5;
+    transform: scale(1.02);
   }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes flame {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
   }
-  100% {
-    background-position: 200% 0;
+  25% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+  50% {
+    transform: scale(1.05) rotate(0deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(3deg);
   }
 }
 
-/* 애니메이션 유틸리티 클래스 */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--pku-primary-500), 0 0 10px var(--pku-primary-500);
+  }
+  50% {
+    box-shadow: 0 0 10px var(--pku-primary-500), 0 0 20px var(--pku-primary-500);
+  }
+}
+
+@keyframes progressPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes ringProgress {
+  from {
+    stroke-dashoffset: var(--circumference);
+  }
+  to {
+    stroke-dashoffset: var(--target-offset);
+  }
+}
+
+/* ============================================
+   Animation Utility Classes
+   ============================================ */
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out;
 }
@@ -134,6 +293,10 @@ body {
   animation: scaleIn 0.2s ease-out;
 }
 
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
 .animate-slide-in-right {
   animation: slideInRight 0.3s ease-out;
 }
@@ -142,14 +305,77 @@ body {
   animation: slideOutRight 0.3s ease-out forwards;
 }
 
-/* 스켈레톤 로딩 */
+.animate-bounce-in {
+  animation: bounceIn 0.3s ease-out;
+}
+
+.animate-flame {
+  animation: flame 1s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-progress-pulse {
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Visual Depth & Patterns
+   ============================================ */
+
+/* 배경 패턴 - 도트 */
+.bg-pattern-dots {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.dark .bg-pattern-dots {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* 다층 그림자 - 카드 */
+.card-elevated {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 8px rgba(0, 0, 0, 0.04),
+    0 12px 24px rgba(0, 0, 0, 0.06);
+}
+
+.dark .card-elevated {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.15),
+    0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* 그라데이션 배경 */
+.bg-gradient-warm {
+  background: linear-gradient(135deg, var(--pku-primary-50) 0%, var(--bg-secondary) 50%, var(--pku-accent-50) 100%);
+}
+
+.dark .bg-gradient-warm {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+}
+
+/* ============================================
+   Skeleton Loading
+   ============================================ */
 .skeleton {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
-/* 안전 영역 (노치 대응) */
+.dark .skeleton {
+  background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+  background-size: 200% 100%;
+}
+
+/* ============================================
+   Safe Area (Notch Support)
+   ============================================ */
 .safe-area-top {
   padding-top: env(safe-area-inset-top);
 }
@@ -158,7 +384,9 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 토스트 컨테이너 */
+/* ============================================
+   Toast Container
+   ============================================ */
 .toast-container {
   position: fixed;
   top: env(safe-area-inset-top, 16px);
@@ -175,10 +403,98 @@ body {
   pointer-events: auto;
 }
 
-/* 반응형 유틸리티 */
 @media (min-width: 640px) {
   .toast-container {
     left: auto;
     max-width: 400px;
   }
+}
+
+/* ============================================
+   PKU Safety Badges
+   ============================================ */
+.badge-safe {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
+  @apply bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200;
+}
+
+.badge-caution {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
+  @apply bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 border border-yellow-200;
+}
+
+.badge-avoid {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
+  @apply bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border border-red-200;
+}
+
+.dark .badge-safe {
+  @apply from-green-900/30 to-emerald-900/30 text-green-400 border-green-800;
+}
+
+.dark .badge-caution {
+  @apply from-yellow-900/30 to-amber-900/30 text-yellow-400 border-yellow-800;
+}
+
+.dark .badge-avoid {
+  @apply from-red-900/30 to-rose-900/30 text-red-400 border-red-800;
+}
+
+/* ============================================
+   Glassmorphism Effects
+   ============================================ */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+/* ============================================
+   Progress Ring Gradient
+   ============================================ */
+.ring-gradient-primary {
+  stroke: url(#gradient-primary);
+}
+
+.ring-gradient-accent {
+  stroke: url(#gradient-accent);
+}
+
+/* ============================================
+   Interactive States
+   ============================================ */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Input Focus States
+   ============================================ */
+.input-focus {
+  @apply transition-all duration-200;
+  @apply border-gray-300 dark:border-gray-600;
+  @apply focus:ring-2;
+}
+
+.input-focus:focus {
+  border-color: var(--pku-primary-500);
+  --tw-ring-color: rgba(34, 197, 94, 0.2);
+}
+
+.dark .input-focus:focus {
+  border-color: var(--pku-primary-400);
+  --tw-ring-color: rgba(74, 222, 128, 0.2);
 }

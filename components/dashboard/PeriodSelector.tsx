@@ -22,7 +22,7 @@ export default function PeriodSelector({
   ];
 
   return (
-    <div className="flex bg-gray-100 rounded-lg p-1">
+    <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
       {periods.map(({ value, labelKey }) => (
         <button
           key={value}
@@ -31,8 +31,8 @@ export default function PeriodSelector({
             flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition-colors
             ${
               selectedPeriod === value
-                ? "bg-white text-indigo-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
             }
           `}
         >

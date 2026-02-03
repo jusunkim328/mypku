@@ -52,7 +52,7 @@ export default function NotificationSettings() {
   if (!_hasHydrated) {
     return (
       <Card className="p-4">
-        <div className="text-center text-gray-500">{tCommon("loading")}</div>
+        <div className="text-center text-gray-500 dark:text-gray-400">{tCommon("loading")}</div>
       </Card>
     );
   }
@@ -60,8 +60,8 @@ export default function NotificationSettings() {
   if (!isSupported) {
     return (
       <Card className="p-4">
-        <h3 className="text-base font-semibold mb-2">{t("title")}</h3>
-        <p className="text-sm text-gray-500">{t("notSupported")}</p>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">{t("title")}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t("notSupported")}</p>
       </Card>
     );
   }
@@ -70,12 +70,12 @@ export default function NotificationSettings() {
 
   return (
     <Card className="p-4">
-      <h3 className="text-base font-semibold mb-3">{t("title")}</h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">{t("title")}</h3>
 
       {/* Permission Status */}
       {permission === "default" && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-900 mb-2">{t("enablePrompt")}</p>
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+          <p className="text-sm text-blue-900 dark:text-blue-300 mb-2">{t("enablePrompt")}</p>
           <Button small onClick={handleRequestPermission}>
             {t("enableNotifications")}
           </Button>
@@ -83,31 +83,31 @@ export default function NotificationSettings() {
       )}
 
       {permission === "denied" && (
-        <div className="mb-4 p-3 bg-red-50 rounded-lg">
-          <p className="text-sm text-red-900">{t("permissionDeniedMessage")}</p>
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+          <p className="text-sm text-red-900 dark:text-red-300">{t("permissionDeniedMessage")}</p>
         </div>
       )}
 
       {permission === "granted" && (
-        <div className="mb-4 p-3 bg-green-50 rounded-lg">
-          <p className="text-sm text-green-900">✓ {t("notificationsEnabled")}</p>
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+          <p className="text-sm text-green-900 dark:text-green-300">✓ {t("notificationsEnabled")}</p>
         </div>
       )}
 
       {/* Meal Reminders */}
       <div className="space-y-3 mb-4">
-        <h4 className="text-sm font-semibold text-gray-700">{t("mealReminders")}</h4>
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("mealReminders")}</h4>
 
         {(["breakfast", "lunch", "dinner", "snack"] as const).map((mealType) => {
           const reminder = mealReminders[mealType];
           return (
             <div
               key={mealType}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {tMealTypes(mealType)}
                   </span>
                   <Toggle
@@ -121,7 +121,7 @@ export default function NotificationSettings() {
                     type="time"
                     value={reminder.time}
                     onChange={(e) => setMealReminderTime(mealType, e.target.value)}
-                    className="text-xs px-2 py-1 border rounded"
+                    className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded"
                   />
                 )}
               </div>
@@ -131,13 +131,13 @@ export default function NotificationSettings() {
       </div>
 
       {/* Other Notifications */}
-      <div className="space-y-3 border-t pt-4">
-        <h4 className="text-sm font-semibold text-gray-700">{t("otherNotifications")}</h4>
+      <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4">
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("otherNotifications")}</h4>
 
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium">{t("pheWarnings")}</p>
-            <p className="text-xs text-gray-500">{t("pheWarningsDesc")}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("pheWarnings")}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t("pheWarningsDesc")}</p>
           </div>
           <Toggle
             checked={pheWarnings && isGranted}
@@ -148,8 +148,8 @@ export default function NotificationSettings() {
 
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium">{t("goalAchievements")}</p>
-            <p className="text-xs text-gray-500">{t("goalAchievementsDesc")}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("goalAchievements")}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t("goalAchievementsDesc")}</p>
           </div>
           <Toggle
             checked={goalAchievements && isGranted}
@@ -160,8 +160,8 @@ export default function NotificationSettings() {
 
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium">{t("streakMilestones")}</p>
-            <p className="text-xs text-gray-500">{t("streakMilestonesDesc")}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("streakMilestones")}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t("streakMilestonesDesc")}</p>
           </div>
           <Toggle
             checked={streakMilestones && isGranted}

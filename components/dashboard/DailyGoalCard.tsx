@@ -12,7 +12,6 @@ export default function DailyGoalCard() {
   const { getTodayNutrition } = useMealRecords();
   const isPKU = mode === "pku";
 
-  // mealRecords가 변경될 때마다 다시 계산됨 (인증 상태에 따라 DB 또는 로컬 데이터)
   const todayNutrition = getTodayNutrition();
 
   const nutrients = [
@@ -24,6 +23,7 @@ export default function DailyGoalCard() {
       goal: isPKU ? dailyGoals.phenylalanine_mg || 300 : dailyGoals.calories,
       unit: isPKU ? "mg" : "kcal",
       warning: isPKU,
+      color: "primary",
     },
     {
       name: tNutrients("protein"),
@@ -31,6 +31,7 @@ export default function DailyGoalCard() {
       goal: dailyGoals.protein_g,
       unit: "g",
       warning: false,
+      color: "accent",
     },
     {
       name: tNutrients("carbs"),
@@ -38,6 +39,7 @@ export default function DailyGoalCard() {
       goal: dailyGoals.carbs_g,
       unit: "g",
       warning: false,
+      color: "success",
     },
     {
       name: tNutrients("fat"),
@@ -45,14 +47,17 @@ export default function DailyGoalCard() {
       goal: dailyGoals.fat_g,
       unit: "g",
       warning: false,
+      color: "info",
     },
   ];
 
   return (
-    <Card className="p-4">
-      <h3 className="text-base font-semibold mb-3">{t("title")}</h3>
-      <div className="space-y-3">
-        {nutrients.map((nutrient) => {
+    <Card className="p-5 md:p-6 lg:p-8">
+      <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 lg:mb-6">
+        {t("title")}
+      </h3>
+      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:space-y-0 lg:gap-y-4">
+        {nutrients.map((nutrient, index) => {
           const percentage = Math.min(
             (nutrient.current / nutrient.goal) * 100,
             100
@@ -60,21 +65,38 @@ export default function DailyGoalCard() {
           const isOver = nutrient.current > nutrient.goal;
 
           return (
-            <div key={nutrient.name}>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">{nutrient.name}</span>
+            <div
+              key={nutrient.name}
+              className="animate-fade-in-up"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="flex justify-between text-sm mb-1.5">
+                <span className="text-gray-600 dark:text-gray-400 font-medium">
+                  {nutrient.name}
+                </span>
                 <span
-                  className={
+                  className={`font-semibold ${
                     isOver && nutrient.warning
-                      ? "text-red-500 font-semibold"
-                      : "text-gray-800"
-                  }
+                      ? "text-red-500 dark:text-red-400"
+                      : "text-gray-800 dark:text-gray-200"
+                  }`}
                 >
-                  {Math.round(nutrient.current)} / {nutrient.goal}
-                  {nutrient.unit}
+                  {Math.round(nutrient.current)}
+                  <span className="text-gray-400 dark:text-gray-500 font-normal">
+                    {" "}/ {nutrient.goal}{nutrient.unit}
+                  </span>
                 </span>
               </div>
-              <Progressbar progress={percentage / 100} warning={nutrient.warning} />
+              <Progressbar
+                progress={percentage / 100}
+                warning={nutrient.warning}
+                showGlow={percentage >= 80 && percentage < 100 && !isOver}
+              />
+              {isOver && nutrient.warning && (
+                <p className="text-xs text-red-500 dark:text-red-400 mt-1 font-medium animate-pulse">
+                  {t("exceeded") || "Limit exceeded!"}
+                </p>
+              )}
             </div>
           );
         })}

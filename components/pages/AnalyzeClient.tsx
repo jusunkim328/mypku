@@ -246,13 +246,13 @@ export default function AnalyzeClient() {
 
       <Block className="space-y-4">
         {/* 입력 모드 탭 */}
-        <div className="flex rounded-xl bg-gray-100 p-1">
+        <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
           <button
             onClick={() => handleModeChange("image")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
               inputMode === "image"
-                ? "bg-white text-indigo-600 shadow-sm"
-                : "text-gray-600"
+                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-gray-600 dark:text-gray-400"
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,8 +265,8 @@ export default function AnalyzeClient() {
             onClick={() => handleModeChange("voice")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
               inputMode === "voice"
-                ? "bg-white text-indigo-600 shadow-sm"
-                : "text-gray-600"
+                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-gray-600 dark:text-gray-400"
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -278,8 +278,8 @@ export default function AnalyzeClient() {
             onClick={() => handleModeChange("manual")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
               inputMode === "manual"
-                ? "bg-white text-indigo-600 shadow-sm"
-                : "text-gray-600"
+                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-gray-600 dark:text-gray-400"
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,8 +306,8 @@ export default function AnalyzeClient() {
               disabled={analysisState === "loading"}
             />
             {voiceText && (
-              <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
-                <p className="text-sm text-indigo-800">&ldquo;{voiceText}&rdquo;</p>
+              <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                <p className="text-sm text-indigo-800 dark:text-indigo-300">&ldquo;{voiceText}&rdquo;</p>
               </div>
             )}
           </Card>
@@ -316,7 +316,7 @@ export default function AnalyzeClient() {
         {/* 수동 입력 */}
         {inputMode === "manual" && (
           <Card className="p-4">
-            <p className="text-sm text-gray-600 mb-4">{t("manualEntryDesc")}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t("manualEntryDesc")}</p>
             <FoodSearchInput
               onFoodSelect={(food) => {
                 const newItems = [...items, food];
@@ -354,8 +354,8 @@ export default function AnalyzeClient() {
 
         {/* 에러 메시지 */}
         {analysisState === "error" && (
-          <Card className="p-4 bg-red-50">
-            <p className="text-red-600 text-sm">{error}</p>
+          <Card className="p-4 bg-red-50 dark:bg-red-900/30">
+            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             <Button small outline className="mt-2" onClick={handleAnalyze}>
               {tCommon("retry")}
             </Button>
@@ -373,7 +373,7 @@ export default function AnalyzeClient() {
 
             {/* 식사 유형 선택 */}
             <Card className="p-4">
-              <h3 className="text-sm font-semibold mb-2">{t("mealType")}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">{t("mealType")}</h3>
               <div className="flex gap-2">
                 {mealTypes.map((type) => (
                   <Button

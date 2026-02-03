@@ -17,9 +17,9 @@ function ChartLoading() {
   const t = useTranslations("WeeklyChart");
   return (
     <Card className="p-4">
-      <h3 className="text-base font-semibold mb-3">{t("title", { nutrient: "" })}</h3>
-      <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg">
-        <p className="text-gray-400 text-sm">{t("loading")}</p>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">{t("title", { nutrient: "" })}</h3>
+      <div className="h-48 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <p className="text-gray-400 dark:text-gray-500 text-sm">{t("loading")}</p>
       </div>
     </Card>
   );

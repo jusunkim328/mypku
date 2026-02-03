@@ -73,20 +73,20 @@ export default function AnalysisResult({
   return (
     <div className="space-y-4">
       {/* 총 영양소 요약 */}
-      <Card className="p-4 bg-indigo-50">
-        <h3 className="text-base font-semibold mb-3 text-indigo-900">
+      <Card className="p-4 md:p-5 lg:p-6 bg-indigo-50">
+        <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 text-indigo-900">
           {t("analysisSummary")}
         </h3>
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 text-sm md:text-base">
           {isPKU && (
             <>
-              <div className="col-span-2 bg-white rounded-lg p-3">
+              <div className="col-span-2 md:col-span-1 bg-white rounded-lg p-3 md:p-4">
                 <span className="text-gray-600">{t("estimatedPhe")}</span>
-                <p className="text-xl font-bold text-indigo-600">
+                <p className="text-xl md:text-2xl font-bold text-indigo-600">
                   {totalNutrition.phenylalanine_mg}mg
                 </p>
               </div>
-              <div className="col-span-2 flex items-center gap-2 p-3 bg-indigo-600 rounded-lg">
+              <div className="col-span-2 md:col-span-1 flex items-center gap-2 p-3 md:p-4 bg-indigo-600 rounded-lg">
                 <span className="text-3xl font-bold text-white">
                   {totalExchanges}
                 </span>
@@ -101,27 +101,27 @@ export default function AnalysisResult({
               </div>
             </>
           )}
-          <div className="bg-white rounded-lg p-3">
+          <div className="bg-white rounded-lg p-3 md:p-4">
             <span className="text-gray-600">{tNutrients("calories")}</span>
-            <p className="text-lg font-semibold">
+            <p className="text-lg md:text-xl font-semibold">
               {Math.round(totalNutrition.calories)}kcal
             </p>
           </div>
-          <div className="bg-white rounded-lg p-3">
+          <div className="bg-white rounded-lg p-3 md:p-4">
             <span className="text-gray-600">{tNutrients("protein")}</span>
-            <p className="text-lg font-semibold">
+            <p className="text-lg md:text-xl font-semibold">
               {totalNutrition.protein_g.toFixed(1)}g
             </p>
           </div>
-          <div className="bg-white rounded-lg p-3">
+          <div className="bg-white rounded-lg p-3 md:p-4">
             <span className="text-gray-600">{tNutrients("carbs")}</span>
-            <p className="text-lg font-semibold">
+            <p className="text-lg md:text-xl font-semibold">
               {totalNutrition.carbs_g.toFixed(1)}g
             </p>
           </div>
-          <div className="bg-white rounded-lg p-3">
+          <div className="bg-white rounded-lg p-3 md:p-4">
             <span className="text-gray-600">{tNutrients("fat")}</span>
-            <p className="text-lg font-semibold">
+            <p className="text-lg md:text-xl font-semibold">
               {totalNutrition.fat_g.toFixed(1)}g
             </p>
           </div>
