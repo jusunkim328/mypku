@@ -140,6 +140,7 @@ export type Database = {
       meal_records: {
         Row: {
           ai_confidence: number | null
+          client_id: string | null
           confirmed_at: string | null
           confirmed_by: string | null
           created_at: string | null
@@ -154,6 +155,7 @@ export type Database = {
         }
         Insert: {
           ai_confidence?: number | null
+          client_id?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string | null
@@ -168,6 +170,7 @@ export type Database = {
         }
         Update: {
           ai_confidence?: number | null
+          client_id?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string | null

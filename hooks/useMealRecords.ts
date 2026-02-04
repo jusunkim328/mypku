@@ -204,8 +204,9 @@ export function useMealRecords(): UseMealRecordsReturn {
       imageBase64?: string
     ) => {
       // 로컬 스토어에 항상 저장 (오프라인 백업)
+      // UUID 사용: Phase 7 동기화/병합 대비 (Codex 권장)
       const localRecord = {
-        id: `meal-${Date.now()}`,
+        id: crypto.randomUUID(),
         timestamp: record.timestamp,
         mealType: record.mealType,
         imageBase64,

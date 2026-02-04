@@ -13,6 +13,7 @@ import {
   MOCK_PROFILE,
   MOCK_DAILY_GOALS,
 } from "@/lib/devAuth";
+import { migrateLocalDataIfNeeded, type MigrationResult } from "@/lib/dataMigration";
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ interface AuthContextType {
   dailyGoals: DBDailyGoals | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  migrationResult: MigrationResult | null;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
@@ -75,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [dailyGoals, setDailyGoals] = useState<DBDailyGoals | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDevAuthMode, setIsDevAuthMode] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<MigrationResult | null>(null);
 
   // Supabase 클라이언트를 ref로 저장하여 의존성 문제 방지
   const supabaseRef = useRef(createClient());
@@ -170,14 +173,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
 
-        // SIGNED_IN은 토큰이 아직 준비되지 않은 상태일 수 있으므로 스킵
-        // INITIAL_SESSION, TOKEN_REFRESHED, SIGNED_OUT에서만 데이터 로드
-        if (event === "SIGNED_IN") {
+        // SIGNED_OUT 이벤트는 로그아웃이므로 데이터 클리어만
+        if (event === "SIGNED_OUT") {
+          setProfile(null);
+          setDailyGoals(null);
+          setMigrationResult(null);
+          setIsLoading(false);
           return;
         }
 
         try {
           if (session?.user) {
+            console.log(`[AuthContext] 이벤트: ${event}, 사용자: ${session.user.email}`);
+
             const [profileData, goalsData] = await Promise.all([
               fetchProfile(session.user.id),
               fetchDailyGoals(session.user.id),
@@ -187,9 +195,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             setProfile(profileData);
             setDailyGoals(goalsData);
+
+            // 로그인 성공 시 게스트 데이터 마이그레이션 시도
+            // SIGNED_IN (OAuth 콜백), INITIAL_SESSION (페이지 로드), TOKEN_REFRESHED 모두 처리
+            if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+              try {
+                console.log("[AuthContext] 게스트 데이터 마이그레이션 확인 중...");
+                const result = await migrateLocalDataIfNeeded(session.user.id);
+                setMigrationResult(result);
+
+                if (result.status === "completed" && result.count && result.count > 0) {
+                  console.log(`[AuthContext] 마이그레이션 완료: ${result.count}개 레코드`);
+                  toast.success(`${result.count}개의 기록이 계정에 동기화되었습니다!`);
+                } else if (result.status === "skipped_remote_exists") {
+                  console.log("[AuthContext] 마이그레이션 스킵 - 원격 데이터 존재");
+                } else if (result.status === "offline_deferred") {
+                  console.log("[AuthContext] 마이그레이션 보류 - 오프라인");
+                } else if (result.status === "already_migrated") {
+                  console.log("[AuthContext] 이미 마이그레이션됨");
+                } else if (result.status === "empty_local") {
+                  console.log("[AuthContext] 로컬 데이터 없음");
+                }
+              } catch (migrationError) {
+                console.error("[AuthContext] 마이그레이션 실패:", migrationError);
+                // 마이그레이션 실패해도 로그인은 유지
+              }
+            }
           } else {
             setProfile(null);
             setDailyGoals(null);
+            setMigrationResult(null);
           }
         } catch (error) {
           console.error("[AuthContext] onAuthStateChange 데이터 로드 실패:", error);
@@ -366,6 +401,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         dailyGoals,
         isLoading,
         isAuthenticated: !!user,
+        migrationResult,
         signInWithGoogle,
         signOut,
         updateProfile,

@@ -397,8 +397,8 @@ export default function SettingsClient() {
         {/* 알림 설정 */}
         <NotificationSettings />
 
-        {/* 데이터 관리 */}
-        <DataManagement />
+        {/* 데이터 관리 - 비로그인 사용자만 (로그인 시 Supabase에 저장됨) */}
+        {!isAuthenticated && <DataManagement />}
 
         {/* 언어 설정 */}
         <Card className="p-4 md:p-5 lg:p-6">
