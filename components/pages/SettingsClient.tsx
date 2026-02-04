@@ -5,10 +5,12 @@ import { useTranslations, useLocale } from "next-intl";
 import { useTheme } from "next-themes";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader, NumberInput } from "@/components/ui";
-import { Sun, Monitor, Moon, User } from "lucide-react";
+import { Sun, Monitor, Moon, User, Download, Upload, Database } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
+import { downloadJSON, getExportSummary } from "@/lib/dataExport";
+import { openFileAndImport } from "@/lib/dataImport";
 import type { Locale } from "@/i18n/routing";
 import type { DailyGoals } from "@/types/nutrition";
 import NotificationSettings from "@/components/settings/NotificationSettings";
@@ -75,6 +77,115 @@ function ThemeToggle() {
         <Moon className="w-5 h-5" />
       </button>
     </div>
+  );
+}
+
+// 데이터 관리 컴포넌트
+function DataManagement() {
+  const t = useTranslations("SettingsPage");
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [summary, setSummary] = useState<ReturnType<typeof getExportSummary>>(null);
+
+  // 마운트 시 요약 정보 로드
+  useEffect(() => {
+    setSummary(getExportSummary());
+  }, []);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const success = downloadJSON();
+      if (success) {
+        toast.success(t("exportSuccess"));
+      } else {
+        toast.error(t("exportFailed"));
+      }
+    } catch {
+      toast.error(t("exportFailed"));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImport = async () => {
+    setIsImporting(true);
+    try {
+      const result = await openFileAndImport({ overwrite: true });
+
+      if (result.success) {
+        toast.success(
+          t("importSuccess", { count: result.imported?.mealCount || 0 })
+        );
+        // 페이지 새로고침으로 상태 반영
+        window.location.reload();
+      } else if (result.error === "cancelled" || result.error === "noFileSelected") {
+        // 사용자가 취소한 경우 무시
+      } else if (result.error === "invalidFormat") {
+        toast.error(t("importInvalidFormat"));
+      } else {
+        toast.error(t("importFailed"));
+      }
+    } catch {
+      toast.error(t("importFailed"));
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  return (
+    <Card className="p-4 md:p-5 lg:p-6">
+      <div className="flex items-center gap-2 mb-3">
+        <Database className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+        <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {t("dataManagement")}
+        </h3>
+      </div>
+
+      {/* 데이터 요약 */}
+      {summary && summary.mealCount > 0 && (
+        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {t("dataSummary", {
+              meals: summary.mealCount,
+              days: summary.dayCount,
+            })}
+          </p>
+          {summary.oldestDate && summary.newestDate && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+              {summary.oldestDate} ~ {summary.newestDate}
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button
+          small
+          outline
+          onClick={handleExport}
+          disabled={isExporting}
+          className="flex-1"
+        >
+          <Download className="w-4 h-4 mr-1.5" />
+          {isExporting ? t("exporting") : t("exportData")}
+        </Button>
+        <Button
+          small
+          outline
+          onClick={handleImport}
+          disabled={isImporting}
+          className="flex-1"
+        >
+          <Upload className="w-4 h-4 mr-1.5" />
+          {isImporting ? t("importing") : t("importData")}
+        </Button>
+      </div>
+
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+        {t("dataManagementDesc")}
+      </p>
+    </Card>
   );
 }
 
@@ -285,6 +396,9 @@ export default function SettingsClient() {
 
         {/* 알림 설정 */}
         <NotificationSettings />
+
+        {/* 데이터 관리 */}
+        <DataManagement />
 
         {/* 언어 설정 */}
         <Card className="p-4 md:p-5 lg:p-6">

@@ -99,7 +99,19 @@
     "selectLanguage": "Select language",
     "goalsSaved": "Daily goals saved!",
     "saveFailed": "Save failed. Please try again.",
-    "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave?"
+    "unsavedChangesWarning": "You have unsaved changes. Are you sure you want to leave?",
+    "dataManagement": "Data Management",
+    "dataManagementDesc": "Export your data as a backup or import from a previous backup.",
+    "exportData": "Export Data",
+    "importData": "Import Data",
+    "exporting": "Exporting...",
+    "importing": "Importing...",
+    "exportSuccess": "Data exported successfully!",
+    "exportFailed": "Failed to export data.",
+    "importSuccess": "Imported {count} meal records successfully!",
+    "importFailed": "Failed to import data.",
+    "importInvalidFormat": "Invalid file format. Please select a valid MyPKU backup file.",
+    "dataSummary": "{meals} meals recorded over {days} days"
   },
   "Auth": {
     "login": "Login",
