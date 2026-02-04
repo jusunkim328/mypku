@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Button, NumberInput } from "@/components/ui";
 import { ChevronRight, Check, Sparkles } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { PKU_PHE_DEFAULTS, PKU_EXCHANGE } from "@/lib/constants";
 
 interface QuickSetupProps {
   onComplete: () => void;
@@ -12,25 +13,39 @@ interface QuickSetupProps {
 
 type Step = 1 | 2 | 3;
 
+interface SetupState {
+  step: Step;
+  pheAllowance: number;
+  exchangeUnit: number;
+}
+
 export default function QuickSetup({ onComplete }: QuickSetupProps) {
   const t = useTranslations("QuickSetup");
   const tNutrients = useTranslations("Nutrients");
 
   const { dailyGoals, setDailyGoals, setQuickSetupCompleted } = useUserSettings();
 
-  const [step, setStep] = useState<Step>(1);
-  const [pheAllowance, setPheAllowance] = useState(dailyGoals.phenylalanine_mg || 300);
-  const [exchangeUnit, setExchangeUnit] = useState(50); // 1 Exchange = 50mg Phe (기본값)
+  const [state, setState] = useState<SetupState>({
+    step: 1,
+    pheAllowance: dailyGoals.phenylalanine_mg || PKU_PHE_DEFAULTS.DEFAULT,
+    exchangeUnit: PKU_EXCHANGE.STANDARD,
+  });
+
+  const { step, pheAllowance, exchangeUnit } = state;
+
+  const updateState = useCallback((updates: Partial<SetupState>) => {
+    setState(prev => ({ ...prev, ...updates }));
+  }, []);
 
   const handleNext = () => {
     if (step < 3) {
-      setStep((step + 1) as Step);
+      updateState({ step: (step + 1) as Step });
     }
   };
 
   const handleBack = () => {
     if (step > 1) {
-      setStep((step - 1) as Step);
+      updateState({ step: (step - 1) as Step });
     }
   };
 
@@ -98,10 +113,10 @@ export default function QuickSetup({ onComplete }: QuickSetupProps) {
                 </label>
                 <NumberInput
                   value={pheAllowance}
-                  onChange={setPheAllowance}
+                  onChange={(val) => updateState({ pheAllowance: val })}
                   min={50}
                   max={2000}
-                  defaultValue={300}
+                  defaultValue={PKU_PHE_DEFAULTS.DEFAULT}
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   = {calculateExchanges(pheAllowance)} {tNutrients("exchanges")}
@@ -110,10 +125,10 @@ export default function QuickSetup({ onComplete }: QuickSetupProps) {
 
               {/* 빠른 선택 버튼 */}
               <div className="flex flex-wrap gap-2">
-                {[200, 300, 400, 500].map((val) => (
+                {[PKU_PHE_DEFAULTS.INFANT, PKU_PHE_DEFAULTS.DEFAULT, PKU_PHE_DEFAULTS.ADULT, 500].map((val) => (
                   <button
                     key={val}
-                    onClick={() => setPheAllowance(val)}
+                    onClick={() => updateState({ pheAllowance: val })}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                       pheAllowance === val
                         ? "bg-indigo-600 text-white"
@@ -140,12 +155,12 @@ export default function QuickSetup({ onComplete }: QuickSetupProps) {
 
               <div className="space-y-3">
                 {[
-                  { value: 50, label: "50mg", desc: t("exchange50Desc") },
-                  { value: 15, label: "15mg", desc: t("exchange15Desc") },
+                  { value: PKU_EXCHANGE.STANDARD, label: "50mg", desc: t("exchange50Desc") },
+                  { value: PKU_EXCHANGE.DETAILED, label: "15mg", desc: t("exchange15Desc") },
                 ].map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setExchangeUnit(option.value)}
+                    onClick={() => updateState({ exchangeUnit: option.value })}
                     className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                       exchangeUnit === option.value
                         ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"

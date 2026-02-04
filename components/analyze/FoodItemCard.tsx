@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Check, AlertTriangle, X, CheckCircle2, Database, Bot, Keyboard, Mic } from "lucide-react";
+import { Check, AlertTriangle, X, CheckCircle2 } from "lucide-react";
 import { Card, Button } from "@/components/ui";
+import { SourceBadge, ConfidenceBadge } from "@/components/badges";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { PKU_CONFIDENCE } from "@/lib/constants";
 import type { FoodItem, PKUSafetyLevel, DataSource, ConfidenceLevel } from "@/types/nutrition";
 
 interface FoodItemCardProps {
@@ -41,58 +43,6 @@ function PKUSafetyBadge({ safety, t }: { safety: PKUSafetyLevel; t: (key: string
   );
 }
 
-// 데이터 출처 아이콘 컴포넌트
-function SourceIcon({ source }: { source: DataSource }) {
-  const iconClass = "w-3 h-3";
-  switch (source) {
-    case "ai":
-      return <Bot className={iconClass} />;
-    case "barcode":
-      return <Database className={iconClass} />;
-    case "manual":
-    case "usda":
-    case "kfda":
-      return <Database className={iconClass} />;
-    case "voice":
-      return <Mic className={iconClass} />;
-    default:
-      return <Bot className={iconClass} />;
-  }
-}
-
-// 데이터 출처 배지 컴포넌트
-function SourceBadge({ source, t }: { source: DataSource; t: (key: string) => string }) {
-  const sourceColors: Record<DataSource, string> = {
-    ai: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700",
-    barcode: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700",
-    manual: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600",
-    usda: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700",
-    kfda: "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-700",
-    voice: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700",
-  };
-
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${sourceColors[source]}`}>
-      <SourceIcon source={source} />
-      {t(`source_${source}`)}
-    </span>
-  );
-}
-
-// 신뢰도 레벨 배지 컴포넌트
-function ConfidenceBadge({ level, t }: { level: ConfidenceLevel; t: (key: string) => string }) {
-  const levelColors: Record<ConfidenceLevel, string> = {
-    high: "text-green-600 dark:text-green-400",
-    medium: "text-yellow-600 dark:text-yellow-400",
-    low: "text-red-600 dark:text-red-400",
-  };
-
-  return (
-    <span className={`text-xs ${levelColors[level]}`}>
-      {t("confidence")}: {t(level)}
-    </span>
-  );
-}
 
 export default function FoodItemCard({ item, onUpdate, onConfirm, showConfirmButton = true }: FoodItemCardProps) {
   const t = useTranslations("FoodItem");
@@ -109,7 +59,7 @@ export default function FoodItemCard({ item, onUpdate, onConfirm, showConfirmBut
 
   // 신뢰도 레벨 결정 (AI가 반환한 값 우선, 없으면 계산)
   const confidenceLevel: ConfidenceLevel = item.confidenceLevel ??
-    (item.confidence >= 0.8 ? "high" : item.confidence >= 0.5 ? "medium" : "low");
+    (item.confidence >= PKU_CONFIDENCE.HIGH ? "high" : item.confidence >= PKU_CONFIDENCE.LOW ? "medium" : "low");
 
   // 데이터 출처 (기본값: ai)
   const source: DataSource = item.source ?? "ai";

@@ -24,6 +24,7 @@ export default function AnalysisResult({
   showConfirmButtons = true,
 }: AnalysisResultProps) {
   const t = useTranslations("AnalyzePage");
+  const tCommon = useTranslations("Common");
   const tNutrients = useTranslations("Nutrients");
   const { getExchanges } = useUserSettings();
 
@@ -215,7 +216,7 @@ export default function AnalysisResult({
 
               {loadingAlternatives ? (
                 <div className={`text-center py-3 text-sm ${hasAvoidFood ? "text-red-600" : "text-amber-600"}`}>
-                  로딩 중...
+                  {tCommon("loading")}
                 </div>
               ) : alternatives.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">

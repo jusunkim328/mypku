@@ -1,6 +1,8 @@
 /**
  * 개발 환경 인증 테스트 유틸리티
  *
+ * ⚠️ 개발 환경에서만 동작합니다. 프로덕션에서는 자동 비활성화됩니다.
+ *
  * 사용법:
  * 1. Mock Mode: NEXT_PUBLIC_DEV_AUTH_MOCK=true 환경 변수 설정
  * 2. Test Account: /api/dev/login API 호출
@@ -13,13 +15,18 @@
 import type { User, Session } from "@supabase/supabase-js";
 import type { Profile, DailyGoals } from "@/lib/supabase/types";
 
+// 프로덕션 환경 체크 (모든 Dev Auth 기능 비활성화)
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+if (IS_PRODUCTION && typeof window !== "undefined") {
+  console.warn("[DevAuth] Dev Auth is disabled in production environment.");
+}
+
 // Mock 모드 활성화 여부
 export const isDevAuthMockEnabled = (): boolean => {
+  if (IS_PRODUCTION) return false;
   if (typeof window === "undefined") return false;
-  return (
-    process.env.NODE_ENV === "development" &&
-    process.env.NEXT_PUBLIC_DEV_AUTH_MOCK === "true"
-  );
+  return process.env.NEXT_PUBLIC_DEV_AUTH_MOCK === "true";
 };
 
 // Mock 사용자 데이터
@@ -85,7 +92,7 @@ interface DevAuthState {
 
 // Dev Auth 상태 저장
 export const setDevAuthState = (state: Partial<DevAuthState>): void => {
-  if (typeof window === "undefined") return;
+  if (IS_PRODUCTION || typeof window === "undefined") return;
 
   const current = getDevAuthState();
   const newState = { ...current, ...state };
@@ -118,6 +125,11 @@ export const enableDevAuth = (customData?: {
   profile?: Partial<Profile>;
   dailyGoals?: Partial<DailyGoals>;
 }): void => {
+  if (IS_PRODUCTION) {
+    console.warn("[DevAuth] enableDevAuth is disabled in production.");
+    return;
+  }
+
   const profile = { ...MOCK_PROFILE, ...customData?.profile };
   const dailyGoals = { ...MOCK_DAILY_GOALS, ...customData?.dailyGoals };
 
@@ -133,6 +145,11 @@ export const enableDevAuth = (customData?: {
 
 // Dev Auth 비활성화
 export const disableDevAuth = (): void => {
+  if (IS_PRODUCTION) {
+    console.warn("[DevAuth] disableDevAuth is disabled in production.");
+    return;
+  }
+
   setDevAuthState({
     enabled: false,
     user: null,
@@ -144,7 +161,7 @@ export const disableDevAuth = (): void => {
 };
 
 // 전역 함수로 노출 (Chrome DevTools에서 쉽게 호출)
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+if (typeof window !== "undefined" && !IS_PRODUCTION) {
   (window as typeof window & {
     devLogin: typeof enableDevAuth;
     devLogout: typeof disableDevAuth;
