@@ -3,10 +3,10 @@
 import { useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
-import type { UserMode, DailyGoals } from "@/types/nutrition";
+import type { DailyGoals } from "@/types/nutrition";
 
 /**
- * 사용자 설정 통합 훅
+ * 사용자 설정 통합 훅 (PKU 전용)
  *
  * - 로그인 상태: Supabase 데이터 우선, localStorage 백업
  * - 비로그인 상태: localStorage만 사용
@@ -18,19 +18,11 @@ import type { UserMode, DailyGoals } from "@/types/nutrition";
 export function useUserSettings() {
   const {
     isAuthenticated,
-    profile,
     dailyGoals: dbGoals,
-    updateProfile,
     updateDailyGoals: updateDbGoals,
   } = useAuth();
 
   const localStore = useNutritionStore();
-
-  // mode: 로그인 시 Supabase 우선, 비로그인 시 localStorage
-  // DB에서 mode는 string | null로 저장되므로 UserMode로 단언
-  const mode: UserMode = isAuthenticated && profile?.mode
-    ? (profile.mode as UserMode)
-    : localStore.mode;
 
   // dailyGoals: 로그인 시 Supabase 우선, 비로그인 시 localStorage
   // DB에서 nullable 필드들이므로 기본값 적용
@@ -56,22 +48,6 @@ export function useUserSettings() {
     localStore.dailyGoals,
   ]);
 
-  // mode 변경
-  const setMode = useCallback(async (newMode: UserMode) => {
-    // localStorage에 항상 저장 (오프라인 백업)
-    localStore.setMode(newMode);
-
-    // 로그인 상태면 Supabase도 업데이트
-    if (isAuthenticated) {
-      try {
-        await updateProfile({ mode: newMode });
-      } catch (error) {
-        console.error("[useUserSettings] mode 업데이트 실패:", error);
-        // Supabase 실패해도 localStorage에는 저장됨
-      }
-    }
-  }, [isAuthenticated, updateProfile, localStore]);
-
   // dailyGoals 변경
   const setDailyGoals = useCallback(async (goals: Partial<DailyGoals>) => {
     // localStorage에 항상 저장 (오프라인 백업)
@@ -87,6 +63,9 @@ export function useUserSettings() {
       }
     }
   }, [isAuthenticated, updateDbGoals, localStore]);
+
+  // 퀵셋업 상태 (localStorage)
+  const { quickSetupCompleted, setQuickSetupCompleted } = localStore;
 
   // Water 관련 (Phase 1에서는 localStorage만 사용)
   const {
@@ -109,9 +88,11 @@ export function useUserSettings() {
   }, [dailyGoals.phenylalanine_mg, getExchanges]);
 
   return {
-    // 동기화되는 설정
-    mode,
-    setMode,
+    // 퀵셋업 상태
+    quickSetupCompleted,
+    setQuickSetupCompleted,
+
+    // 동기화되는 설정 (PKU 전용)
     dailyGoals,
     setDailyGoals,
 
@@ -124,7 +105,7 @@ export function useUserSettings() {
     getTodayWaterIntake,
     getWaterIntakeByDate,
 
-    // Exchange 계산 함수
+    // Exchange 계산 함수 (PKU 전용)
     getExchanges,
     getTodayExchanges,
     getExchangeGoal,

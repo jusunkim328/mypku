@@ -9,7 +9,6 @@ import AnalysisResult from "@/components/analyze/AnalysisResult";
 import VoiceInput from "@/components/analyze/VoiceInput";
 import FoodSearchInput from "@/components/analyze/FoodSearchInput";
 import { useMealRecords } from "@/hooks/useMealRecords";
-import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useStreakStore } from "@/hooks/useStreakStore";
 import { toast } from "@/hooks/useToast";
@@ -56,7 +55,6 @@ export default function AnalyzeClient() {
   const tMeals = useTranslations("MealTypes");
   const tVoice = useTranslations("VoiceInput");
   const { addMealRecord } = useMealRecords();
-  const { mode } = useUserSettings();
   const { streakMilestones, permission } = useNotificationStore();
   const { currentStreak } = useStreakStore();
 
@@ -90,7 +88,7 @@ export default function AnalyzeClient() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, mode }),
+          body: JSON.stringify({ text }),
         },
         3,
         1000
@@ -140,7 +138,7 @@ export default function AnalyzeClient() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64, mode }),
+          body: JSON.stringify({ imageBase64 }),
         },
         3,
         1000
@@ -165,7 +163,7 @@ export default function AnalyzeClient() {
       setAnalysisState("error");
       toast.error(errorMessage);
     }
-  }, [imageBase64, mode, t]);
+  }, [imageBase64, t]);
 
   const handleSave = useCallback(async () => {
     if (!totalNutrition || items.length === 0) return;

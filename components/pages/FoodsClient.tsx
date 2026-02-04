@@ -17,24 +17,38 @@ import {
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { toast } from "@/hooks/useToast";
-import type { MealType, FoodItem } from "@/types/nutrition";
+import type { MealType, FoodItem, PKUSafetyLevel } from "@/types/nutrition";
+
+// PKU 안전 등급 계산
+const getPkuSafetyLevel = (phe_mg: number): PKUSafetyLevel => {
+  if (phe_mg <= 20) return "safe";
+  if (phe_mg <= 100) return "caution";
+  return "avoid";
+};
 
 // PKUFood → FoodItem 변환 함수
-const pkuFoodToFoodItem = (food: PKUFood, weight: number): FoodItem => ({
-  id: `pku-${food.id}-${Date.now()}`,
-  name: food.name_ko || food.name,
-  estimatedWeight_g: weight,
-  nutrition: {
-    calories: (food.calories || 0) * (weight / 100),
-    protein_g: food.protein_g * (weight / 100),
-    carbs_g: (food.carbs_g || 0) * (weight / 100),
-    fat_g: (food.fat_g || 0) * (weight / 100),
-    phenylalanine_mg: food.phenylalanine_mg * (weight / 100),
-  },
-  confidence: 0.95,
-  userVerified: true,
-  source: "manual",
-});
+const pkuFoodToFoodItem = (food: PKUFood, weight: number): FoodItem => {
+  const phe_mg = food.phenylalanine_mg * (weight / 100);
+  const exchanges = Math.round((phe_mg / 50) * 10) / 10;
+
+  return {
+    id: `pku-${food.id}-${Date.now()}`,
+    name: food.name_ko || food.name,
+    estimatedWeight_g: weight,
+    nutrition: {
+      calories: (food.calories || 0) * (weight / 100),
+      protein_g: food.protein_g * (weight / 100),
+      carbs_g: (food.carbs_g || 0) * (weight / 100),
+      fat_g: (food.fat_g || 0) * (weight / 100),
+      phenylalanine_mg: phe_mg,
+    },
+    confidence: 0.95,
+    userVerified: true,
+    source: "manual",
+    pkuSafety: getPkuSafetyLevel(phe_mg),
+    exchanges,
+  };
+};
 
 export default function FoodsClient() {
   const t = useTranslations("FoodsPage");

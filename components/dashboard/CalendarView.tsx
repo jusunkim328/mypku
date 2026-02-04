@@ -15,8 +15,8 @@ interface CalendarViewProps {
 export default function CalendarView({ onDateSelect, selectedDate }: CalendarViewProps) {
   const t = useTranslations("Calendar");
   const tCommon = useTranslations("Common");
-  // mode, dailyGoals는 Supabase 동기화 (로그인 시)
-  const { mode, dailyGoals } = useUserSettings();
+  // dailyGoals는 Supabase 동기화 (로그인 시)
+  const { dailyGoals } = useUserSettings();
   // 월간 데이터는 로컬 스토어에서 (Phase 1)
   const { getMonthlyData } = useNutritionStore();
 
@@ -25,10 +25,8 @@ export default function CalendarView({ onDateSelect, selectedDate }: CalendarVie
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
-  const isPKU = mode === "pku";
-  const goalValue = isPKU
-    ? dailyGoals.phenylalanine_mg || 300
-    : dailyGoals.calories;
+  // PKU 전용: Phe 기준으로 히트맵 표시
+  const goalValue = dailyGoals.phenylalanine_mg || 300;
 
   // 월간 데이터 가져오기
   const monthlyData = useMemo(
@@ -64,13 +62,12 @@ export default function CalendarView({ onDateSelect, selectedDate }: CalendarVie
     return days;
   }, [currentMonth]);
 
-  // 히트맵 색상 계산 (0-100% 기준)
+  // 히트맵 색상 계산 (Phe 기준, 0-100%)
   const getHeatmapColor = (nutrition: NutritionData | undefined): string => {
     if (!nutrition) return "bg-gray-100 dark:bg-gray-800";
 
-    const value = isPKU
-      ? nutrition.phenylalanine_mg || 0
-      : nutrition.calories;
+    // PKU 전용: 페닐알라닌 기준
+    const value = nutrition.phenylalanine_mg || 0;
     const percentage = (value / goalValue) * 100;
 
     if (percentage === 0) return "bg-gray-100 dark:bg-gray-800";
@@ -196,9 +193,7 @@ export default function CalendarView({ onDateSelect, selectedDate }: CalendarVie
               </span>
               {nutrition && (
                 <span className="text-[10px] text-gray-600 dark:text-gray-400">
-                  {isPKU
-                    ? `${Math.round(nutrition.phenylalanine_mg || 0)}`
-                    : `${Math.round(nutrition.calories)}`}
+                  {Math.round(nutrition.phenylalanine_mg || 0)}
                 </span>
               )}
             </button>

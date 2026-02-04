@@ -1,12 +1,11 @@
-import { GoogleGenerativeAI, SchemaType, GenerativeModel } from "@google/generative-ai";
-import { FOOD_ANALYSIS_PROMPT, PKU_ANALYSIS_PROMPT, calculatePhenylalanine } from "./prompts";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { PKU_ANALYSIS_PROMPT } from "./prompts";
 import type {
   FoodItem,
   NutritionData,
   GeminiAnalysisResult,
-  GeminiPKUAnalysisResult,
-  UserMode,
-  PKUSafetyLevel
+  PKUSafetyLevel,
+  ConfidenceLevel
 } from "@/types/nutrition";
 
 // 서버 사이드에서만 사용 (API Route에서 호출)
@@ -63,31 +62,7 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// Structured Output 스키마 (일반 모드)
-const analysisSchema = {
-  type: SchemaType.OBJECT,
-  properties: {
-    foods: {
-      type: SchemaType.ARRAY,
-      items: {
-        type: SchemaType.OBJECT,
-        properties: {
-          name: { type: SchemaType.STRING },
-          estimated_weight_g: { type: SchemaType.NUMBER },
-          calories: { type: SchemaType.NUMBER },
-          protein_g: { type: SchemaType.NUMBER },
-          carbs_g: { type: SchemaType.NUMBER },
-          fat_g: { type: SchemaType.NUMBER },
-          confidence: { type: SchemaType.NUMBER },
-        },
-        required: ["name", "estimated_weight_g", "calories", "protein_g", "carbs_g", "fat_g", "confidence"],
-      },
-    },
-  },
-  required: ["foods"],
-};
-
-// Structured Output 스키마 (PKU 모드)
+// Structured Output 스키마 (PKU 전용)
 const pkuAnalysisSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -103,7 +78,11 @@ const pkuAnalysisSchema = {
           carbs_g: { type: SchemaType.NUMBER },
           fat_g: { type: SchemaType.NUMBER },
           confidence: { type: SchemaType.NUMBER },
-          // PKU 특화 필드
+          confidence_level: {
+            type: SchemaType.STRING,
+            enum: ["high", "medium", "low"],
+          },
+          // PKU 필수 필드
           phe_mg: { type: SchemaType.NUMBER },
           pku_safety: {
             type: SchemaType.STRING,
@@ -123,6 +102,7 @@ const pkuAnalysisSchema = {
           "carbs_g",
           "fat_g",
           "confidence",
+          "confidence_level",
           "phe_mg",
           "pku_safety",
           "exchanges",
@@ -133,20 +113,40 @@ const pkuAnalysisSchema = {
   required: ["foods"],
 };
 
-export async function analyzeFood(
-  imageBase64: string,
-  mode: UserMode = "pku"
-): Promise<{
+/**
+ * 신뢰도 레벨 결정 (신뢰 설계)
+ * 불확실하면 보수적으로 처리
+ */
+function getConfidenceLevel(confidence: number): ConfidenceLevel {
+  if (confidence >= 0.8) return "high";
+  if (confidence >= 0.5) return "medium";
+  return "low";
+}
+
+/**
+ * PKU 안전 등급 보수적 조정 (신뢰 설계)
+ * 신뢰도가 낮으면 avoid로 처리
+ */
+function adjustPkuSafety(
+  safety: PKUSafetyLevel,
+  confidence: number
+): PKUSafetyLevel {
+  // 신뢰도 50% 미만이면 무조건 avoid
+  if (confidence < 0.5) return "avoid";
+  // 신뢰도 70% 미만이고 safe면 caution으로 격하
+  if (confidence < 0.7 && safety === "safe") return "caution";
+  return safety;
+}
+
+export async function analyzeFood(imageBase64: string): Promise<{
   items: FoodItem[];
   totalNutrition: NutritionData;
 }> {
-  const isPKU = mode === "pku";
-
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: {
       responseMimeType: "application/json",
-      responseSchema: isPKU ? pkuAnalysisSchema : analysisSchema,
+      responseSchema: pkuAnalysisSchema,
     },
   });
 
@@ -155,29 +155,33 @@ export async function analyzeFood(
   const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
   const base64Data = imageBase64.replace(/^data:.+;base64,/, "");
 
-  const prompt = isPKU ? PKU_ANALYSIS_PROMPT : FOOD_ANALYSIS_PROMPT;
-
   const result = await withRetry(
-    () => model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          mimeType,
-          data: base64Data,
+    () =>
+      model.generateContent([
+        PKU_ANALYSIS_PROMPT,
+        {
+          inlineData: {
+            mimeType,
+            data: base64Data,
+          },
         },
-      },
-    ]),
+      ]),
     "analyzeFood"
   );
 
   const response = result.response;
   const text = response.text();
 
-  if (isPKU) {
-    // PKU 모드: PKU 특화 필드 포함
-    const parsed: GeminiPKUAnalysisResult = JSON.parse(text);
+  const parsed: GeminiAnalysisResult = JSON.parse(text);
 
-    const items: FoodItem[] = parsed.foods.map((food, index) => ({
+  const items: FoodItem[] = parsed.foods.map((food, index) => {
+    const confidenceLevel = getConfidenceLevel(food.confidence);
+    const adjustedSafety = adjustPkuSafety(
+      food.pku_safety as PKUSafetyLevel,
+      food.confidence
+    );
+
+    return {
       id: `food-${Date.now()}-${index}`,
       name: food.name,
       estimatedWeight_g: food.estimated_weight_g,
@@ -189,80 +193,45 @@ export async function analyzeFood(
         phenylalanine_mg: food.phe_mg,
       },
       confidence: food.confidence,
+      confidenceLevel,
       userVerified: false,
-      pkuSafety: food.pku_safety as PKUSafetyLevel,
+      isConfirmed: false, // 사용자 확정 전
+      source: "ai" as const,
+      pkuSafety: adjustedSafety,
       exchanges: food.exchanges,
       alternatives: food.alternatives,
-    }));
+    };
+  });
 
-    const totalNutrition: NutritionData = items.reduce(
-      (acc, item) => ({
-        calories: acc.calories + item.nutrition.calories,
-        protein_g: acc.protein_g + item.nutrition.protein_g,
-        carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-        fat_g: acc.fat_g + item.nutrition.fat_g,
-        phenylalanine_mg:
-          (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-      }),
-      { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-    );
+  const totalNutrition: NutritionData = items.reduce(
+    (acc, item) => ({
+      calories: acc.calories + item.nutrition.calories,
+      protein_g: acc.protein_g + item.nutrition.protein_g,
+      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
+      fat_g: acc.fat_g + item.nutrition.fat_g,
+      phenylalanine_mg:
+        (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
+    }),
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
+  );
 
-    return { items, totalNutrition };
-  } else {
-    // 일반 모드: 기본 영양소만
-    const parsed: GeminiAnalysisResult = JSON.parse(text);
-
-    const items: FoodItem[] = parsed.foods.map((food, index) => ({
-      id: `food-${Date.now()}-${index}`,
-      name: food.name,
-      estimatedWeight_g: food.estimated_weight_g,
-      nutrition: {
-        calories: food.calories,
-        protein_g: food.protein_g,
-        carbs_g: food.carbs_g,
-        fat_g: food.fat_g,
-        phenylalanine_mg: calculatePhenylalanine(food.protein_g),
-      },
-      confidence: food.confidence,
-      userVerified: false,
-    }));
-
-    const totalNutrition: NutritionData = items.reduce(
-      (acc, item) => ({
-        calories: acc.calories + item.nutrition.calories,
-        protein_g: acc.protein_g + item.nutrition.protein_g,
-        carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-        fat_g: acc.fat_g + item.nutrition.fat_g,
-        phenylalanine_mg:
-          (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-      }),
-      { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-    );
-
-    return { items, totalNutrition };
-  }
+  return { items, totalNutrition };
 }
 
-// 텍스트 기반 음식 분석 (음성 입력용)
-export async function analyzeFoodByText(
-  foodDescription: string,
-  mode: UserMode = "pku"
-): Promise<{
+// 텍스트 기반 음식 분석 (음성 입력용 - PKU 전용)
+export async function analyzeFoodByText(foodDescription: string): Promise<{
   items: FoodItem[];
   totalNutrition: NutritionData;
 }> {
-  const isPKU = mode === "pku";
-
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: {
       responseMimeType: "application/json",
-      responseSchema: isPKU ? pkuAnalysisSchema : analysisSchema,
+      responseSchema: pkuAnalysisSchema,
     },
   });
 
-  // PKU 모드용 프롬프트
-  const pkuTextPrompt = `${PKU_ANALYSIS_PROMPT}
+  const prompt = `${PKU_ANALYSIS_PROMPT}
 
 ## Food Description to Analyze
 "${foodDescription}"
@@ -274,38 +243,15 @@ export async function analyzeFoodByText(
 4. If the description is vague, use average/typical values
 5. Confidence should be lower (0.5-0.7) for vague descriptions
 6. Consider cultural context for food names (especially Korean foods)
+7. confidence_level should be "low" for vague descriptions, "medium" for clear descriptions with estimated portions, "high" only for well-known foods with precise amounts
 
 ## Required Output
 Return a JSON with foods array containing:
-- name, estimated_weight_g, calories, protein_g, carbs_g, fat_g, confidence
+- name, estimated_weight_g, calories, protein_g, carbs_g, fat_g, confidence, confidence_level
 - phe_mg (phenylalanine in mg)
 - pku_safety ("safe" | "caution" | "avoid")
 - exchanges (phe_mg / 50)
 - alternatives (array of low-phe substitutes if pku_safety is "caution" or "avoid")`;
-
-  // 일반 모드용 프롬프트
-  const generalTextPrompt = `You are an expert nutritionist. Analyze the following food description and estimate its nutritional content.
-
-## Food Description
-"${foodDescription}"
-
-## Instructions
-1. Identify each food item mentioned
-2. Estimate reasonable portion sizes based on typical serving sizes
-3. Calculate nutritional values per item
-4. Consider common preparation methods (fried, steamed, raw, etc.)
-5. If the description is vague, use average/typical values
-
-## Response Format
-Return a JSON with:
-- foods: array of food items with name, estimated_weight_g, calories, protein_g, carbs_g, fat_g, confidence
-
-## Important
-- Confidence should be lower (0.5-0.7) for vague descriptions
-- Use realistic portion sizes
-- Consider cultural context for food names`;
-
-  const prompt = isPKU ? pkuTextPrompt : generalTextPrompt;
 
   const result = await withRetry(
     () => model.generateContent(prompt),
@@ -314,11 +260,16 @@ Return a JSON with:
   const response = result.response;
   const text = response.text();
 
-  if (isPKU) {
-    // PKU 모드: PKU 특화 필드 포함
-    const parsed: GeminiPKUAnalysisResult = JSON.parse(text);
+  const parsed: GeminiAnalysisResult = JSON.parse(text);
 
-    const items: FoodItem[] = parsed.foods.map((food, index) => ({
+  const items: FoodItem[] = parsed.foods.map((food, index) => {
+    const confidenceLevel = getConfidenceLevel(food.confidence);
+    const adjustedSafety = adjustPkuSafety(
+      food.pku_safety as PKUSafetyLevel,
+      food.confidence
+    );
+
+    return {
       id: `food-${Date.now()}-${index}`,
       name: food.name,
       estimatedWeight_g: food.estimated_weight_g,
@@ -330,60 +281,29 @@ Return a JSON with:
         phenylalanine_mg: food.phe_mg,
       },
       confidence: food.confidence,
+      confidenceLevel,
       userVerified: false,
+      isConfirmed: false,
       source: "voice" as const,
-      pkuSafety: food.pku_safety as PKUSafetyLevel,
+      pkuSafety: adjustedSafety,
       exchanges: food.exchanges,
       alternatives: food.alternatives,
-    }));
+    };
+  });
 
-    const totalNutrition: NutritionData = items.reduce(
-      (acc, item) => ({
-        calories: acc.calories + item.nutrition.calories,
-        protein_g: acc.protein_g + item.nutrition.protein_g,
-        carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-        fat_g: acc.fat_g + item.nutrition.fat_g,
-        phenylalanine_mg:
-          (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-      }),
-      { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-    );
+  const totalNutrition: NutritionData = items.reduce(
+    (acc, item) => ({
+      calories: acc.calories + item.nutrition.calories,
+      protein_g: acc.protein_g + item.nutrition.protein_g,
+      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
+      fat_g: acc.fat_g + item.nutrition.fat_g,
+      phenylalanine_mg:
+        (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
+    }),
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
+  );
 
-    return { items, totalNutrition };
-  } else {
-    // 일반 모드
-    const parsed: GeminiAnalysisResult = JSON.parse(text);
-
-    const items: FoodItem[] = parsed.foods.map((food, index) => ({
-      id: `food-${Date.now()}-${index}`,
-      name: food.name,
-      estimatedWeight_g: food.estimated_weight_g,
-      nutrition: {
-        calories: food.calories,
-        protein_g: food.protein_g,
-        carbs_g: food.carbs_g,
-        fat_g: food.fat_g,
-        phenylalanine_mg: calculatePhenylalanine(food.protein_g),
-      },
-      confidence: food.confidence,
-      userVerified: false,
-      source: "voice" as const,
-    }));
-
-    const totalNutrition: NutritionData = items.reduce(
-      (acc, item) => ({
-        calories: acc.calories + item.nutrition.calories,
-        protein_g: acc.protein_g + item.nutrition.protein_g,
-        carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-        fat_g: acc.fat_g + item.nutrition.fat_g,
-        phenylalanine_mg:
-          (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-      }),
-      { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-    );
-
-    return { items, totalNutrition };
-  }
+  return { items, totalNutrition };
 }
 
 // 바코드 OCR 프롬프트
@@ -436,7 +356,6 @@ export async function extractBarcodeFromImage(
 
 export async function generateCoaching(
   weeklyData: string,
-  mode: string,
   dailyGoals: string,
   locale: string = "en"
 ): Promise<string> {
@@ -444,39 +363,32 @@ export async function generateCoaching(
     model: "gemini-2.5-flash",
   });
 
-  const languageInstruction = locale === "ko"
-    ? "응답은 한국어로 작성하세요."
-    : "Write your response in English.";
+  const languageInstruction =
+    locale === "ko"
+      ? "응답은 한국어로 작성하세요."
+      : "Write your response in English.";
 
-  const prompt = `You are a friendly nutrition coach. Analyze the user's weekly nutrition data and provide encouraging feedback.
+  const prompt = `You are a friendly PKU nutrition coach. Analyze the user's weekly nutrition data and provide encouraging feedback.
 
 ## Weekly Data
 ${weeklyData}
 
-## User Mode
-${mode}
-
 ## Daily Goals
 ${dailyGoals}
 
-## Instructions
-1. If mode is "pku":
-   - Pay special attention to phenylalanine intake
-   - Gently warn when exceeding the target
-   - Include low-protein food recommendations
+## Instructions (PKU Focus)
+1. Pay special attention to phenylalanine intake
+2. Gently warn when exceeding the Phe target
+3. Celebrate days with good Phe management
+4. Suggest low-protein food alternatives when appropriate
+5. Acknowledge the challenge of PKU diet management
 
-2. For general mode:
-   - Focus on calorie balance
-   - Praise nutritional balance or suggest improvements
-
-3. Common guidelines:
-   - Maintain a positive and encouraging tone
-   - Mention specific numbers
-   - Keep it concise (2-3 sentences)
-   - Do not give medical advice
-
-## Important
-- Use "user" instead of "patient"
+## Guidelines
+- Maintain a positive and encouraging tone
+- Mention specific numbers (Phe mg, exchanges)
+- Keep it concise (2-3 sentences)
+- Do not give medical advice
+- Use "you" instead of "patient"
 - Avoid expressions that imply diagnosis or prescription
 
 ${languageInstruction} Respond in plain text only (not JSON).`;

@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PKU(페닐케톤뇨증) 환자를 위한 AI 기반 맞춤형 식단 관리 PWA.
 
-- **대상**: PKU 환자 (1차), 일반 건강 관리 사용자 (2차)
-- **핵심 기능**: Gemini Vision 음식 분석 + 페닐알라닌 추적 + AI 코칭
+- **대상**: PKU 환자 (신생아~성인), 보호자
+- **핵심 기능**: Gemini Vision 음식 분석 + 페닐알라닌(Phe) 추적 + Exchange 단위 관리
 - **서비스 언어**: 영어 (기본), 한국어
 - **개발 커뮤니케이션**: 한국어
 
@@ -87,7 +87,7 @@ PWA: Serwist (Service Worker)
 - **미들웨어**: `lib/supabase/middleware.ts` (세션 갱신)
 
 ### 상태 관리 (Zustand)
-- `hooks/useNutritionStore.ts`: 영양 데이터, 일일 목표, 모드 설정
+- `hooks/useNutritionStore.ts`: 영양 데이터, 일일 목표, 퀵셋업 상태
 - `hooks/useMealRecords.ts`: Supabase/localStorage 통합 식사 기록
 - `hooks/useStreakStore.ts`: 연속 기록 추적
 - `hooks/useBadgeStore.ts`: 뱃지/업적
@@ -97,6 +97,12 @@ PWA: Serwist (Service Worker)
 - `contexts/AuthContext.tsx`: profile, dailyGoals 상태 관리 + Supabase 동기화
 - 로그인 시 Supabase 우선, 비로그인 시 localStorage 사용
 - DB nullable 필드는 기본값 적용 (`dbGoals.calories ?? 2000`)
+
+### PKU 전용 기능
+- `components/quicksetup/QuickSetup.tsx`: 첫 방문 시 Phe 허용량/Exchange 단위 설정
+- `components/dashboard/PheRemainingCard.tsx`: 일일 Phe 잔여량 표시 (녹→노→빨 프로그레스)
+- Exchange 계산: 1 Exchange = 50mg Phe (기본값, 커스터마이즈 가능)
+- PKU Safety Level: `safe` (≤20mg), `caution` (≤100mg), `avoid` (>100mg)
 
 ### PKU 식품 DB
 - `lib/pkuFoodDatabase.ts`: PKU 식품 검색, 바코드 조회, 외부 API 폴백
@@ -131,10 +137,10 @@ pku_foods         # PKU 식품 DB (외부 API 캐싱)
 
 ## 개발 규칙
 
-### 듀얼 모드 (PKU/일반)
-- PKU 모드: 페닐알라닌(mg) 추적 우선, `pkuSafety` 등급 표시
-- 일반 모드: 칼로리 추적 우선
-- 공통: 칼로리, 단백질, 탄수화물, 지방
+### PKU 전용 앱
+- 페닐알라닌(mg) 추적이 핵심 지표
+- `pkuSafety` 등급과 `exchanges` 필드는 FoodItem에 필수
+- 공통 영양소: 칼로리, 단백질, 탄수화물, 지방
 
 ### 타입 정의
 - `types/nutrition.ts`: `NutritionData`, `FoodItem`, `MealRecord`, `PKUSafetyLevel`
@@ -165,6 +171,26 @@ mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwh
 
 ---
 
+## Dev Auth (개발 테스트용)
+
+Chrome DevTools MCP에서 Google SSO 없이 인증 상태를 테스트할 수 있는 기능.
+
+### 사용법 (브라우저 콘솔 또는 evaluate_script)
+```javascript
+devLogin()                                    // Mock 사용자로 로그인
+devLogin({ dailyGoals: { phenylalanine_mg: 400 } })  // 커스텀 설정
+devLogout()                                   // 로그아웃
+devAuthState()                                // 현재 상태 확인
+```
+
+### 동작 방식
+- `lib/devAuth.ts`: Mock 사용자 데이터, 전역 함수 정의
+- `contexts/AuthContext.tsx`: Dev Auth 상태 감지 및 처리
+- `hooks/useMealRecords.ts`: Dev Auth 모드에서 Supabase 대신 localStorage 사용
+- 개발 환경에서만 동작 (프로덕션 비활성화)
+
+---
+
 ## 환경 변수
 
 ```env
@@ -172,27 +198,3 @@ GEMINI_API_KEY=xxx                    # 서버 전용 - 클라이언트 노출 �
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
-
----
-
-## 현재 상태
-
-### 완료
-- [x] Gemini 2.0 Flash 음식 분석
-- [x] 듀얼 모드 UI (PKU/일반)
-- [x] 대시보드 및 영양소 시각화
-- [x] 식사 기록 및 히스토리
-- [x] AI 코칭 메시지
-- [x] Supabase Auth (Google SSO)
-- [x] 다국어 지원 (영어/한국어)
-- [x] PWA (Serwist Service Worker)
-- [x] PKU 식품 DB + 외부 API 통합
-- [x] 바코드 스캐너
-- [x] 음성 입력
-
-### 진행 중
-- [ ] Vercel 배포 설정
-- [ ] 프로덕션 에러 핸들링
-- [ ] localStorage → Supabase 마이그레이션 (첫 로그인 시)
-- [ ] waterGoal/waterIntakes Supabase 동기화
-- [ ] 오프라인 동기화 큐 (IndexedDB 기반)

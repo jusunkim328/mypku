@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeFood } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
-import type { AnalysisResponse, FoodItem, NutritionData, UserMode } from "@/types/nutrition";
+import type { AnalysisResponse, FoodItem, NutritionData } from "@/types/nutrition";
 
 /**
  * PKU 식품 DB에서 음식 이름으로 검색 (서버 사이드)
@@ -94,9 +94,11 @@ async function enrichWithDBData(items: FoodItem[]): Promise<{
   return { items: enrichedItems, totalNutrition };
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse<AnalysisResponse>> {
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<AnalysisResponse>> {
   try {
-    const { imageBase64, mode = "pku" } = await request.json();
+    const { imageBase64 } = await request.json();
 
     if (!imageBase64) {
       return NextResponse.json(
@@ -112,14 +114,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalysisR
       );
     }
 
-    // 1. Gemini로 음식 분석 (mode에 따라 PKU/일반 스키마 사용)
-    const { items: rawItems } = await analyzeFood(imageBase64, mode as UserMode);
+    // 1. Gemini로 음식 분석 (PKU 전용)
+    const { items: rawItems } = await analyzeFood(imageBase64);
 
-    // 2. PKU 모드일 때만 DB와 매칭하여 Phe 데이터 보강
-    // (PKU 모드에서는 Gemini가 이미 phe_mg을 반환하지만, DB 매칭으로 정확도 향상 가능)
-    const { items, totalNutrition } = mode === "pku"
-      ? await enrichWithDBData(rawItems)
-      : { items: rawItems, totalNutrition: calculateTotalNutrition(rawItems) };
+    // 2. PKU DB와 매칭하여 Phe 데이터 보강
+    const { items, totalNutrition } = await enrichWithDBData(rawItems);
 
     return NextResponse.json({
       success: true,
@@ -131,24 +130,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalysisR
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "분석 중 오류가 발생했습니다.",
+        error:
+          error instanceof Error
+            ? error.message
+            : "분석 중 오류가 발생했습니다.",
       },
       { status: 500 }
     );
   }
 }
 
-// 일반 모드용 총 영양소 계산
-function calculateTotalNutrition(items: FoodItem[]): NutritionData {
-  return items.reduce(
-    (acc, item) => ({
-      calories: acc.calories + item.nutrition.calories,
-      protein_g: acc.protein_g + item.nutrition.protein_g,
-      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-      fat_g: acc.fat_g + item.nutrition.fat_g,
-      phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-    }),
-    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-  );
-}

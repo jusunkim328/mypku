@@ -58,28 +58,37 @@ export type Database = {
       food_items: {
         Row: {
           confidence: number | null
+          data_source: string | null
+          exchanges: number | null
           id: string
           meal_record_id: string | null
           name: string
           nutrition: Json
+          pku_safety: string | null
           user_verified: boolean | null
           weight_g: number | null
         }
         Insert: {
           confidence?: number | null
+          data_source?: string | null
+          exchanges?: number | null
           id?: string
           meal_record_id?: string | null
           name: string
           nutrition: Json
+          pku_safety?: string | null
           user_verified?: boolean | null
           weight_g?: number | null
         }
         Update: {
           confidence?: number | null
+          data_source?: string | null
+          exchanges?: number | null
           id?: string
           meal_record_id?: string | null
           name?: string
           nutrition?: Json
+          pku_safety?: string | null
           user_verified?: boolean | null
           weight_g?: number | null
         }
@@ -131,9 +140,13 @@ export type Database = {
       meal_records: {
         Row: {
           ai_confidence: number | null
+          confirmed_at: string | null
+          confirmed_by: string | null
           created_at: string | null
+          data_source: string | null
           id: string
           image_url: string | null
+          is_confirmed: boolean | null
           meal_type: string | null
           timestamp: string
           total_nutrition: Json
@@ -141,9 +154,13 @@ export type Database = {
         }
         Insert: {
           ai_confidence?: number | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string | null
+          data_source?: string | null
           id?: string
           image_url?: string | null
+          is_confirmed?: boolean | null
           meal_type?: string | null
           timestamp: string
           total_nutrition: Json
@@ -151,9 +168,13 @@ export type Database = {
         }
         Update: {
           ai_confidence?: number | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string | null
+          data_source?: string | null
           id?: string
           image_url?: string | null
+          is_confirmed?: boolean | null
           meal_type?: string | null
           timestamp?: string
           total_nutrition?: Json

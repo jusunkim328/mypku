@@ -6,28 +6,42 @@ import { X } from "lucide-react";
 import { type PKUFood } from "@/lib/pkuFoodDatabase";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { NumberInput } from "@/components/ui";
-import type { FoodItem } from "@/types/nutrition";
+import type { FoodItem, PKUSafetyLevel } from "@/types/nutrition";
 
 interface FoodSearchInputProps {
   onFoodSelect: (food: FoodItem) => void;
 }
 
+// PKU 안전 등급 계산
+const getPkuSafetyLevel = (phe_mg: number): PKUSafetyLevel => {
+  if (phe_mg <= 20) return "safe";
+  if (phe_mg <= 100) return "caution";
+  return "avoid";
+};
+
 // PKUFood → FoodItem 변환
-const pkuFoodToFoodItem = (food: PKUFood, weight: number): FoodItem => ({
-  id: `manual-${food.id}-${Date.now()}`,
-  name: food.name_ko || food.name,
-  estimatedWeight_g: weight,
-  nutrition: {
-    calories: (food.calories || 0) * (weight / 100),
-    protein_g: food.protein_g * (weight / 100),
-    carbs_g: (food.carbs_g || 0) * (weight / 100),
-    fat_g: (food.fat_g || 0) * (weight / 100),
-    phenylalanine_mg: food.phenylalanine_mg * (weight / 100),
-  },
-  confidence: 0.95,
-  userVerified: true,
-  source: "manual",
-});
+const pkuFoodToFoodItem = (food: PKUFood, weight: number): FoodItem => {
+  const phe_mg = food.phenylalanine_mg * (weight / 100);
+  const exchanges = Math.round((phe_mg / 50) * 10) / 10;
+
+  return {
+    id: `manual-${food.id}-${Date.now()}`,
+    name: food.name_ko || food.name,
+    estimatedWeight_g: weight,
+    nutrition: {
+      calories: (food.calories || 0) * (weight / 100),
+      protein_g: food.protein_g * (weight / 100),
+      carbs_g: (food.carbs_g || 0) * (weight / 100),
+      fat_g: (food.fat_g || 0) * (weight / 100),
+      phenylalanine_mg: phe_mg,
+    },
+    confidence: 0.95,
+    userVerified: true,
+    source: "manual",
+    pkuSafety: getPkuSafetyLevel(phe_mg),
+    exchanges,
+  };
+};
 
 export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) {
   const t = useTranslations("FoodsPage");

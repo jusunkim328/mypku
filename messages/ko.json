@@ -73,7 +73,9 @@
     "highPheWarning": "고Phe 식품이 포함되어 있습니다",
     "noAlternatives": "대체 식품을 찾을 수 없습니다",
     "manualEntry": "직접 입력",
-    "manualEntryDesc": "PKU 식품 DB에서 음식을 검색하여 추가하세요"
+    "manualEntryDesc": "PKU 식품 DB에서 음식을 검색하여 추가하세요",
+    "unconfirmedWarning": "{count}개 항목이 미확정 상태입니다. 확정하면 일일 추적에 반영됩니다.",
+    "confirmedSummary": "확정됨: {phe}mg Phe ({exchanges} Exchanges)"
   },
   "HistoryPage": {
     "title": "식사 기록",
@@ -170,6 +172,10 @@
     "foodName": "음식 이름",
     "weight": "중량(g)",
     "modified": "수정됨",
+    "confirmed": "확정됨",
+    "confirmThis": "확정",
+    "unconfirmed": "미확정",
+    "confirmToTrack": "확정하면 일일 추적에 반영됩니다",
     "confidence": "신뢰도",
     "high": "높음",
     "medium": "보통",
@@ -178,7 +184,13 @@
     "caution": "주의",
     "avoid": "회피",
     "alternatives": "대체품",
-    "pkuSafety": "PKU 안전등급"
+    "pkuSafety": "PKU 안전등급",
+    "source_ai": "AI 분석",
+    "source_barcode": "바코드",
+    "source_manual": "수동입력",
+    "source_usda": "USDA",
+    "source_kfda": "식약처",
+    "source_voice": "음성"
   },
   "NutrientRing": {
     "goal": "목표",
@@ -337,5 +349,35 @@
     "updateMessage": "MyPKU의 새 버전이 준비되었습니다. 지금 업데이트하세요.",
     "updateNow": "지금 업데이트",
     "later": "나중에"
+  },
+  "QuickSetup": {
+    "welcomeTag": "MyPKU에 오신 것을 환영합니다",
+    "title": "빠른 설정",
+    "subtitle": "60초 만에 PKU 관리를 시작하세요",
+    "step1Title": "일일 Phe 허용량",
+    "step1Desc": "의료진이 처방한 일일 페닐알라닌 허용량을 입력하세요.",
+    "step2Title": "익스체인지 단위",
+    "step2Desc": "병원이나 영양사가 사용하는 익스체인지 단위를 선택하세요.",
+    "exchange50Desc": "표준 (가장 일반적)",
+    "exchange15Desc": "세밀한 추적",
+    "step3Title": "설정 확인",
+    "step3Desc": "시작하기 전에 설정을 확인하세요.",
+    "dailyPheAllowance": "일일 Phe 허용량",
+    "exchangeUnit": "익스체인지 단위",
+    "dailyExchanges": "일일 익스체인지",
+    "canChangeAnytime": "이 설정은 언제든지 설정에서 변경할 수 있습니다.",
+    "skipForNow": "나중에 설정",
+    "next": "다음",
+    "back": "이전",
+    "complete": "완료"
+  },
+  "PheRemaining": {
+    "title": "오늘의 Phe 예산",
+    "used": "사용",
+    "remaining": "남음",
+    "allowance": "허용량",
+    "exceeded": "한도 초과!",
+    "nearLimit": "한도 근접",
+    "dailyProgress": "일일 진행률"
   }
 }

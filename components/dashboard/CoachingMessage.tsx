@@ -11,11 +11,10 @@ const CACHE_KEY = "mypku-coaching-cache";
 interface CachedCoaching {
   message: string;
   date: string; // YYYY-MM-DD
-  mode: string;
   locale: string;
 }
 
-function getCachedMessage(currentMode: string, currentLocale: string): string | null {
+function getCachedMessage(currentLocale: string): string | null {
   if (typeof window === "undefined") return null;
 
   try {
@@ -25,8 +24,8 @@ function getCachedMessage(currentMode: string, currentLocale: string): string | 
     const data: CachedCoaching = JSON.parse(cached);
     const today = new Date().toISOString().split("T")[0];
 
-    // 오늘 날짜 + 같은 모드 + 같은 언어일 때만 캐시 사용
-    if (data.date === today && data.mode === currentMode && data.locale === currentLocale) {
+    // 오늘 날짜 + 같은 언어일 때만 캐시 사용
+    if (data.date === today && data.locale === currentLocale) {
       return data.message;
     }
     return null;
@@ -35,13 +34,12 @@ function getCachedMessage(currentMode: string, currentLocale: string): string | 
   }
 }
 
-function setCachedMessage(message: string, mode: string, locale: string): void {
+function setCachedMessage(message: string, locale: string): void {
   if (typeof window === "undefined") return;
 
   const data: CachedCoaching = {
     message,
     date: new Date().toISOString().split("T")[0],
-    mode,
     locale,
   };
   localStorage.setItem(CACHE_KEY, JSON.stringify(data));
@@ -50,7 +48,7 @@ function setCachedMessage(message: string, mode: string, locale: string): void {
 export default function CoachingMessage() {
   const t = useTranslations("Coaching");
   const locale = useLocale();
-  const { mode, dailyGoals } = useUserSettings();
+  const { dailyGoals } = useUserSettings();
   const { getWeeklyData, isLoading: recordsLoading } = useMealRecords();
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -67,12 +65,12 @@ export default function CoachingMessage() {
     setHasData(dataExists);
 
     if (dataExists) {
-      const cached = getCachedMessage(mode, locale);
+      const cached = getCachedMessage(locale);
       if (cached) {
         setMessage(cached);
       }
     }
-  }, [mode, locale, getWeeklyData, recordsLoading]);
+  }, [locale, getWeeklyData, recordsLoading]);
 
   const fetchCoaching = async () => {
     setIsLoading(true);
@@ -84,7 +82,6 @@ export default function CoachingMessage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           weeklyData: getWeeklyData(),
-          mode,
           dailyGoals,
           locale,
         }),
@@ -94,7 +91,7 @@ export default function CoachingMessage() {
 
       if (data.success) {
         setMessage(data.message);
-        setCachedMessage(data.message, mode, locale);
+        setCachedMessage(data.message, locale);
       } else {
         setError(data.error || t("errorFetch"));
       }

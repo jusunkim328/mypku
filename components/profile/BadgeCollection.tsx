@@ -16,7 +16,7 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
   const { badges, checkAndUnlockBadges, getUnlockedBadges, getLockedBadges, _hasHydrated } = useBadgeStore();
   const { currentStreak, longestStreak, totalLoggingDays } = useStreakStore();
   const { mealRecords } = useMealRecords();
-  const { mode } = useUserSettings();
+  const { dailyGoals: _dailyGoals } = useUserSettings(); // PKU 전용 앱
 
   // 배지 달성 조건 체크
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
       longestStreak,
       totalMeals: mealRecords.length,
       daysWithinGoal: 0, // TODO: 실제 계산 필요
-      pkuModeDays: mode === "pku" ? totalLoggingDays : 0,
+      pkuModeDays: totalLoggingDays, // PKU 전용 앱: 항상 totalLoggingDays 사용
       barcodeScans: mealRecords.filter((r) =>
         r.items.some((i) => (i as { source?: string }).source === "barcode")
       ).length,
@@ -43,7 +43,6 @@ export default function BadgeCollection({ showAll = false }: BadgeCollectionProp
     longestStreak,
     totalLoggingDays,
     mealRecords,
-    mode,
     checkAndUnlockBadges,
   ]);
 

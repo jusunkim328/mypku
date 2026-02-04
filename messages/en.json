@@ -73,7 +73,9 @@
     "highPheWarning": "High Phe foods detected",
     "noAlternatives": "No alternatives found",
     "manualEntry": "Manual Entry",
-    "manualEntryDesc": "Search and add foods from the PKU database"
+    "manualEntryDesc": "Search and add foods from the PKU database",
+    "unconfirmedWarning": "{count} item(s) unconfirmed. Confirm to add to daily tracking.",
+    "confirmedSummary": "Confirmed: {phe}mg Phe ({exchanges} Exchanges)"
   },
   "HistoryPage": {
     "title": "Meal History",
@@ -170,6 +172,10 @@
     "foodName": "Food name",
     "weight": "Weight (g)",
     "modified": "Modified",
+    "confirmed": "Confirmed",
+    "confirmThis": "Confirm",
+    "unconfirmed": "Unconfirmed",
+    "confirmToTrack": "Confirm to add to daily tracking",
     "confidence": "Confidence",
     "high": "High",
     "medium": "Medium",
@@ -178,7 +184,13 @@
     "caution": "Caution",
     "avoid": "Avoid",
     "alternatives": "Alternatives",
-    "pkuSafety": "PKU Safety Level"
+    "pkuSafety": "PKU Safety Level",
+    "source_ai": "AI Analysis",
+    "source_barcode": "Barcode",
+    "source_manual": "Manual",
+    "source_usda": "USDA",
+    "source_kfda": "KFDA",
+    "source_voice": "Voice"
   },
   "NutrientRing": {
     "goal": "Goal",
@@ -337,5 +349,35 @@
     "updateMessage": "A new version of MyPKU is ready. Update now for the best experience.",
     "updateNow": "Update Now",
     "later": "Later"
+  },
+  "QuickSetup": {
+    "welcomeTag": "Welcome to MyPKU",
+    "title": "Quick Setup",
+    "subtitle": "Let's personalize your PKU management in 60 seconds",
+    "step1Title": "Daily Phe Allowance",
+    "step1Desc": "Enter your daily phenylalanine limit as prescribed by your healthcare provider.",
+    "step2Title": "Exchange Unit",
+    "step2Desc": "Select the exchange unit used by your clinic or dietitian.",
+    "exchange50Desc": "Standard (most common)",
+    "exchange15Desc": "Detailed tracking",
+    "step3Title": "Confirm Settings",
+    "step3Desc": "Review your settings before getting started.",
+    "dailyPheAllowance": "Daily Phe Allowance",
+    "exchangeUnit": "Exchange Unit",
+    "dailyExchanges": "Daily Exchanges",
+    "canChangeAnytime": "You can change these settings anytime in Settings.",
+    "skipForNow": "Skip for now",
+    "next": "Next",
+    "back": "Back",
+    "complete": "Complete"
+  },
+  "PheRemaining": {
+    "title": "Daily Phe Budget",
+    "used": "Used",
+    "remaining": "Remaining",
+    "allowance": "Allowance",
+    "exceeded": "Over limit!",
+    "nearLimit": "Near limit",
+    "dailyProgress": "Daily Progress"
   }
 }

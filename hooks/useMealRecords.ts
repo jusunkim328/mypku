@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNutritionStore } from "./useNutritionStore";
 import { uploadMealImage, deleteMealImage } from "@/lib/supabase/storage";
 import { toast } from "./useToast";
+import { getDevAuthState } from "@/lib/devAuth";
 import type { FoodItem, MealRecord, NutritionData, MealType } from "@/types/nutrition";
 
 interface MealRecordWithItems {
@@ -90,6 +91,14 @@ export function useMealRecords(): UseMealRecordsReturn {
       return;
     }
 
+    // Dev Auth 모드에서는 Supabase 조회 스킵 (localStorage 사용)
+    const devAuthState = getDevAuthState();
+    if (devAuthState.enabled) {
+      console.log("[useMealRecords] Dev Auth 모드 - localStorage 사용");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       // 최근 7일 기록만 조회
@@ -132,14 +141,21 @@ export function useMealRecords(): UseMealRecordsReturn {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .filter((item: any) => item.meal_record_id === record.id)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            estimatedWeight_g: item.weight_g || 0,
-            nutrition: item.nutrition as NutritionData,
-            confidence: item.confidence || 0,
-            userVerified: item.user_verified,
-          })),
+          .map((item: any) => {
+            const nutrition = item.nutrition as NutritionData;
+            const phe_mg = nutrition?.phenylalanine_mg || 0;
+            return {
+              id: item.id,
+              name: item.name,
+              estimatedWeight_g: item.weight_g || 0,
+              nutrition,
+              confidence: item.confidence || 0,
+              userVerified: item.user_verified,
+              // PKU 필수 필드 계산
+              pkuSafety: (phe_mg <= 20 ? "safe" : phe_mg <= 100 ? "caution" : "avoid") as "safe" | "caution" | "avoid",
+              exchanges: Math.round((phe_mg / 50) * 10) / 10,
+            };
+          }),
       }));
 
       setDbRecords(records);
@@ -163,10 +179,13 @@ export function useMealRecords(): UseMealRecordsReturn {
   }, [authLoading, isAuthenticated, fetchRecords]);
 
   // 인증 상태에 따른 데이터 소스 선택
+  // Dev Auth 모드에서는 localStorage 사용
   const mealRecords: MealRecordWithItems[] = useMemo(() => {
-    return isAuthenticated
-      ? dbRecords
-      : localStore.mealRecords.map((r) => ({
+    const devAuthState = getDevAuthState();
+    const useLocalStorage = !isAuthenticated || devAuthState.enabled;
+
+    return useLocalStorage
+      ? localStore.mealRecords.map((r) => ({
           id: r.id,
           timestamp: r.timestamp,
           mealType: r.mealType,
@@ -174,7 +193,8 @@ export function useMealRecords(): UseMealRecordsReturn {
           items: r.items,
           totalNutrition: r.totalNutrition,
           aiConfidence: null,
-        }));
+        }))
+      : dbRecords;
   }, [isAuthenticated, dbRecords, localStore.mealRecords]);
 
   // 식사 기록 추가
@@ -193,9 +213,14 @@ export function useMealRecords(): UseMealRecordsReturn {
         totalNutrition: record.totalNutrition,
       };
 
-      if (!isAuthenticated) {
-        // 비로그인: 로컬 스토어에만 저장
+      // Dev Auth 모드 또는 비로그인: 로컬 스토어에만 저장
+      const devAuthState = getDevAuthState();
+      if (!isAuthenticated || devAuthState.enabled) {
         localStore.addMealRecord(localRecord);
+        if (devAuthState.enabled) {
+          console.log("[useMealRecords] Dev Auth 모드 - localStorage에 저장");
+          toast.success("식사 기록이 저장되었습니다! (Dev Mode)");
+        }
         return;
       }
 
@@ -272,8 +297,13 @@ export function useMealRecords(): UseMealRecordsReturn {
   // 식사 기록 삭제
   const removeMealRecord = useCallback(
     async (id: string) => {
-      if (!isAuthenticated) {
+      // Dev Auth 모드 또는 비로그인: 로컬 스토어에서만 삭제
+      const devAuthState = getDevAuthState();
+      if (!isAuthenticated || devAuthState.enabled) {
         localStore.removeMealRecord(id);
+        if (devAuthState.enabled) {
+          console.log("[useMealRecords] Dev Auth 모드 - localStorage에서 삭제");
+        }
         return;
       }
 

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useTheme } from "next-themes";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { Page, Navbar, Block, Button, Card, Toggle, List, ListItem, Preloader, NumberInput } from "@/components/ui";
+import { Page, Navbar, Block, Button, Card, Preloader, NumberInput } from "@/components/ui";
 import { Sun, Monitor, Moon, User } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,16 +80,14 @@ function ThemeToggle() {
 
 export default function SettingsClient() {
   const t = useTranslations("SettingsPage");
-  const tModes = useTranslations("Modes");
   const tNutrients = useTranslations("Nutrients");
   const tCommon = useTranslations("Common");
   const tAuth = useTranslations("Auth");
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
-  const { mode, setMode, dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useUserSettings();
+  const { dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useUserSettings();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
-  const isPKU = mode === "pku";
 
   // authLoading 타임아웃 (3초 후 강제로 로딩 완료 처리)
   const [authTimeout, setAuthTimeout] = useState(false);
@@ -151,10 +149,6 @@ export default function SettingsClient() {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [hasGoalsChanges, t]);
-
-  const handleModeToggle = async (checked: boolean) => {
-    await setMode(checked ? "pku" : "general");
-  };
 
   const handleLanguageChange = (newLocale: Locale) => {
     router.replace(pathname, { locale: newLocale });
@@ -289,28 +283,6 @@ export default function SettingsClient() {
           <ThemeToggle />
         </Card>
 
-        {/* 모드 설정 */}
-        <Card className="p-4 md:p-5 lg:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            {t("appMode")}
-          </h3>
-          <List>
-            <ListItem
-              title={tModes("pku")}
-              subtitle={t("pkuModeDesc")}
-              after={
-                <Toggle
-                  checked={isPKU}
-                  onChange={handleModeToggle}
-                />
-              }
-            />
-          </List>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-1">
-            {t("pkuModeExplain")}
-          </p>
-        </Card>
-
         {/* 알림 설정 */}
         <NotificationSettings />
 
@@ -339,24 +311,23 @@ export default function SettingsClient() {
             {t("dailyGoals")}
           </h3>
           <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
-            {isPKU && (
-              <div>
-                <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                  {tNutrients("phenylalanine")} (mg)
-                </label>
-                <NumberInput
-                  value={draftGoals.phenylalanine_mg || 300}
-                  onChange={(value) => setDraftGoals((prev) => ({ ...prev, phenylalanine_mg: value }))}
-                  min={50}
-                  max={1000}
-                  defaultValue={300}
-                  className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-                />
-                <p className="text-xs text-primary-600 dark:text-primary-400 mt-1.5 font-medium">
-                  = {getExchanges(draftGoals.phenylalanine_mg || 300)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = 50mg)
-                </p>
-              </div>
-            )}
+            {/* Phe 목표 (PKU 전용) */}
+            <div>
+              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                {tNutrients("phenylalanine")} (mg)
+              </label>
+              <NumberInput
+                value={draftGoals.phenylalanine_mg || 300}
+                onChange={(value) => setDraftGoals((prev) => ({ ...prev, phenylalanine_mg: value }))}
+                min={50}
+                max={1000}
+                defaultValue={300}
+                className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
+              />
+              <p className="text-xs text-primary-600 dark:text-primary-400 mt-1.5 font-medium">
+                = {getExchanges(draftGoals.phenylalanine_mg || 300)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = 50mg)
+              </p>
+            </div>
             <div>
               <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {tNutrients("calories")} (kcal)

@@ -8,21 +8,19 @@ import { useMealRecords } from "@/hooks/useMealRecords";
 export default function DailyGoalCard() {
   const t = useTranslations("DailyGoal");
   const tNutrients = useTranslations("Nutrients");
-  const { mode, dailyGoals } = useUserSettings();
+  const { dailyGoals } = useUserSettings();
   const { getTodayNutrition } = useMealRecords();
-  const isPKU = mode === "pku";
 
   const todayNutrition = getTodayNutrition();
 
   const nutrients = [
+    // Phe (PKU 전용 - 메인 지표)
     {
-      name: isPKU ? tNutrients("phenylalanine") : tNutrients("calories"),
-      current: isPKU
-        ? todayNutrition.phenylalanine_mg || 0
-        : todayNutrition.calories,
-      goal: isPKU ? dailyGoals.phenylalanine_mg || 300 : dailyGoals.calories,
-      unit: isPKU ? "mg" : "kcal",
-      warning: isPKU,
+      name: tNutrients("phenylalanine"),
+      current: todayNutrition.phenylalanine_mg || 0,
+      goal: dailyGoals.phenylalanine_mg || 300,
+      unit: "mg",
+      warning: true,
       color: "primary",
     },
     {

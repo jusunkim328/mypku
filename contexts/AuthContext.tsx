@@ -5,6 +5,14 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/hooks/useToast";
 import type { User, Session } from "@supabase/supabase-js";
 import type { Profile, DailyGoals as DBDailyGoals } from "@/lib/supabase/types";
+import {
+  getDevAuthState,
+  setDevAuthState,
+  MOCK_USER,
+  MOCK_SESSION,
+  MOCK_PROFILE,
+  MOCK_DAILY_GOALS,
+} from "@/lib/devAuth";
 
 interface AuthContextType {
   user: User | null;
@@ -66,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [dailyGoals, setDailyGoals] = useState<DBDailyGoals | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDevAuthMode, setIsDevAuthMode] = useState(false);
 
   // Supabase 클라이언트를 ref로 저장하여 의존성 문제 방지
   const supabaseRef = useRef(createClient());
@@ -199,6 +208,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile, fetchDailyGoals]);
 
+  // Dev Auth 모드 지원 (개발 환경에서만)
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return;
+
+    // 초기 Dev Auth 상태 확인
+    const devState = getDevAuthState();
+    if (devState.enabled) {
+      console.log("[AuthContext] Dev Auth 모드 활성화됨");
+      setIsDevAuthMode(true);
+      setUser(devState.user || MOCK_USER);
+      setSession(MOCK_SESSION);
+      setProfile(devState.profile || MOCK_PROFILE);
+      setDailyGoals(devState.dailyGoals || MOCK_DAILY_GOALS);
+      setIsLoading(false);
+    }
+
+    // Dev Auth 상태 변경 이벤트 리스너
+    const handleDevAuthChange = (event: CustomEvent<{
+      enabled: boolean;
+      user: User | null;
+      profile: Profile | null;
+      dailyGoals: DBDailyGoals | null;
+    }>) => {
+      const { enabled, user: devUser, profile: devProfile, dailyGoals: devGoals } = event.detail;
+
+      if (enabled) {
+        console.log("[AuthContext] Dev Auth 로그인");
+        setIsDevAuthMode(true);
+        setUser(devUser || MOCK_USER);
+        setSession(MOCK_SESSION);
+        setProfile(devProfile || MOCK_PROFILE);
+        setDailyGoals(devGoals || MOCK_DAILY_GOALS);
+      } else {
+        console.log("[AuthContext] Dev Auth 로그아웃");
+        setIsDevAuthMode(false);
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        setDailyGoals(null);
+      }
+      setIsLoading(false);
+    };
+
+    window.addEventListener("devAuthStateChange", handleDevAuthChange as EventListener);
+
+    return () => {
+      window.removeEventListener("devAuthStateChange", handleDevAuthChange as EventListener);
+    };
+  }, []);
+
   const signInWithGoogle = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -214,13 +273,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const signOut = useCallback(async () => {
+    // Dev Auth 모드면 로컬 상태만 클리어
+    if (isDevAuthMode) {
+      setDevAuthState({
+        enabled: false,
+        user: null,
+        profile: null,
+        dailyGoals: null,
+      });
+      setIsDevAuthMode(false);
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setDailyGoals(null);
+      return;
+    }
+
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-  }, [supabase]);
+  }, [supabase, isDevAuthMode]);
 
   // 프로필 업데이트
   const updateProfile = useCallback(async (updates: Partial<Profile>) => {
     if (!user) throw new Error("로그인이 필요합니다.");
+
+    // Dev Auth 모드면 로컬 상태만 업데이트
+    if (isDevAuthMode) {
+      const newProfile = profile ? { ...profile, ...updates } : null;
+      setProfile(newProfile);
+      setDevAuthState({ profile: newProfile });
+      console.log("[AuthContext] Dev Auth 프로필 업데이트:", updates);
+      return;
+    }
 
     try {
       await withRetry(async () => {
@@ -239,11 +323,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.error("설정 저장에 실패했습니다. 다시 시도해 주세요.");
       throw error;
     }
-  }, [user, supabase]);
+  }, [user, supabase, isDevAuthMode, profile]);
 
   // 일일 목표 업데이트
   const updateDailyGoals = useCallback(async (goals: Partial<DBDailyGoals>) => {
     if (!user) throw new Error("로그인이 필요합니다.");
+
+    // Dev Auth 모드면 로컬 상태만 업데이트
+    if (isDevAuthMode) {
+      const newGoals = dailyGoals ? { ...dailyGoals, ...goals } : null;
+      setDailyGoals(newGoals);
+      setDevAuthState({ dailyGoals: newGoals });
+      console.log("[AuthContext] Dev Auth 일일 목표 업데이트:", goals);
+      return;
+    }
 
     try {
       await withRetry(async () => {
@@ -262,7 +355,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.error("목표 저장에 실패했습니다. 다시 시도해 주세요.");
       throw error;
     }
-  }, [user, supabase]);
+  }, [user, supabase, isDevAuthMode, dailyGoals]);
 
   return (
     <AuthContext.Provider

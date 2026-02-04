@@ -3,7 +3,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type {
-  UserMode,
   MealRecord,
   NutritionData,
   DailyGoals,
@@ -15,11 +14,11 @@ interface WaterIntake {
 }
 
 interface NutritionState {
-  // 사용자 모드
-  mode: UserMode;
-  setMode: (mode: UserMode) => void;
+  // 퀵셋업 완료 여부
+  quickSetupCompleted: boolean;
+  setQuickSetupCompleted: (completed: boolean) => void;
 
-  // 일일 목표
+  // 일일 목표 (PKU 전용)
   dailyGoals: DailyGoals;
   setDailyGoals: (goals: Partial<DailyGoals>) => void;
   waterGoal: number; // glasses per day (default 8)
@@ -122,8 +121,9 @@ const getTodayDateStr = (): string => {
 export const useNutritionStore = create<NutritionState>()(
   persist(
     (set, get) => ({
-      mode: "pku",
-      setMode: (mode) => set({ mode }),
+      // 퀵셋업 상태
+      quickSetupCompleted: false,
+      setQuickSetupCompleted: (completed) => set({ quickSetupCompleted: completed }),
 
       dailyGoals: DEFAULT_GOALS,
       setDailyGoals: (goals) =>
@@ -302,7 +302,7 @@ export const useNutritionStore = create<NutritionState>()(
       name: "mypku-nutrition-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        mode: state.mode,
+        quickSetupCompleted: state.quickSetupCompleted,
         dailyGoals: state.dailyGoals,
         mealRecords: state.mealRecords,
         waterIntakes: state.waterIntakes,

@@ -23,12 +23,11 @@ export default function WeeklyChartClient() {
   const tChart = useTranslations("Chart");
   const tNutrients = useTranslations("Nutrients");
   const format = useFormatter();
-  // mode, dailyGoals는 Supabase 동기화 (로그인 시)
-  const { mode, dailyGoals } = useUserSettings();
+  // dailyGoals는 Supabase 동기화 (로그인 시)
+  const { dailyGoals } = useUserSettings();
   // 월간 데이터는 로컬 스토어에서 (Phase 1)
   const { getMonthlyData } = useNutritionStore();
   const { getWeeklyData, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
-  const isPKU = mode === "pku";
 
   const [period, setPeriod] = useState<ChartPeriod>("week");
 
@@ -45,9 +44,7 @@ export default function WeeklyChartClient() {
       return [
         {
           date: tChart("total"),
-          value: isPKU
-            ? todayNutrition.phenylalanine_mg || 0
-            : todayNutrition.calories,
+          value: todayNutrition.phenylalanine_mg || 0,
         },
       ];
     }
@@ -56,9 +53,7 @@ export default function WeeklyChartClient() {
       const weeklyData = getWeeklyData();
       return weeklyData.map((day) => ({
         date: format.dateTime(new Date(day.date), { weekday: "short" }),
-        value: isPKU
-          ? day.nutrition.phenylalanine_mg || 0
-          : day.nutrition.calories,
+        value: day.nutrition.phenylalanine_mg || 0,
       }));
     }
 
@@ -73,15 +68,11 @@ export default function WeeklyChartClient() {
       const nutrition = monthlyData[dateStr];
       result.push({
         date: String(i),
-        value: nutrition
-          ? isPKU
-            ? nutrition.phenylalanine_mg || 0
-            : nutrition.calories
-          : 0,
+        value: nutrition ? (nutrition.phenylalanine_mg || 0) : 0,
       });
     }
     return result;
-  }, [period, isPKU, getWeeklyData, getMonthlyData, getTodayNutrition, format, tChart, recordsLoading]);
+  }, [period, getWeeklyData, getMonthlyData, getTodayNutrition, format, tChart, recordsLoading]);
 
   // 평균 및 합계 계산
   const stats = useMemo(() => {
@@ -91,12 +82,10 @@ export default function WeeklyChartClient() {
     return { total, average };
   }, [chartData]);
 
-  const goalValue = isPKU
-    ? dailyGoals.phenylalanine_mg || 300
-    : dailyGoals.calories;
-
-  const unit = isPKU ? "mg" : "kcal";
-  const label = isPKU ? tNutrients("phenylalanine") : tNutrients("calories");
+  // PKU 전용: Phe 목표치
+  const goalValue = dailyGoals.phenylalanine_mg || 300;
+  const unit = "mg";
+  const label = tNutrients("phenylalanine");
 
   const titleKey = period === "day" ? "dailyTitle" : period === "week" ? "weeklyTitle" : "monthlyTitle";
 
@@ -137,7 +126,7 @@ export default function WeeklyChartClient() {
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke={isPKU ? "#6366f1" : "#3b82f6"}
+                stroke="#6366f1"
                 strokeWidth={2}
                 dot={false}
               />
@@ -164,7 +153,7 @@ export default function WeeklyChartClient() {
               />
               <Bar
                 dataKey="value"
-                fill={isPKU ? "#6366f1" : "#3b82f6"}
+                fill="#6366f1"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

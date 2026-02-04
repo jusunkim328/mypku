@@ -3,7 +3,7 @@ import { generateCoaching } from "@/lib/gemini";
 
 export async function POST(request: NextRequest) {
   try {
-    const { weeklyData, mode, dailyGoals, locale } = await request.json();
+    const { weeklyData, dailyGoals, locale } = await request.json();
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // PKU 전용 앱: mode 파라미터 제거
     const message = await generateCoaching(
       JSON.stringify(weeklyData),
-      mode,
       JSON.stringify(dailyGoals),
       locale || "en"
     );

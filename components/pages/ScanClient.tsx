@@ -8,7 +8,14 @@ import BarcodeScanner from "@/components/scan/BarcodeScanner";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { toast } from "@/hooks/useToast";
-import type { NutritionData, MealType } from "@/types/nutrition";
+import type { NutritionData, MealType, PKUSafetyLevel } from "@/types/nutrition";
+
+// PKU 안전 등급 계산
+const getPkuSafetyLevel = (phe_mg: number): PKUSafetyLevel => {
+  if (phe_mg <= 20) return "safe";
+  if (phe_mg <= 100) return "caution";
+  return "avoid";
+};
 
 interface ProductResult {
   name: string;
@@ -39,9 +46,8 @@ export default function ScanClient() {
   const tMeals = useTranslations("MealTypes");
   const tNutrients = useTranslations("Nutrients");
 
-  const { mode, _hasHydrated } = useUserSettings();
+  const { _hasHydrated } = useUserSettings();
   const { addMealRecord } = useMealRecords();
-  const isPKU = mode === "pku";
 
   const [isLoading, setIsLoading] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -113,6 +119,8 @@ export default function ScanClient() {
             confidence: 0.95, // 바코드 스캔은 신뢰도 높음
             userVerified: false,
             source: "barcode",
+            pkuSafety: getPkuSafetyLevel(nutrition.phenylalanine_mg || 0),
+            exchanges: Math.round(((nutrition.phenylalanine_mg || 0) / 50) * 10) / 10,
           },
         ],
         totalNutrition: nutrition,
@@ -260,16 +268,15 @@ export default function ScanClient() {
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{t("nutritionInfo")}</h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      {isPKU && (
-                        <div className="col-span-2 bg-indigo-100 dark:bg-indigo-900/40 rounded p-2">
-                          <span className="text-indigo-700 dark:text-indigo-300 font-medium">
-                            {tNutrients("phenylalanine")}: {calculatedNutrition.phenylalanine_mg}mg
-                          </span>
-                          {scanResult.product.nutrition_per_100g.phenylalanine_estimated && (
-                            <span className="text-xs text-indigo-500 dark:text-indigo-400 ml-2">({t("estimated")})</span>
-                          )}
-                        </div>
-                      )}
+                      {/* Phe 정보 (PKU 전용) */}
+                      <div className="col-span-2 bg-indigo-100 dark:bg-indigo-900/40 rounded p-2">
+                        <span className="text-indigo-700 dark:text-indigo-300 font-medium">
+                          {tNutrients("phenylalanine")}: {calculatedNutrition.phenylalanine_mg}mg
+                        </span>
+                        {scanResult.product.nutrition_per_100g.phenylalanine_estimated && (
+                          <span className="text-xs text-indigo-500 dark:text-indigo-400 ml-2">({t("estimated")})</span>
+                        )}
+                      </div>
                       <div>
                         <span className="text-gray-500 dark:text-gray-400">{tNutrients("calories")}:</span>{" "}
                         <span className="font-medium text-gray-900 dark:text-gray-100">{calculatedNutrition.calories}kcal</span>

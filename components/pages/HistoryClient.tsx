@@ -19,8 +19,7 @@ export default function HistoryClient() {
   const tNutrients = useTranslations("Nutrients");
   const format = useFormatter();
   const { mealRecords, removeMealRecord, isLoading } = useMealRecords();
-  const { mode, _hasHydrated } = useUserSettings();
-  const isPKU = mode === "pku";
+  const { _hasHydrated } = useUserSettings();
 
   // 날짜 선택 상태
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -185,11 +184,10 @@ export default function HistoryClient() {
                             {record.items.map((i) => i.name).join(", ")}
                           </p>
                           <div className="flex gap-3 text-xs mt-2">
-                            {isPKU && (
-                              <span className="text-primary-600 dark:text-primary-400 font-semibold">
-                                {t("phe")}: {record.totalNutrition.phenylalanine_mg}mg
-                              </span>
-                            )}
+                            {/* Phe 정보 (PKU 전용) */}
+                            <span className="text-primary-600 dark:text-primary-400 font-semibold">
+                              {t("phe")}: {record.totalNutrition.phenylalanine_mg}mg
+                            </span>
                             <span className="text-gray-500 dark:text-gray-400">
                               {Math.round(record.totalNutrition.calories)}kcal
                             </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Page, Block, Button, Card, Preloader } from "@/components/ui";
@@ -11,27 +11,34 @@ import { useMealRecords } from "@/hooks/useMealRecords";
 import { useAuth } from "@/contexts/AuthContext";
 import { showPheWarning } from "@/lib/notifications";
 import NutrientRing from "@/components/dashboard/NutrientRing";
+import PheRemainingCard from "@/components/dashboard/PheRemainingCard";
 import DailyGoalCard from "@/components/dashboard/DailyGoalCard";
 import StreakBadge from "@/components/dashboard/StreakBadge";
 import WaterTracker from "@/components/dashboard/WaterTracker";
 import Disclaimer from "@/components/common/Disclaimer";
+import QuickSetup from "@/components/quicksetup/QuickSetup";
 
 export default function HomeClient() {
   const t = useTranslations("HomePage");
-  const tModes = useTranslations("Modes");
   const tNutrients = useTranslations("Nutrients");
-  const tCommon = useTranslations("Common");
-  const { mode, dailyGoals, _hasHydrated, getExchanges, getExchangeGoal } = useUserSettings();
+  const { dailyGoals, _hasHydrated, getExchanges, getExchangeGoal, quickSetupCompleted } = useUserSettings();
   const { pheWarnings, permission } = useNotificationStore();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
 
+  const [showQuickSetup, setShowQuickSetup] = useState(false);
   const lastWarningRef = useRef<number>(0);
-  const isPKU = mode === "pku";
 
-  // Phe 한도 경고 알림
+  // 첫 방문 시 퀵셋업 모달 표시
   useEffect(() => {
-    if (!isPKU || !pheWarnings || permission !== "granted" || !_hasHydrated) {
+    if (_hasHydrated && !quickSetupCompleted) {
+      setShowQuickSetup(true);
+    }
+  }, [_hasHydrated, quickSetupCompleted]);
+
+  // Phe 한도 경고 알림 (PKU 전용)
+  useEffect(() => {
+    if (!pheWarnings || permission !== "granted" || !_hasHydrated) {
       return;
     }
 
@@ -45,7 +52,7 @@ export default function HomeClient() {
       showPheWarning(currentPhe, limitPhe);
       lastWarningRef.current = percentage >= 100 ? 100 : 80;
     }
-  }, [mealRecords, isPKU, pheWarnings, permission, _hasHydrated, dailyGoals.phenylalanine_mg]);
+  }, [mealRecords, pheWarnings, permission, _hasHydrated, dailyGoals.phenylalanine_mg, getTodayNutrition]);
 
   // 하이드레이션 및 데이터 로딩 대기
   if (!_hasHydrated || recordsLoading) {
@@ -63,6 +70,11 @@ export default function HomeClient() {
 
   return (
     <Page>
+      {/* 퀵셋업 모달 */}
+      {showQuickSetup && (
+        <QuickSetup onComplete={() => setShowQuickSetup(false)} />
+      )}
+
       {/* 커스텀 헤더 - 왼쪽 정렬 레이아웃 */}
       <header className="sticky top-0 z-50 glass border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 py-3 md:px-6 lg:px-8">
@@ -77,7 +89,7 @@ export default function HomeClient() {
                   {t("title")}
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {isPKU ? tModes("pku") : tModes("general")}
+                  PKU Management
                 </p>
               </div>
             </div>
@@ -113,32 +125,31 @@ export default function HomeClient() {
       </header>
 
       <Block className="space-y-4">
+        {/* Phe 잔여량 카드 (PKU 핵심 지표) */}
+        <PheRemainingCard
+          used={todayNutrition.phenylalanine_mg || 0}
+          goal={dailyGoals.phenylalanine_mg || 300}
+          exchangeUsed={getExchanges(todayNutrition.phenylalanine_mg || 0)}
+          exchangeGoal={getExchangeGoal()}
+        />
+
         {/* 오늘의 영양소 요약 */}
         <Card className="p-5 md:p-6 lg:p-8" elevated>
           <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-5 md:mb-6">
             {t("todayIntake")}
           </h2>
           <div className="flex justify-around md:justify-center md:gap-8 lg:gap-12">
-            {isPKU ? (
-              <NutrientRing
-                label={tNutrients("phenylalanine")}
-                current={todayNutrition.phenylalanine_mg || 0}
-                goal={dailyGoals.phenylalanine_mg || 300}
-                unit="mg"
-                color="var(--pku-primary)"
-                warning={true}
-                exchangeValue={getExchanges(todayNutrition.phenylalanine_mg || 0)}
-                exchangeGoal={getExchangeGoal()}
-              />
-            ) : (
-              <NutrientRing
-                label={tNutrients("calories")}
-                current={todayNutrition.calories}
-                goal={dailyGoals.calories}
-                unit="kcal"
-                color="var(--pku-primary)"
-              />
-            )}
+            {/* Phe 링 (PKU 전용) */}
+            <NutrientRing
+              label={tNutrients("phenylalanine")}
+              current={todayNutrition.phenylalanine_mg || 0}
+              goal={dailyGoals.phenylalanine_mg || 300}
+              unit="mg"
+              color="var(--pku-primary)"
+              warning={true}
+              exchangeValue={getExchanges(todayNutrition.phenylalanine_mg || 0)}
+              exchangeGoal={getExchangeGoal()}
+            />
             <NutrientRing
               label={tNutrients("protein")}
               current={todayNutrition.protein_g}
