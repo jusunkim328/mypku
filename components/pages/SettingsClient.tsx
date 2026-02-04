@@ -10,7 +10,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
 import { downloadJSON, getExportSummary } from "@/lib/dataExport";
-import { openFileAndImport } from "@/lib/dataImport";
+import { openFileAndImport, openFileAndImportToSupabase } from "@/lib/dataImport";
 import type { Locale } from "@/i18n/routing";
 import type { DailyGoals } from "@/types/nutrition";
 import NotificationSettings from "@/components/settings/NotificationSettings";
@@ -81,16 +81,18 @@ function ThemeToggle() {
 }
 
 // 데이터 관리 컴포넌트
-function DataManagement() {
+function DataManagement({ isAuthenticated, userId }: { isAuthenticated: boolean; userId?: string }) {
   const t = useTranslations("SettingsPage");
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [summary, setSummary] = useState<ReturnType<typeof getExportSummary>>(null);
 
-  // 마운트 시 요약 정보 로드
+  // 마운트 시 요약 정보 로드 (비로그인 상태에서만)
   useEffect(() => {
-    setSummary(getExportSummary());
-  }, []);
+    if (!isAuthenticated) {
+      setSummary(getExportSummary());
+    }
+  }, [isAuthenticated]);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -111,7 +113,15 @@ function DataManagement() {
   const handleImport = async () => {
     setIsImporting(true);
     try {
-      const result = await openFileAndImport({ overwrite: true });
+      let result;
+
+      if (isAuthenticated && userId) {
+        // 로그인 상태: Supabase에 직접 업로드
+        result = await openFileAndImportToSupabase(userId);
+      } else {
+        // 비로그인 상태: localStorage에 저장
+        result = await openFileAndImport({ overwrite: true });
+      }
 
       if (result.success) {
         toast.success(
@@ -142,8 +152,17 @@ function DataManagement() {
         </h3>
       </div>
 
-      {/* 데이터 요약 */}
-      {summary && summary.mealCount > 0 && (
+      {/* 로그인 상태 안내 */}
+      {isAuthenticated && (
+        <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+          <p className="text-sm text-primary-700 dark:text-primary-300">
+            {t("importToCloud")}
+          </p>
+        </div>
+      )}
+
+      {/* 데이터 요약 (비로그인 상태에서만) */}
+      {!isAuthenticated && summary && summary.mealCount > 0 && (
         <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {t("dataSummary", {
@@ -160,22 +179,25 @@ function DataManagement() {
       )}
 
       <div className="flex flex-col sm:flex-row gap-2">
-        <Button
-          small
-          outline
-          onClick={handleExport}
-          disabled={isExporting}
-          className="flex-1"
-        >
-          <Download className="w-4 h-4 mr-1.5" />
-          {isExporting ? t("exporting") : t("exportData")}
-        </Button>
+        {/* 내보내기는 비로그인 상태에서만 */}
+        {!isAuthenticated && (
+          <Button
+            small
+            outline
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex-1"
+          >
+            <Download className="w-4 h-4 mr-1.5" />
+            {isExporting ? t("exporting") : t("exportData")}
+          </Button>
+        )}
         <Button
           small
           outline
           onClick={handleImport}
           disabled={isImporting}
-          className="flex-1"
+          className={!isAuthenticated ? "flex-1" : "w-full"}
         >
           <Upload className="w-4 h-4 mr-1.5" />
           {isImporting ? t("importing") : t("importData")}
@@ -183,7 +205,7 @@ function DataManagement() {
       </div>
 
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-        {t("dataManagementDesc")}
+        {isAuthenticated ? t("importToCloudDesc") : t("dataManagementDesc")}
       </p>
     </Card>
   );
@@ -397,8 +419,8 @@ export default function SettingsClient() {
         {/* 알림 설정 */}
         <NotificationSettings />
 
-        {/* 데이터 관리 - 비로그인 사용자만 (로그인 시 Supabase에 저장됨) */}
-        {!isAuthenticated && <DataManagement />}
+        {/* 데이터 관리 */}
+        <DataManagement isAuthenticated={isAuthenticated} userId={user?.id} />
 
         {/* 언어 설정 */}
         <Card className="p-4 md:p-5 lg:p-6">

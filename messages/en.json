@@ -111,7 +111,9 @@
     "importSuccess": "Imported {count} meal records successfully!",
     "importFailed": "Failed to import data.",
     "importInvalidFormat": "Invalid file format. Please select a valid MyPKU backup file.",
-    "dataSummary": "{meals} meals recorded over {days} days"
+    "dataSummary": "{meals} meals recorded over {days} days",
+    "importToCloud": "Import JSON file to add records to your cloud account.",
+    "importToCloudDesc": "Records from backup file will be added to your cloud. Duplicate records are automatically skipped."
   },
   "Auth": {
     "login": "Login",

@@ -111,7 +111,9 @@
     "importSuccess": "{count}개의 식사 기록을 성공적으로 가져왔습니다!",
     "importFailed": "데이터 가져오기에 실패했습니다.",
     "importInvalidFormat": "잘못된 파일 형식입니다. 올바른 MyPKU 백업 파일을 선택해 주세요.",
-    "dataSummary": "{days}일 동안 {meals}개의 식사 기록"
+    "dataSummary": "{days}일 동안 {meals}개의 식사 기록",
+    "importToCloud": "JSON 파일을 가져와 클라우드 계정에 추가합니다.",
+    "importToCloudDesc": "백업 파일의 기록이 클라우드에 추가됩니다. 중복 기록은 자동으로 건너뜁니다."
   },
   "Auth": {
     "login": "로그인",

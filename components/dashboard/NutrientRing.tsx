@@ -25,7 +25,8 @@ export default function NutrientRing({
 }: NutrientRingProps) {
   const t = useTranslations("NutrientRing");
   const tNutrients = useTranslations("Nutrients");
-  const percentage = Math.min((current / goal) * 100, 100);
+  const safeCurrent = isNaN(current) ? 0 : current;
+  const percentage = goal > 0 ? Math.min((safeCurrent / goal) * 100, 100) : 0;
   const isOverLimit = current > goal;
   const hasExchange = exchangeValue !== undefined && exchangeGoal !== undefined;
 
@@ -115,7 +116,7 @@ export default function NutrientRing({
                 : "text-gray-900 dark:text-gray-100"
             }`}
           >
-            {Math.round(current)}
+            {Math.round(safeCurrent)}
           </span>
           <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400">{unit}</span>
         </div>

@@ -5,6 +5,7 @@
  */
 
 import type { MealRecord, DailyGoals } from "@/types/nutrition";
+import { NUTRITION_STORAGE_KEY } from "@/lib/constants";
 
 // 내보내기 데이터 버전
 export const EXPORT_VERSION = "1.0";
@@ -23,9 +24,6 @@ export interface ExportData {
   };
 }
 
-// localStorage 키
-const STORAGE_KEY = "mypku-nutrition-storage";
-
 /**
  * localStorage에서 데이터 읽기
  */
@@ -33,7 +31,7 @@ export function getLocalStorageData(): ExportData["data"] | null {
   if (typeof window === "undefined") return null;
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(NUTRITION_STORAGE_KEY);
     if (!stored) return null;
 
     const parsed = JSON.parse(stored);

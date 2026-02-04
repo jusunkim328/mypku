@@ -10,6 +10,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { MealType, NutritionData, FoodItem } from "@/types/nutrition";
+import { NUTRITION_STORAGE_KEY, NUTRITION_BACKUP_KEY } from "@/lib/constants";
 
 // localStorage에 저장된 mealRecord 형식
 interface LocalMealRecord {
@@ -58,9 +59,6 @@ export function getMigrationStatus(userId: string): string | null {
 /**
  * localStorage에서 mealRecords 가져오기
  */
-// Zustand persist 키 이름
-const NUTRITION_STORAGE_KEY = "mypku-nutrition-storage";
-
 function getLocalMealRecords(): LocalMealRecord[] {
   if (typeof window === "undefined") return [];
 
@@ -110,7 +108,7 @@ function backupLocalData(): void {
   try {
     const nutritionState = localStorage.getItem(NUTRITION_STORAGE_KEY);
     if (nutritionState) {
-      localStorage.setItem(`${NUTRITION_STORAGE_KEY}_backup`, nutritionState);
+      localStorage.setItem(NUTRITION_BACKUP_KEY, nutritionState);
       console.log("[Migration] 로컬 데이터 백업 완료");
     }
   } catch (error) {
