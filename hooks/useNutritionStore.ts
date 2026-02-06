@@ -13,10 +13,30 @@ interface WaterIntake {
   glasses: number; // 1 glass = 250ml
 }
 
+interface FormulaSettings {
+  formulaName: string;
+  servingAmount: number;
+  servingUnit: "ml" | "g" | "scoop";
+  timeSlots: string[];
+  isActive: boolean;
+}
+
 interface NutritionState {
-  // 퀵셋업 완료 여부
+  // 퀵셋업 완료 여부 (Phase 1 호환)
   quickSetupCompleted: boolean;
   setQuickSetupCompleted: (completed: boolean) => void;
+
+  // 온보딩 완료 여부 (Phase 2)
+  onboardingCompleted: boolean;
+  setOnboardingCompleted: (completed: boolean) => void;
+
+  // 진단 시기 (온보딩 Step 1)
+  diagnosisAgeGroup: string | null;
+  setDiagnosisAgeGroup: (group: string | null) => void;
+
+  // 포뮬러 설정 (온보딩 Step 3, Phase 2.3에서 확장)
+  formulaSettings: FormulaSettings | null;
+  setFormulaSettings: (settings: FormulaSettings | null) => void;
 
   // 일일 목표 (PKU 전용)
   dailyGoals: DailyGoals;
@@ -71,6 +91,12 @@ const EMPTY_NUTRITION: NutritionData = {
   phenylalanine_mg: 0,
 };
 
+// 불완전한 nutrition 데이터를 정규화
+const normalizeNutrition = (n: Partial<NutritionData> | null | undefined): NutritionData => ({
+  ...EMPTY_NUTRITION,
+  ...n,
+});
+
 // 특정 날짜인지 확인
 const isSameDate = (dateString: string, targetDate: Date): boolean => {
   const date = new Date(dateString);
@@ -106,8 +132,7 @@ const sumNutrition = (records: MealRecord[]): NutritionData => {
       carbs_g: acc.carbs_g + record.totalNutrition.carbs_g,
       fat_g: acc.fat_g + record.totalNutrition.fat_g,
       phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) +
-        (record.totalNutrition.phenylalanine_mg || 0),
+        acc.phenylalanine_mg + record.totalNutrition.phenylalanine_mg,
     }),
     { ...EMPTY_NUTRITION }
   );
@@ -121,9 +146,21 @@ const getTodayDateStr = (): string => {
 export const useNutritionStore = create<NutritionState>()(
   persist(
     (set, get) => ({
-      // 퀵셋업 상태
+      // 퀵셋업 상태 (Phase 1 호환)
       quickSetupCompleted: false,
       setQuickSetupCompleted: (completed) => set({ quickSetupCompleted: completed }),
+
+      // 온보딩 상태 (Phase 2)
+      onboardingCompleted: false,
+      setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
+
+      // 진단 시기
+      diagnosisAgeGroup: null,
+      setDiagnosisAgeGroup: (group) => set({ diagnosisAgeGroup: group }),
+
+      // 포뮬러 설정
+      formulaSettings: null,
+      setFormulaSettings: (settings) => set({ formulaSettings: settings }),
 
       dailyGoals: DEFAULT_GOALS,
       setDailyGoals: (goals) =>
@@ -303,13 +340,31 @@ export const useNutritionStore = create<NutritionState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         quickSetupCompleted: state.quickSetupCompleted,
+        onboardingCompleted: state.onboardingCompleted,
+        diagnosisAgeGroup: state.diagnosisAgeGroup,
+        formulaSettings: state.formulaSettings,
         dailyGoals: state.dailyGoals,
         mealRecords: state.mealRecords,
         waterIntakes: state.waterIntakes,
         waterGoal: state.waterGoal,
       }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        if (state) {
+          // localStorage에서 복원된 mealRecords의 totalNutrition 정규화
+          const records = state.mealRecords;
+          if (records?.length) {
+            const needsNormalization = records.some(
+              (r) => !r.totalNutrition || r.totalNutrition.protein_g === undefined
+            );
+            if (needsNormalization) {
+              state.mealRecords = records.map((r) => ({
+                ...r,
+                totalNutrition: normalizeNutrition(r.totalNutrition),
+              }));
+            }
+          }
+          state.setHasHydrated(true);
+        }
       },
     }
   )

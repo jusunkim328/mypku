@@ -170,6 +170,12 @@ mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwh
   clearTimeout(timeout);
   ```
 
+### 숫자 입력 UI 주의사항
+- **공통 컴포넌트**: `components/ui/NumberInput.tsx` — 범위 검증, 전체 선택, 빈 문자열 처리가 포함된 숫자 입력. 새로운 숫자 입력 필드에서 우선 사용 검토
+- **onFocus 전체 선택**: `onFocus={(e) => e.target.select()}` — 기존값을 지우고 입력하는 UX 문제 해결. 모든 `type="number"` 입력에 적용 필수
+- **입력 중 범위 강제 금지**: `onChange` 시 min/max를 강제하면 여러 자릿수 입력이 불가능해짐 (예: `300` 입력 시 `3`에서 잘림). 입력 중 자유 타이핑 허용, `onBlur` 시점에만 범위 검증
+- **빈 문자열 허용**: 숫자를 지우는 도중 `""` 상태를 허용해야 자연스러운 편집 가능. `onBlur` 시 빈 값이면 `defaultValue`로 복원
+
 ### 면책조항
 - 모든 페이지에 `<Disclaimer />` 컴포넌트 표시 필수
 - 의료 진단/치료 조언 제공 금지

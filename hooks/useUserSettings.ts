@@ -64,8 +64,11 @@ export function useUserSettings() {
     }
   }, [isAuthenticated, updateDbGoals, localStore]);
 
-  // 퀵셋업 상태 (localStorage)
+  // 퀵셋업/온보딩 상태 (localStorage)
   const { quickSetupCompleted, setQuickSetupCompleted } = localStore;
+  const { onboardingCompleted, setOnboardingCompleted } = localStore;
+  const { diagnosisAgeGroup, setDiagnosisAgeGroup } = localStore;
+  const { formulaSettings, setFormulaSettings } = localStore;
 
   // Water 관련 (Phase 1에서는 localStorage만 사용)
   const {
@@ -88,9 +91,15 @@ export function useUserSettings() {
   }, [dailyGoals.phenylalanine_mg, getExchanges]);
 
   return {
-    // 퀵셋업 상태
+    // 퀵셋업/온보딩 상태
     quickSetupCompleted,
     setQuickSetupCompleted,
+    onboardingCompleted,
+    setOnboardingCompleted,
+    diagnosisAgeGroup,
+    setDiagnosisAgeGroup,
+    formulaSettings,
+    setFormulaSettings,
 
     // 동기화되는 설정 (PKU 전용)
     dailyGoals,

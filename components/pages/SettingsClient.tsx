@@ -14,6 +14,7 @@ import { openFileAndImport, openFileAndImportToSupabase } from "@/lib/dataImport
 import type { Locale } from "@/i18n/routing";
 import type { DailyGoals } from "@/types/nutrition";
 import NotificationSettings from "@/components/settings/NotificationSettings";
+import FormulaSettingsCard from "@/components/settings/FormulaSettingsCard";
 
 const languages: { code: Locale; name: string }[] = [
   { code: "en", name: "English" },
@@ -233,6 +234,9 @@ export default function SettingsClient() {
   const [draftGoals, setDraftGoals] = useState<DailyGoals>(dailyGoals);
   const [isSavingGoals, setIsSavingGoals] = useState(false);
 
+  // Formula 변경 상태 (FormulaSettingsCard에서 콜백으로 관리)
+  const [hasFormulaChanges, setHasFormulaChanges] = useState(false);
+
   // 실제 값 비교로 변경 감지 (값을 되돌리면 버튼 숨김)
   const hasGoalsChanges = useMemo(() => {
     return (
@@ -249,21 +253,34 @@ export default function SettingsClient() {
     setDraftGoals(dailyGoals);
   }, [dailyGoals]);
 
+  const hasAnyChanges = hasGoalsChanges || hasFormulaChanges;
+
+  // URL 해시 앵커 스크롤 (예: /settings#formula)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash) {
+      const id = window.location.hash.slice(1);
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      }
+    }
+  }, []);
+
   // 페이지 이탈 경고 (저장하지 않은 변경사항 있을 때)
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasGoalsChanges) {
+      if (hasAnyChanges) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [hasGoalsChanges]);
+  }, [hasAnyChanges]);
 
   // 브라우저 뒤로가기 버튼 경고
   useEffect(() => {
-    if (!hasGoalsChanges) return;
+    if (!hasAnyChanges) return;
 
     // 현재 상태를 히스토리에 푸시 (뒤로가기 감지용)
     window.history.pushState(null, "", window.location.href);
@@ -281,7 +298,7 @@ export default function SettingsClient() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [hasGoalsChanges, t]);
+  }, [hasAnyChanges, t]);
 
   const handleLanguageChange = (newLocale: Locale) => {
     router.replace(pathname, { locale: newLocale });
@@ -316,7 +333,7 @@ export default function SettingsClient() {
 
   // 앱 내부 네비게이션 경고 (Link 클릭 시)
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (hasGoalsChanges) {
+    if (hasAnyChanges) {
       const confirmed = window.confirm(t("unsavedChangesWarning"));
       if (!confirmed) {
         e.preventDefault();
@@ -418,6 +435,9 @@ export default function SettingsClient() {
 
         {/* 알림 설정 */}
         <NotificationSettings />
+
+        {/* 포뮬러 설정 */}
+        <FormulaSettingsCard onChangesStateChange={setHasFormulaChanges} />
 
         {/* 데이터 관리 */}
         <DataManagement isAuthenticated={isAuthenticated} userId={user?.id} />

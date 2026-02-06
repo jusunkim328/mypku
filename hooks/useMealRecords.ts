@@ -41,6 +41,12 @@ const EMPTY_NUTRITION: NutritionData = {
   phenylalanine_mg: 0,
 };
 
+// 불완전한 nutrition 데이터를 정규화
+const normalizeNutrition = (n: Partial<NutritionData> | null | undefined): NutritionData => ({
+  ...EMPTY_NUTRITION,
+  ...n,
+});
+
 // 오늘 날짜인지 확인
 const isToday = (dateString: string): boolean => {
   const date = new Date(dateString);
@@ -69,8 +75,7 @@ const sumNutrition = (records: MealRecordWithItems[]): NutritionData => {
       carbs_g: acc.carbs_g + record.totalNutrition.carbs_g,
       fat_g: acc.fat_g + record.totalNutrition.fat_g,
       phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) +
-        (record.totalNutrition.phenylalanine_mg || 0),
+        acc.phenylalanine_mg + record.totalNutrition.phenylalanine_mg,
     }),
     { ...EMPTY_NUTRITION }
   );
@@ -134,7 +139,7 @@ export function useMealRecords(): UseMealRecordsReturn {
         timestamp: record.timestamp,
         mealType: record.meal_type as MealType,
         imageUrl: record.image_url,
-        totalNutrition: record.total_nutrition as NutritionData,
+        totalNutrition: normalizeNutrition(record.total_nutrition),
         aiConfidence: record.ai_confidence,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         items: ((foodItems as any[]) || [])
@@ -191,7 +196,7 @@ export function useMealRecords(): UseMealRecordsReturn {
           mealType: r.mealType,
           imageUrl: null,
           items: r.items,
-          totalNutrition: r.totalNutrition,
+          totalNutrition: normalizeNutrition(r.totalNutrition),
           aiConfidence: null,
         }))
       : dbRecords;

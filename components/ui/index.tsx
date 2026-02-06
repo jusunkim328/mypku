@@ -54,14 +54,17 @@ export function Card({
   className = "",
   animate = true,
   elevated = false,
+  id,
 }: {
   children: React.ReactNode;
   className?: string;
   animate?: boolean;
   elevated?: boolean;
+  id?: string;
 }) {
   return (
     <div
+      id={id}
       className={`
         bg-white dark:bg-gray-900/80 rounded-2xl
         ${elevated ? "card-elevated" : "shadow-soft"}
@@ -309,6 +312,7 @@ export function Input({
   type = "text",
   value,
   onChange,
+  onFocus,
   placeholder,
   disabled = false,
   className = "",
@@ -316,6 +320,7 @@ export function Input({
   type?: string;
   value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -325,6 +330,7 @@ export function Input({
       type={type}
       value={value}
       onChange={onChange}
+      onFocus={onFocus}
       placeholder={placeholder}
       disabled={disabled}
       className={`

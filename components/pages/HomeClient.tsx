@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Block, Button, Card, Preloader } from "@/components/ui";
-import { ScanBarcode, Database, Settings } from "lucide-react";
+import { ScanBarcode, Database, Settings, Droplets, GraduationCap } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
@@ -15,26 +15,26 @@ import PheRemainingCard from "@/components/dashboard/PheRemainingCard";
 import DailyGoalCard from "@/components/dashboard/DailyGoalCard";
 import StreakBadge from "@/components/dashboard/StreakBadge";
 import WaterTracker from "@/components/dashboard/WaterTracker";
+import FormulaWidget from "@/components/dashboard/FormulaWidget";
 import Disclaimer from "@/components/common/Disclaimer";
-import QuickSetup from "@/components/quicksetup/QuickSetup";
 
 export default function HomeClient() {
   const t = useTranslations("HomePage");
   const tNutrients = useTranslations("Nutrients");
-  const { dailyGoals, _hasHydrated, getExchanges, getExchangeGoal, quickSetupCompleted } = useUserSettings();
+  const router = useRouter();
+  const { dailyGoals, _hasHydrated, getExchanges, getExchangeGoal, quickSetupCompleted, onboardingCompleted } = useUserSettings();
   const { pheWarnings, permission } = useNotificationStore();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
 
-  const [showQuickSetup, setShowQuickSetup] = useState(false);
   const lastWarningRef = useRef<number>(0);
 
-  // 첫 방문 시 퀵셋업 모달 표시
+  // 첫 방문 시 온보딩 페이지로 리다이렉트
   useEffect(() => {
-    if (_hasHydrated && !quickSetupCompleted) {
-      setShowQuickSetup(true);
+    if (_hasHydrated && !quickSetupCompleted && !onboardingCompleted) {
+      router.push("/onboarding");
     }
-  }, [_hasHydrated, quickSetupCompleted]);
+  }, [_hasHydrated, quickSetupCompleted, onboardingCompleted, router]);
 
   // Phe 한도 경고 알림 (PKU 전용)
   useEffect(() => {
@@ -70,11 +70,6 @@ export default function HomeClient() {
 
   return (
     <Page>
-      {/* 퀵셋업 모달 */}
-      {showQuickSetup && (
-        <QuickSetup onComplete={() => setShowQuickSetup(false)} />
-      )}
-
       {/* 커스텀 헤더 - 왼쪽 정렬 레이아웃 */}
       <header className="sticky top-0 z-50 glass border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 py-3 md:px-6 lg:px-8">
@@ -178,6 +173,9 @@ export default function HomeClient() {
           </Button>
         </Link>
 
+        {/* 포뮬러 섭취 추적 */}
+        <FormulaWidget />
+
         {/* 일일 목표 카드 */}
         <DailyGoalCard />
 
@@ -202,10 +200,22 @@ export default function HomeClient() {
               {t("viewHistory")}
             </Button>
           </Link>
-          <Link href="/foods" className="col-span-2 md:col-span-4">
+          <Link href="/blood-levels" className="md:col-span-2">
+            <Button large outline className="w-full flex items-center justify-center gap-2">
+              <Droplets className="w-5 h-5" />
+              {t("bloodLevels")}
+            </Button>
+          </Link>
+          <Link href="/foods" className="md:col-span-2">
             <Button large outline className="w-full flex items-center justify-center gap-2">
               <Database className="w-5 h-5" />
               {t("foodDatabase")}
+            </Button>
+          </Link>
+          <Link href="/learn" className="col-span-2 md:col-span-4">
+            <Button large outline className="w-full flex items-center justify-center gap-2">
+              <GraduationCap className="w-5 h-5" />
+              {t("learnAboutPku")}
             </Button>
           </Link>
         </div>
