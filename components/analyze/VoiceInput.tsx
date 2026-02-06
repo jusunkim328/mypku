@@ -40,7 +40,8 @@ export default function VoiceInput({ onTranscript, onError, disabled }: VoiceInp
     recognition.continuous = true;
     recognition.interimResults = true;
     // 앱의 locale에 맞춰 음성 인식 언어 설정
-    recognition.lang = locale === "ko" ? "ko-KR" : "en-US";
+    const langMap: Record<string, string> = { ko: "ko-KR", ru: "ru-RU", en: "en-US" };
+    recognition.lang = langMap[locale] || "en-US";
 
     recognition.onstart = () => {
       setIsListening(true);

@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const isDev = process.env.NODE_ENV === "development";
+
 export async function updateSession(request: NextRequest) {
   return updateSessionWithResponse(request, NextResponse.next({ request }));
 }
@@ -15,12 +17,9 @@ export async function updateSessionWithResponse(
     {
       cookies: {
         getAll() {
-          const cookies = request.cookies.getAll();
-          console.log("[supabase-middleware] getAll cookies:", cookies.map(c => c.name));
-          return cookies;
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          console.log("[supabase-middleware] setAll cookies:", cookiesToSet.map(c => c.name));
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -34,7 +33,9 @@ export async function updateSessionWithResponse(
 
   // 세션 갱신 (사용자가 로그인한 경우)
   const { data: { user }, error } = await supabase.auth.getUser();
-  console.log("[supabase-middleware] getUser result:", { user: user?.email, error: error?.message });
+  if (isDev) {
+    console.log("[supabase-middleware] getUser:", { user: user?.email, error: error?.message });
+  }
 
   return response;
 }

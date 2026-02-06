@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card } from "@/components/ui";
 import ImageUploader from "@/components/analyze/ImageUploader";
@@ -50,6 +50,7 @@ async function fetchWithRetry(
 
 export default function AnalyzeClient() {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("AnalyzePage");
   const tCommon = useTranslations("Common");
   const tMeals = useTranslations("MealTypes");
@@ -88,7 +89,7 @@ export default function AnalyzeClient() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, locale }),
         },
         3,
         1000

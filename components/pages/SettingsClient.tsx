@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useTheme } from "next-themes";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader, NumberInput } from "@/components/ui";
-import { Sun, Monitor, Moon, User, Download, Upload, Database } from "lucide-react";
+import { Sun, Monitor, Moon, User, Download, Upload, Database, Users } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/useToast";
@@ -15,10 +15,14 @@ import type { Locale } from "@/i18n/routing";
 import type { DailyGoals } from "@/types/nutrition";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import FormulaSettingsCard from "@/components/settings/FormulaSettingsCard";
+import FamilyInvite from "@/components/family/FamilyInvite";
+import FamilyMembers from "@/components/family/FamilyMembers";
+import { useFamilyShare } from "@/hooks/useFamilyShare";
 
 const languages: { code: Locale; name: string }[] = [
   { code: "en", name: "English" },
   { code: "ko", name: "한국어" },
+  { code: "ru", name: "Русский" },
 ];
 
 // 테마 토글 컴포넌트
@@ -222,6 +226,7 @@ export default function SettingsClient() {
   const pathname = usePathname();
   const { dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useUserSettings();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
+  const { caregivers, patients, isLoading: familyLoading, sendInvite, removeLink } = useFamilyShare();
 
   // authLoading 타임아웃 (3초 후 강제로 로딩 완료 처리)
   const [authTimeout, setAuthTimeout] = useState(false);
@@ -438,6 +443,33 @@ export default function SettingsClient() {
 
         {/* 포뮬러 설정 */}
         <FormulaSettingsCard onChangesStateChange={setHasFormulaChanges} />
+
+        {/* 가족 공유 */}
+        {isAuthenticated && (
+          <Card className="p-4 md:p-5 lg:p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {t("familySharing")}
+              </h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {t("familySharingDesc")}
+            </p>
+            <FamilyMembers
+              caregivers={caregivers}
+              patients={patients}
+              isLoading={familyLoading}
+              removeLink={removeLink}
+            />
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t("inviteCaregiver")}
+              </p>
+              <FamilyInvite sendInvite={sendInvite} />
+            </div>
+          </Card>
+        )}
 
         {/* 데이터 관리 */}
         <DataManagement isAuthenticated={isAuthenticated} userId={user?.id} />

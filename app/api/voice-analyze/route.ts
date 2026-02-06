@@ -4,7 +4,7 @@ import { analyzeFoodByText } from "@/lib/gemini";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { text } = body;
+    const { text, locale } = body;
 
     if (!text || typeof text !== "string") {
       return NextResponse.json({ error: "Text is required" }, { status: 400 });
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Gemini로 텍스트 분석 (PKU 전용)
-    const result = await analyzeFoodByText(text);
+    const result = await analyzeFoodByText(text, locale);
 
     return NextResponse.json({
       success: true,

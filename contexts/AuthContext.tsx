@@ -23,7 +23,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   migrationResult: MigrationResult | null;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (returnUrl?: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   updateDailyGoals: (goals: Partial<DBDailyGoals>) => Promise<void>;
@@ -166,8 +166,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
 
     // 인증 상태 변화 구독
+    // 주의: onAuthStateChange 콜백 안에서 Supabase 쿼리를 직접 호출하면
+    // 세션 초기화 완료 전에 실행되어 행이 걸릴 수 있음 → setTimeout으로 분리
     const { data: { subscription } } = supabaseRef.current.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!isMounted) return;
 
         setSession(session);
@@ -182,57 +184,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        try {
-          if (session?.user) {
-            console.log(`[AuthContext] 이벤트: ${event}, 사용자: ${session.user.email}`);
+        if (session?.user) {
+          console.log(`[AuthContext] 이벤트: ${event}, 사용자: ${session.user.email}`);
 
-            const [profileData, goalsData] = await Promise.all([
-              fetchProfile(session.user.id),
-              fetchDailyGoals(session.user.id),
-            ]);
-
+          // async 작업을 콜백 바깥에서 실행 (Supabase 세션 초기화 완료 보장)
+          const userId = session.user.id;
+          setTimeout(async () => {
             if (!isMounted) return;
 
-            setProfile(profileData);
-            setDailyGoals(goalsData);
+            try {
+              const [profileData, goalsData] = await Promise.all([
+                fetchProfile(userId),
+                fetchDailyGoals(userId),
+              ]);
 
-            // 로그인 성공 시 게스트 데이터 마이그레이션 시도
-            // SIGNED_IN (OAuth 콜백), INITIAL_SESSION (페이지 로드), TOKEN_REFRESHED 모두 처리
-            if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
-              try {
-                console.log("[AuthContext] 게스트 데이터 마이그레이션 확인 중...");
-                const result = await migrateLocalDataIfNeeded(session.user.id);
-                setMigrationResult(result);
+              if (!isMounted) return;
 
-                if (result.status === "completed" && result.count && result.count > 0) {
-                  console.log(`[AuthContext] 마이그레이션 완료: ${result.count}개 레코드`);
-                  toast.success(`${result.count}개의 기록이 계정에 동기화되었습니다!`);
-                } else if (result.status === "skipped_remote_exists") {
-                  console.log("[AuthContext] 마이그레이션 스킵 - 원격 데이터 존재");
-                } else if (result.status === "offline_deferred") {
-                  console.log("[AuthContext] 마이그레이션 보류 - 오프라인");
-                } else if (result.status === "already_migrated") {
-                  console.log("[AuthContext] 이미 마이그레이션됨");
-                } else if (result.status === "empty_local") {
-                  console.log("[AuthContext] 로컬 데이터 없음");
+              setProfile(profileData);
+              setDailyGoals(goalsData);
+
+              // 마이그레이션: SIGNED_IN만 (INITIAL_SESSION/TOKEN_REFRESHED는 불필요)
+              if (event === "SIGNED_IN") {
+                try {
+                  console.log("[AuthContext] 게스트 데이터 마이그레이션 확인 중...");
+                  const result = await migrateLocalDataIfNeeded(userId);
+                  if (isMounted) setMigrationResult(result);
+
+                  if (result.status === "completed" && result.count && result.count > 0) {
+                    toast.success(`${result.count}개의 기록이 계정에 동기화되었습니다!`);
+                  }
+                  console.log(`[AuthContext] 마이그레이션 결과: ${result.status}`);
+                } catch (migrationError) {
+                  console.error("[AuthContext] 마이그레이션 실패:", migrationError);
                 }
-              } catch (migrationError) {
-                console.error("[AuthContext] 마이그레이션 실패:", migrationError);
-                // 마이그레이션 실패해도 로그인은 유지
+              }
+            } catch (error) {
+              console.error("[AuthContext] 데이터 로드 실패:", error);
+            } finally {
+              if (isMounted) {
+                setIsLoading(false);
               }
             }
-          } else {
-            setProfile(null);
-            setDailyGoals(null);
-            setMigrationResult(null);
-          }
-        } catch (error) {
-          console.error("[AuthContext] onAuthStateChange 데이터 로드 실패:", error);
-          // 에러가 발생해도 기본 인증은 유지
-        } finally {
-          if (isMounted) {
-            setIsLoading(false);
-          }
+          }, 0);
+        } else {
+          setProfile(null);
+          setDailyGoals(null);
+          setMigrationResult(null);
+          setIsLoading(false);
         }
       }
     );
@@ -293,11 +291,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
+  const signInWithGoogle = useCallback(async (returnUrl?: string) => {
+    const callbackUrl = returnUrl
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnUrl)}`
+      : `${window.location.origin}/auth/callback`;
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: callbackUrl,
         queryParams: {
           access_type: "offline",
           prompt: "consent",

@@ -219,7 +219,7 @@ export async function analyzeFood(imageBase64: string): Promise<{
 }
 
 // 텍스트 기반 음식 분석 (음성 입력용 - PKU 전용)
-export async function analyzeFoodByText(foodDescription: string): Promise<{
+export async function analyzeFoodByText(foodDescription: string, locale: string = "en"): Promise<{
   items: FoodItem[];
   totalNutrition: NutritionData;
 }> {
@@ -242,7 +242,7 @@ export async function analyzeFoodByText(foodDescription: string): Promise<{
 3. Consider common preparation methods (fried, steamed, raw, etc.)
 4. If the description is vague, use average/typical values
 5. Confidence should be lower (0.5-0.7) for vague descriptions
-6. Consider cultural context for food names (especially Korean foods)
+6. Consider cultural context for food names${locale === "ko" ? " (especially Korean foods like 김치, 된장찌개, 비빔밥)" : locale === "ru" ? " (especially Russian foods like борщ, пельмени, блины)" : ""}
 7. confidence_level should be "low" for vague descriptions, "medium" for clear descriptions with estimated portions, "high" only for well-known foods with precise amounts
 
 ## Required Output
@@ -363,10 +363,11 @@ export async function generateCoaching(
     model: "gemini-2.5-flash",
   });
 
-  const languageInstruction =
-    locale === "ko"
-      ? "응답은 한국어로 작성하세요."
-      : "Write your response in English.";
+  const langInstructions: Record<string, string> = {
+    ko: "응답은 한국어로 작성하세요.",
+    ru: "Напишите ответ на русском языке.",
+  };
+  const languageInstruction = langInstructions[locale] || "Write your response in English.";
 
   const prompt = `You are a friendly PKU nutrition coach. Analyze the user's weekly nutrition data and provide encouraging feedback.
 

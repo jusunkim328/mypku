@@ -356,13 +356,13 @@ export type FoodCategory = typeof FOOD_CATEGORIES[number];
  */
 export function getCategoryLabel(category: FoodCategory, locale: string = "en"): string {
   const labels: Record<FoodCategory, Record<string, string>> = {
-    fruit: { en: "Fruits", ko: "과일" },
-    vegetable: { en: "Vegetables", ko: "채소" },
-    grain: { en: "Grains", ko: "곡물" },
-    meat: { en: "Meat & Fish", ko: "육류 & 생선" },
-    dairy: { en: "Dairy", ko: "유제품" },
-    legume: { en: "Legumes", ko: "콩류" },
-    processed: { en: "Processed Foods", ko: "가공식품" },
+    fruit: { en: "Fruits", ko: "과일", ru: "Фрукты" },
+    vegetable: { en: "Vegetables", ko: "채소", ru: "Овощи" },
+    grain: { en: "Grains", ko: "곡물", ru: "Злаки" },
+    meat: { en: "Meat & Fish", ko: "육류 & 생선", ru: "Мясо и рыба" },
+    dairy: { en: "Dairy", ko: "유제품", ru: "Молочные продукты" },
+    legume: { en: "Legumes", ko: "콩류", ru: "Бобовые" },
+    processed: { en: "Processed Foods", ko: "가공식품", ru: "Полуфабрикаты" },
   };
 
   return labels[category]?.[locale] || category;

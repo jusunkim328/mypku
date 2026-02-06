@@ -2,9 +2,16 @@
 
 import { useTranslations } from "next-intl";
 import { Users } from "lucide-react";
+import { Button } from "@/components/ui";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyShare } from "@/hooks/useFamilyShare";
+import FamilyInvite from "@/components/family/FamilyInvite";
 
 export default function StepFamilyInvite() {
   const t = useTranslations("Onboarding");
+  const tAuth = useTranslations("Auth");
+  const { isAuthenticated, signInWithGoogle } = useAuth();
+  const { sendInvite } = useFamilyShare();
 
   return (
     <div className="space-y-6">
@@ -20,12 +27,23 @@ export default function StepFamilyInvite() {
         </p>
       </div>
 
-      {/* Coming soon placeholder */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-        <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
-          {t("step5ComingSoon")}
-        </p>
-      </div>
+      {!isAuthenticated ? (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3">
+          <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
+            {t("step5NeedsLogin")}
+          </p>
+          <Button onClick={signInWithGoogle} className="w-full">
+            {tAuth("login")}
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <FamilyInvite sendInvite={sendInvite} />
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            {t("step5SkipHint")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

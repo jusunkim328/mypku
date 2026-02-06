@@ -65,6 +65,12 @@ export const MOCK_PROFILE: Profile = {
   name: "Dev Test User",
   avatar_url: null,
   mode: null,
+  blood_target_max: null,
+  blood_target_min: null,
+  blood_unit: null,
+  diagnosis_age_group: null,
+  onboarding_completed: null,
+  quicksetup_completed: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };

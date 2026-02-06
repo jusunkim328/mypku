@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
     if (!error) {
       // locale 경로로 리다이렉트
-      const isLocalEnv = process.env.NODE_ENV === "development";
+      const isLocalEnv = origin.includes("localhost") || process.env.NODE_ENV === "development";
       const forwardedHost = request.headers.get("x-forwarded-host");
       const redirectPath = `/${locale}${next === "/" ? "" : next}`;
 

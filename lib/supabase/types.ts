@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      blood_levels: {
+        Row: {
+          collected_at: string
+          created_at: string | null
+          id: string
+          normalized_umol: number
+          notes: string | null
+          raw_unit: string
+          raw_value: number
+          target_max: number | null
+          target_min: number | null
+          user_id: string | null
+        }
+        Insert: {
+          collected_at: string
+          created_at?: string | null
+          id?: string
+          normalized_umol: number
+          notes?: string | null
+          raw_unit?: string
+          raw_value: number
+          target_max?: number | null
+          target_min?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          collected_at?: string
+          created_at?: string | null
+          id?: string
+          normalized_umol?: number
+          notes?: string | null
+          raw_unit?: string
+          raw_value?: number
+          target_max?: number | null
+          target_min?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      caregiver_links: {
+        Row: {
+          accepted_at: string | null
+          caregiver_user_id: string | null
+          id: string
+          invite_email: string | null
+          invite_token: string | null
+          invited_at: string | null
+          patient_profile_id: string
+          permissions: string[] | null
+          relationship: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          caregiver_user_id?: string | null
+          id?: string
+          invite_email?: string | null
+          invite_token?: string | null
+          invited_at?: string | null
+          patient_profile_id: string
+          permissions?: string[] | null
+          relationship?: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          caregiver_user_id?: string | null
+          id?: string
+          invite_email?: string | null
+          invite_token?: string | null
+          invited_at?: string | null
+          patient_profile_id?: string
+          permissions?: string[] | null
+          relationship?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caregiver_links_patient_profile_id_fkey"
+            columns: ["patient_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_goals: {
         Row: {
           calories: number | null
@@ -101,6 +187,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      formula_intakes: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          date: string
+          id: string
+          time_slot: string
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          time_slot: string
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          time_slot?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      formula_settings: {
+        Row: {
+          created_at: string | null
+          formula_name: string
+          id: string
+          is_active: boolean | null
+          serving_amount: number
+          serving_unit: string
+          time_slots: string[]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          formula_name?: string
+          id?: string
+          is_active?: boolean | null
+          serving_amount?: number
+          serving_unit?: string
+          time_slots?: string[]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          formula_name?: string
+          id?: string
+          is_active?: boolean | null
+          serving_amount?: number
+          serving_unit?: string
+          time_slots?: string[]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       health_conditions: {
         Row: {
@@ -268,29 +420,47 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          blood_target_max: number | null
+          blood_target_min: number | null
+          blood_unit: string | null
           created_at: string | null
+          diagnosis_age_group: string | null
           email: string
           id: string
           mode: string | null
           name: string | null
+          onboarding_completed: boolean | null
+          quicksetup_completed: boolean | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          blood_target_max?: number | null
+          blood_target_min?: number | null
+          blood_unit?: string | null
           created_at?: string | null
+          diagnosis_age_group?: string | null
           email: string
           id: string
           mode?: string | null
           name?: string | null
+          onboarding_completed?: boolean | null
+          quicksetup_completed?: boolean | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          blood_target_max?: number | null
+          blood_target_min?: number | null
+          blood_unit?: string | null
           created_at?: string | null
+          diagnosis_age_group?: string | null
           email?: string
           id?: string
           mode?: string | null
           name?: string | null
+          onboarding_completed?: boolean | null
+          quicksetup_completed?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -300,6 +470,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite_by_token: {
+        Args: { invite_token_param: string }
+        Returns: Json
+      }
+      get_linked_patient_profiles: {
+        Args: { caregiver_uid: string }
+        Returns: {
+          id: string
+          email: string
+          name: string
+        }[]
+      }
+      lookup_invite_by_token: {
+        Args: { invite_token_param: string }
+        Returns: Json
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
@@ -443,3 +629,7 @@ export type FoodItem = Database["public"]["Tables"]["food_items"]["Row"];
 export type HealthCondition = Database["public"]["Tables"]["health_conditions"]["Row"];
 export type PKUFoodRow = Database["public"]["Tables"]["pku_foods"]["Row"];
 export type PKUFoodInsert = Database["public"]["Tables"]["pku_foods"]["Insert"];
+export type CaregiverLinkRow = Database["public"]["Tables"]["caregiver_links"]["Row"];
+export type BloodLevelRow = Database["public"]["Tables"]["blood_levels"]["Row"];
+export type FormulaIntakeRow = Database["public"]["Tables"]["formula_intakes"]["Row"];
+export type FormulaSettingRow = Database["public"]["Tables"]["formula_settings"]["Row"];
