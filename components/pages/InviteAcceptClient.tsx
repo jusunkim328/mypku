@@ -20,7 +20,7 @@ interface InviteInfo {
 
 const KNOWN_ERROR_KEYS = [
   "invalidToken", "alreadyUsed", "cannotAcceptOwn",
-  "acceptFailed", "fetchFailed", "alreadyLinked", "expired",
+  "acceptFailed", "fetchFailed", "alreadyLinked", "expired", "emailMismatch",
 ];
 
 export default function InviteAcceptClient() {

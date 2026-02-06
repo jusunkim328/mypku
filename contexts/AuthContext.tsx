@@ -292,8 +292,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async (returnUrl?: string) => {
-    const callbackUrl = returnUrl
-      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnUrl)}`
+    // 상대경로만 허용 (Open Redirect 방지)
+    const safeReturnUrl = returnUrl?.startsWith("/") ? returnUrl : undefined;
+    const callbackUrl = safeReturnUrl
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeReturnUrl)}`
       : `${window.location.origin}/auth/callback`;
 
     const { error } = await supabase.auth.signInWithOAuth({

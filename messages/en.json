@@ -122,7 +122,7 @@
     "formulaSaved": "Formula settings saved!",
     "goToOnboarding": "Go to Onboarding",
     "familySharing": "Family Sharing",
-    "familySharingDesc": "Share records with your spouse or caregiver. Both parents can view and edit the same data in real-time.",
+    "familySharingDesc": "Share records with your spouse or caregivers. Everyone invited can view and edit the same data in real-time.",
     "inviteCaregiver": "Invite Caregiver"
   },
   "Auth": {
@@ -639,7 +639,8 @@
     "sendAnother": "Send another invite",
     "error_cannotAcceptOwn": "You cannot accept your own invitation.",
     "error_alreadyLinked": "You are already linked to this profile.",
-    "error_expired": "This invitation has expired. Please ask for a new one."
+    "error_expired": "This invitation has expired. Please ask for a new one.",
+    "error_emailMismatch": "This invitation was sent to a different email. Please sign in with the invited email address."
   },
   "PheRemaining": {
     "title": "Daily Phe Budget",
