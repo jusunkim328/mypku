@@ -12,6 +12,7 @@ interface BloodLevelCardProps {
   currentTargetMin: number;
   currentTargetMax: number;
   onDelete: (id: string) => void;
+  viewOnly?: boolean;
 }
 
 export default function BloodLevelCard({
@@ -20,6 +21,7 @@ export default function BloodLevelCard({
   currentTargetMin,
   currentTargetMax,
   onDelete,
+  viewOnly = false,
 }: BloodLevelCardProps) {
   const t = useTranslations("BloodLevels");
 
@@ -73,12 +75,14 @@ export default function BloodLevelCard({
             <span className="text-sm font-normal ml-1">{unitLabel}</span>
           </p>
         </div>
-        <button
-          onClick={handleDelete}
-          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {!viewOnly && (
+          <button
+            onClick={handleDelete}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* 목표 범위 시각화 */}

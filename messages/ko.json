@@ -117,13 +117,18 @@
     "importToCloud": "JSON 파일을 가져와 클라우드 계정에 추가합니다.",
     "importToCloudDesc": "백업 파일의 기록이 클라우드에 추가됩니다. 중복 기록은 자동으로 건너뜁니다.",
     "formulaSettings": "포뮬러 설정",
-    "formulaNotConfigured": "포뮬러가 아직 설정되지 않았습니다. 온보딩에서 설정하세요.",
+    "formulaNotConfigured": "포뮬러가 아직 설정되지 않았습니다.",
     "formulaDisableConfirm": "포뮬러 추적을 비활성화하시겠습니까?",
     "formulaSaved": "포뮬러 설정이 저장되었습니다!",
-    "goToOnboarding": "온보딩으로 이동",
+    "setupFormula": "포뮬러 설정하기",
     "familySharing": "가족 공유",
     "familySharingDesc": "배우자나 보호자와 기록을 공유하세요. 초대된 가족 모두 같은 데이터를 실시간으로 보고 수정할 수 있습니다.",
-    "inviteCaregiver": "보호자 초대"
+    "inviteCaregiver": "보호자 초대",
+    "patientSettings": "{name}님의 설정",
+    "mySettings": "내 설정",
+    "patientFormulaNotConfigured": "환자의 포뮬러가 아직 설정되지 않았습니다.",
+    "patientGoalsSaved": "{name}님의 일일 목표가 저장되었습니다!",
+    "patientFormulaSaved": "{name}님의 포뮬러 설정이 저장되었습니다!"
   },
   "Auth": {
     "login": "로그인",
@@ -601,7 +606,7 @@
     "loginToAccept": "가족 공유 초대를 수락하려면 로그인하세요.",
     "loginReturnHint": "로그인 후 자동으로 이 페이지로 돌아옵니다.",
     "invitedAs": "초대 대상: {email}",
-    "inviteDescription": "수락하면 공유된 PKU 기록을 함께 보고 수정할 수 있습니다.",
+    "inviteDescription": "수락하면 공유된 PKU 기록에 접근할 수 있습니다.",
     "acceptInvite": "초대 수락",
     "accepting": "초대 수락 중...",
     "inviteAccepted": "초대가 수락되었습니다!",
@@ -641,6 +646,20 @@
     "error_alreadyLinked": "이미 이 프로필에 연결되어 있습니다.",
     "error_expired": "초대가 만료되었습니다. 새 초대를 요청해주세요.",
     "error_emailMismatch": "이 초대는 다른 이메일로 발송되었습니다. 초대받은 이메일로 로그인해주세요."
+  },
+  "Caregiver": {
+    "myData": "나의 데이터",
+    "viewingPatient": "{name}님의 데이터 보는 중",
+    "backToMyData": "내 데이터로 돌아가기",
+    "viewOnly": "보기 전용",
+    "canEdit": "편집 가능",
+    "selectPatient": "환자 전환",
+    "noEditPermission": "보기 전용 권한만 있습니다",
+    "recordAddedFor": "{name}님에게 기록 추가됨",
+    "linkRevoked": "{name}님의 데이터 접근이 해제되었습니다",
+    "permEditor": "편집자 (조회 + 입력)",
+    "permViewer": "열람자 (보기 전용)",
+    "offlineNotAvailable": "보호자 모드에서는 인터넷 연결이 필요합니다"
   },
   "PheRemaining": {
     "title": "오늘의 Phe 예산",

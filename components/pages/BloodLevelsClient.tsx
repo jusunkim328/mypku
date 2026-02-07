@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { Droplets, Settings2, Check } from "lucide-react";
 import { useBloodLevels, useBloodLevelStore, mgDlToUmol, umolToMgDl, type BloodUnit, type BloodLevelSettings } from "@/hooks/useBloodLevels";
+import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import BloodLevelForm from "@/components/blood/BloodLevelForm";
 import BloodLevelCard from "@/components/blood/BloodLevelCard";
 
@@ -23,6 +24,9 @@ export default function BloodLevelsClient() {
   } = useBloodLevels();
 
   const { _hasHydrated } = useBloodLevelStore();
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
+  const viewOnly = isCaregiverMode && !canEdit;
   const [showSettings, setShowSettings] = useState(false);
 
   // 임시 설정 상태 (저장 전까지 반영 안 됨)
@@ -79,16 +83,18 @@ export default function BloodLevelsClient() {
           </Link>
         }
         right={
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className={`p-2 rounded-lg transition-colors ${
-              showSettings
-                ? "text-primary-600 bg-primary-50 dark:text-primary-400 dark:bg-primary-900/30"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            }`}
-          >
-            <Settings2 className="w-5 h-5" />
-          </button>
+          !viewOnly ? (
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 rounded-lg transition-colors ${
+                showSettings
+                  ? "text-primary-600 bg-primary-50 dark:text-primary-400 dark:bg-primary-900/30"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              <Settings2 className="w-5 h-5" />
+            </button>
+          ) : undefined
         }
       />
 
@@ -198,8 +204,10 @@ export default function BloodLevelsClient() {
           </Card>
         )}
 
-        {/* 새 기록 추가 */}
-        <BloodLevelForm defaultUnit={settings.unit} onSubmit={addRecord} />
+        {/* 새 기록 추가 (view-only 보호자에겐 숨김) */}
+        {!viewOnly && (
+          <BloodLevelForm defaultUnit={settings.unit} onSubmit={addRecord} />
+        )}
 
         {/* 기록 목록 */}
         {records.length === 0 ? (
@@ -225,6 +233,7 @@ export default function BloodLevelsClient() {
                 currentTargetMin={settings.targetMin}
                 currentTargetMax={settings.targetMax}
                 onDelete={removeRecord}
+                viewOnly={viewOnly}
               />
             ))}
           </div>

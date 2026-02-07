@@ -7,6 +7,7 @@ import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import BarcodeScanner from "@/components/scan/BarcodeScanner";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
+import { useCanEdit } from "@/hooks/usePatientContext";
 import { toast } from "@/hooks/useToast";
 import type { NutritionData, MealType, PKUSafetyLevel } from "@/types/nutrition";
 
@@ -48,6 +49,7 @@ export default function ScanClient() {
 
   const { _hasHydrated } = useUserSettings();
   const { addMealRecord } = useMealRecords();
+  const canEdit = useCanEdit();
 
   const [isLoading, setIsLoading] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -328,7 +330,7 @@ export default function ScanClient() {
                   >
                     {t("scanAnother")}
                   </Button>
-                  <Button className="flex-1" onClick={handleSave}>
+                  <Button className="flex-1" onClick={handleSave} disabled={!canEdit}>
                     {t("saveRecord")}
                   </Button>
                 </div>

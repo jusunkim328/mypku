@@ -2,7 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
-import { useUserSettings } from "@/hooks/useUserSettings";
+import { useWaterRecords } from "@/hooks/useWaterRecords";
+import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 
 interface WaterTrackerProps {
   compact?: boolean;
@@ -10,19 +11,25 @@ interface WaterTrackerProps {
 
 export default function WaterTracker({ compact = false }: WaterTrackerProps) {
   const t = useTranslations("Water");
-  const { waterGoal, getTodayWaterIntake, addWaterGlass, removeWaterGlass } = useUserSettings();
+  const tCg = useTranslations("Caregiver");
+  const { todayIntake, waterGoal, addGlass, removeGlass } = useWaterRecords();
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
 
-  const todayIntake = getTodayWaterIntake();
   const percentage = Math.min((todayIntake / waterGoal) * 100, 100);
   const isGoalMet = todayIntake >= waterGoal;
   const mlConsumed = todayIntake * 250;
+  const viewOnly = isCaregiverMode && !canEdit;
 
   if (compact) {
     return (
       <div className="flex items-center gap-2">
         <button
-          onClick={addWaterGlass}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition-colors"
+          onClick={canEdit ? addGlass : undefined}
+          disabled={viewOnly}
+          className={`flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium transition-colors ${
+            viewOnly ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-200"
+          }`}
         >
           <span>💧</span>
           <span>{todayIntake}/{waterGoal}</span>
@@ -40,21 +47,31 @@ export default function WaterTracker({ compact = false }: WaterTrackerProps) {
         </span>
       </div>
 
+      {/* view-only 알림 */}
+      {viewOnly && (
+        <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
+          {tCg("noEditPermission")}
+        </p>
+      )}
+
       {/* 물잔 시각화 */}
       <div className="flex flex-wrap gap-2 md:gap-3 mb-4">
         {Array.from({ length: waterGoal }).map((_, index) => (
           <button
             key={index}
             onClick={() => {
+              if (viewOnly) return;
               if (index < todayIntake) {
-                removeWaterGlass();
+                removeGlass();
               } else {
-                addWaterGlass();
+                addGlass();
               }
             }}
+            disabled={viewOnly}
             className={`
               w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center text-xl md:text-2xl
-              transition-all transform active:scale-95
+              transition-all transform
+              ${viewOnly ? "cursor-not-allowed opacity-60" : "active:scale-95"}
               ${
                 index < todayIntake
                   ? "bg-blue-500 text-white"
@@ -92,8 +109,11 @@ export default function WaterTracker({ compact = false }: WaterTrackerProps) {
 
         {/* 빠른 추가 버튼 */}
         <button
-          onClick={addWaterGlass}
-          className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors"
+          onClick={addGlass}
+          disabled={viewOnly}
+          className={`flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm font-medium transition-colors ${
+            viewOnly ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-600"
+          }`}
         >
           <Plus className="w-4 h-4" />
           {t("addGlass")}

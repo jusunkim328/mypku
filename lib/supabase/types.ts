@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           collected_at: string
           created_at: string | null
+          created_by: string | null
           id: string
           normalized_umol: number
           notes: string | null
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           collected_at: string
           created_at?: string | null
+          created_by?: string | null
           id?: string
           normalized_umol: number
           notes?: string | null
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           collected_at?: string
           created_at?: string | null
+          created_by?: string | null
           id?: string
           normalized_umol?: number
           notes?: string | null
@@ -193,6 +196,7 @@ export type Database = {
           completed: boolean | null
           completed_at: string | null
           created_at: string | null
+          created_by: string | null
           date: string
           id: string
           time_slot: string
@@ -202,6 +206,7 @@ export type Database = {
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string | null
+          created_by?: string | null
           date?: string
           id?: string
           time_slot: string
@@ -211,6 +216,7 @@ export type Database = {
           completed?: boolean | null
           completed_at?: string | null
           created_at?: string | null
+          created_by?: string | null
           date?: string
           id?: string
           time_slot?: string
@@ -296,6 +302,7 @@ export type Database = {
           confirmed_at: string | null
           confirmed_by: string | null
           created_at: string | null
+          created_by: string | null
           data_source: string | null
           id: string
           image_url: string | null
@@ -311,6 +318,7 @@ export type Database = {
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string | null
+          created_by?: string | null
           data_source?: string | null
           id?: string
           image_url?: string | null
@@ -326,6 +334,7 @@ export type Database = {
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string | null
+          created_by?: string | null
           data_source?: string | null
           id?: string
           image_url?: string | null
@@ -465,6 +474,33 @@ export type Database = {
         }
         Relationships: []
       }
+      water_intakes: {
+        Row: {
+          created_at: string | null
+          date: string
+          glasses: number
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          glasses?: number
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          glasses?: number
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -477,8 +513,8 @@ export type Database = {
       get_linked_patient_profiles: {
         Args: { caregiver_uid: string }
         Returns: {
-          id: string
           email: string
+          id: string
           name: string
         }[]
       }
@@ -633,3 +669,4 @@ export type CaregiverLinkRow = Database["public"]["Tables"]["caregiver_links"]["
 export type BloodLevelRow = Database["public"]["Tables"]["blood_levels"]["Row"];
 export type FormulaIntakeRow = Database["public"]["Tables"]["formula_intakes"]["Row"];
 export type FormulaSettingRow = Database["public"]["Tables"]["formula_settings"]["Row"];
+export type WaterIntakeRow = Database["public"]["Tables"]["water_intakes"]["Row"];

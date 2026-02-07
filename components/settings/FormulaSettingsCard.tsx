@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import { FlaskConical } from "lucide-react";
 import { Card, Button, NumberInput, Input } from "@/components/ui";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useIsCaregiverMode, useCanEdit, usePatientContext } from "@/hooks/usePatientContext";
 import { toast } from "@/hooks/useToast";
 
 const ALL_SLOTS = ["morning", "noon", "evening", "bedtime"] as const;
@@ -22,9 +22,13 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
   const tFormula = useTranslations("Formula");
   const tCommon = useTranslations("Common");
   const { formulaSettings, setFormulaSettings } = useUserSettings();
+  const isCaregiverMode = useIsCaregiverMode();
+  const canEdit = useCanEdit();
+  const activePatient = usePatientContext((s) => s.activePatient);
 
   const [draftFormula, setDraftFormula] = useState(formulaSettings);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // formulaSettings 외부 변경 시 드래프트 동기화
   useEffect(() => {
@@ -49,10 +53,21 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
     onChangesStateChange(hasChanges);
   }, [hasChanges, onChangesStateChange]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!draftFormula) return;
-    setFormulaSettings(draftFormula);
-    toast.success(t("formulaSaved"));
+    setIsSaving(true);
+    try {
+      await setFormulaSettings(draftFormula);
+      if (isCaregiverMode && activePatient) {
+        toast.success(t("patientFormulaSaved", { name: activePatient.name || activePatient.email }));
+      } else {
+        toast.success(t("formulaSaved"));
+      }
+    } catch {
+      toast.error(t("saveFailed"));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -89,13 +104,23 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
       {!draftFormula ? (
         <div className="text-center py-4">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            {t("formulaNotConfigured")}
+            {isCaregiverMode ? t("patientFormulaNotConfigured") : t("formulaNotConfigured")}
           </p>
-          <Link href="/onboarding">
-            <Button small outline>
-              {t("goToOnboarding")}
-            </Button>
-          </Link>
+          <Button
+            small
+            outline
+            onClick={() =>
+              setDraftFormula({
+                formulaName: "PKU Formula",
+                servingAmount: 200,
+                servingUnit: "ml",
+                timeSlots: ["morning", "noon", "evening", "bedtime"],
+                isActive: true,
+              })
+            }
+          >
+            {t("setupFormula")}
+          </Button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -106,13 +131,14 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
             </span>
             <button
               onClick={handleToggleActive}
+              disabled={!canEdit}
               role="switch"
               aria-checked={draftFormula.isActive}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 draftFormula.isActive
                   ? "bg-purple-600"
                   : "bg-gray-300 dark:bg-gray-600"
-              }`}
+              } ${!canEdit ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -152,6 +178,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                     setDraftFormula({ ...draftFormula, formulaName: e.target.value })
                   }
                   onFocus={(e) => e.target.select()}
+                  disabled={!canEdit}
                   className="mt-1.5"
                 />
               </div>
@@ -169,6 +196,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                   min={1}
                   max={1000}
                   defaultValue={200}
+                  disabled={!canEdit}
                   className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
                 />
               </div>
@@ -184,6 +212,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                       key={unit}
                       small
                       outline={draftFormula.servingUnit !== unit}
+                      disabled={!canEdit}
                       onClick={() =>
                         setDraftFormula({ ...draftFormula, servingUnit: unit })
                       }
@@ -206,6 +235,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                     return (
                       <button
                         key={slot}
+                        disabled={!canEdit}
                         onClick={() => {
                           const newSlots = isSelected
                             ? draftFormula.timeSlots.filter((s) => s !== slot)
@@ -214,7 +244,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                             setDraftFormula({ ...draftFormula, timeSlots: newSlots });
                           }
                         }}
-                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${!canEdit ? "opacity-50 cursor-not-allowed " : ""}${
                           isSelected
                             ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-700"
                             : "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-purple-200 dark:hover:border-purple-800"
@@ -230,13 +260,13 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
           )}
 
           {/* 저장/취소 버튼 */}
-          {hasChanges && (
+          {hasChanges && canEdit && (
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
               <Button outline onClick={handleCancel}>
                 {tCommon("cancel")}
               </Button>
-              <Button onClick={handleSave}>
-                {tCommon("save")}
+              <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving ? tCommon("loading") : tCommon("save")}
               </Button>
             </div>
           )}

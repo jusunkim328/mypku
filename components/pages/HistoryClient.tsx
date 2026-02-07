@@ -7,6 +7,7 @@ import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { ChevronDown } from "lucide-react";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
 import CoachingMessage from "@/components/dashboard/CoachingMessage";
 import CalendarView from "@/components/dashboard/CalendarView";
@@ -20,6 +21,9 @@ export default function HistoryClient() {
   const format = useFormatter();
   const { mealRecords, removeMealRecord, isLoading } = useMealRecords();
   const { _hasHydrated } = useUserSettings();
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
+  const viewOnly = isCaregiverMode && !canEdit;
 
   // 날짜 선택 상태
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -196,18 +200,20 @@ export default function HistoryClient() {
                             </span>
                           </div>
                         </div>
-                        <Button
-                          small
-                          clear
-                          danger
-                          onClick={async () => {
-                            if (confirm(t("deleteConfirm"))) {
-                              await removeMealRecord(record.id);
-                            }
-                          }}
-                        >
-                          {tCommon("delete")}
-                        </Button>
+                        {!viewOnly && (
+                          <Button
+                            small
+                            clear
+                            danger
+                            onClick={async () => {
+                              if (confirm(t("deleteConfirm"))) {
+                                await removeMealRecord(record.id);
+                              }
+                            }}
+                          >
+                            {tCommon("delete")}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </Card>

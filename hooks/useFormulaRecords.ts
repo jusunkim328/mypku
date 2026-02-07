@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFormulaStore } from "./useFormulaStore";
 import { useUserSettings } from "./useUserSettings";
+import { usePatientContext, useTargetUserId, useCanEdit, useIsCaregiverMode } from "./usePatientContext";
 import { getDevAuthState } from "@/lib/devAuth";
 
 interface FormulaIntake {
@@ -49,8 +50,23 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
   const [dbIntakes, setDbIntakes] = useState<FormulaIntake[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const supabase = createClient();
+  // 보호자 모드 지원
+  const activePatient = usePatientContext((s) => s.activePatient);
+  const queryUserId = useTargetUserId(user?.id);
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
+
+  const supabaseRef = useRef(createClient());
   const today = getTodayDateStr();
+
+  // 환자 전환 시 캐시 초기화
+  const prevPatientIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (prevPatientIdRef.current !== undefined && prevPatientIdRef.current !== activePatient?.id) {
+      setDbIntakes([]);
+    }
+    prevPatientIdRef.current = activePatient?.id ?? null;
+  }, [activePatient?.id]);
 
   const isFormulaActive = formulaSettings?.isActive ?? false;
   const timeSlots = formulaSettings?.timeSlots ?? [];
@@ -61,18 +77,18 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
 
   // Supabase에서 오늘의 섭취 기록 조회
   const fetchIntakes = useCallback(async () => {
-    if (!user || !isFormulaActive) return;
+    if (!queryUserId || !isFormulaActive) return;
 
     const devAuthState = getDevAuthState();
-    if (devAuthState.enabled) return;
+    if (devAuthState.enabled && !isCaregiverMode) return;
 
     setIsLoading(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabaseRef.current as any)
         .from("formula_intakes")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", queryUserId)
         .eq("date", today);
 
       if (error) throw error;
@@ -91,18 +107,22 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user, isFormulaActive, supabase, today]);
+  }, [queryUserId, isFormulaActive, isCaregiverMode, today]);
 
-  // 초기 로드
+  // 초기 로드 + 환자 전환 시 재fetch
   useEffect(() => {
-    if (isAuthenticated && isFormulaActive) {
+    if ((isAuthenticated || isCaregiverMode) && isFormulaActive) {
       fetchIntakes();
     }
-  }, [isAuthenticated, isFormulaActive, fetchIntakes]);
+  }, [isAuthenticated, isCaregiverMode, isFormulaActive, fetchIntakes]);
 
   // 데이터 소스에 따른 완료 여부 확인
   const isSlotCompleted = useCallback(
     (slot: string): boolean => {
+      if (isCaregiverMode) {
+        return dbIntakes.find((i) => i.slot === slot)?.completed ?? false;
+      }
+
       const devAuthState = getDevAuthState();
       const useLocal = !isAuthenticated || devAuthState.enabled;
 
@@ -111,7 +131,7 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
       }
       return dbIntakes.find((i) => i.slot === slot)?.completed ?? false;
     },
-    [isAuthenticated, localStore, dbIntakes, today]
+    [isAuthenticated, isCaregiverMode, localStore, dbIntakes, today]
   );
 
   // 완료 수 계산
@@ -122,27 +142,33 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
   // 슬롯 토글
   const toggleSlot = useCallback(
     async (slot: string) => {
-      const devAuthState = getDevAuthState();
-      const useLocal = !isAuthenticated || devAuthState.enabled;
+      // 보호자 모드: canEdit 검증
+      if (isCaregiverMode && !canEdit) return;
 
-      // localStorage 토글 (항상)
-      localStore.toggleSlot(today, slot);
+      const devAuthState = getDevAuthState();
+      const useLocal = isCaregiverMode ? false : (!isAuthenticated || devAuthState.enabled);
+
+      // 보호자 모드가 아닐 때만 localStorage 토글
+      if (!isCaregiverMode) {
+        localStore.toggleSlot(today, slot);
+      }
 
       if (useLocal) return;
 
       // Supabase upsert
-      if (!user) return;
+      if (!queryUserId || !user) return;
 
       const currentlyCompleted = isSlotCompleted(slot);
       const newCompleted = !currentlyCompleted;
 
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseRef.current as any)
           .from("formula_intakes")
           .upsert(
             {
-              user_id: user.id,
+              user_id: queryUserId,
+              created_by: user.id,
               date: today,
               time_slot: slot,
               completed: newCompleted,
@@ -179,11 +205,13 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
         });
       } catch (error) {
         console.error("[useFormulaRecords] 토글 실패:", error);
-        // 실패 시 localStorage 롤백
-        localStore.toggleSlot(today, slot);
+        // 실패 시 localStorage 롤백 (보호자 모드 아닐 때만)
+        if (!isCaregiverMode) {
+          localStore.toggleSlot(today, slot);
+        }
       }
     },
-    [isAuthenticated, user, supabase, localStore, today, isSlotCompleted]
+    [isAuthenticated, user, queryUserId, canEdit, isCaregiverMode, localStore, today, isSlotCompleted]
   );
 
   return {

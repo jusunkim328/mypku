@@ -7,14 +7,18 @@ import { Button, Input } from "@/components/ui";
 import { toast } from "@/hooks/useToast";
 import type { SendInviteFn } from "@/hooks/useFamilyShare";
 
+type PermissionLevel = "edit" | "view";
+
 interface FamilyInviteProps {
   sendInvite: SendInviteFn;
 }
 
 export default function FamilyInvite({ sendInvite }: FamilyInviteProps) {
   const t = useTranslations("Family");
+  const tCg = useTranslations("Caregiver");
 
   const [email, setEmail] = useState("");
+  const [permLevel, setPermLevel] = useState<PermissionLevel>("edit");
   const [isSending, setIsSending] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -25,7 +29,8 @@ export default function FamilyInvite({ sendInvite }: FamilyInviteProps) {
     setIsSending(true);
     setInviteUrl(null);
 
-    const result = await sendInvite(email.trim());
+    const permissions = permLevel === "edit" ? ["view", "edit"] : ["view"];
+    const result = await sendInvite(email.trim(), permissions);
 
     if (result.success && result.inviteUrl) {
       setInviteUrl(result.inviteUrl);
@@ -132,6 +137,32 @@ export default function FamilyInvite({ sendInvite }: FamilyInviteProps) {
   // 이메일 입력 UI
   return (
     <div className="space-y-3">
+      {/* 권한 선택 */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setPermLevel("edit")}
+          className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+            permLevel === "edit"
+              ? "bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300"
+              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+          }`}
+        >
+          {tCg("permEditor")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setPermLevel("view")}
+          className={`flex-1 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+            permLevel === "view"
+              ? "bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300"
+              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+          }`}
+        >
+          {tCg("permViewer")}
+        </button>
+      </div>
+
       <div className="flex gap-2">
         <Input
           type="email"

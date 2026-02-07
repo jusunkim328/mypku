@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Check, FlaskConical, Settings2 } from "lucide-react";
 import { useFormulaRecords } from "@/hooks/useFormulaRecords";
+import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import { Link } from "@/i18n/navigation";
 
 const SLOT_ICONS: Record<string, string> = {
@@ -23,6 +24,9 @@ export default function FormulaWidget() {
     isSlotCompleted,
     completedCount,
   } = useFormulaRecords();
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
+  const viewOnly = isCaregiverMode && !canEdit;
 
   // 포뮬러가 비활성 상태면 표시하지 않음
   if (!isFormulaActive || timeSlots.length === 0) {
@@ -60,11 +64,13 @@ export default function FormulaWidget() {
           >
             {completedCount}/{totalSlots}
           </span>
-          <Link href="/settings#formula">
-            <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <Settings2 className="w-4 h-4" />
-            </button>
-          </Link>
+          {!viewOnly && (
+            <Link href="/settings#formula">
+              <button className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <Settings2 className="w-4 h-4" />
+              </button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -78,8 +84,10 @@ export default function FormulaWidget() {
             <button
               key={slot}
               onClick={() => toggleSlot(slot)}
+              disabled={viewOnly}
               className={`
-                flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all transform active:scale-[0.97]
+                flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all transform
+                ${viewOnly ? "cursor-not-allowed opacity-60" : "active:scale-[0.97]"}
                 ${
                   completed
                     ? "bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-700"

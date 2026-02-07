@@ -56,6 +56,14 @@ export interface DailyGoals {
   phenylalanine_mg: number; // PKU 전용 앱이므로 필수
 }
 
+export const DEFAULT_DAILY_GOALS: DailyGoals = {
+  calories: 2000,
+  protein_g: 50,
+  carbs_g: 250,
+  fat_g: 65,
+  phenylalanine_mg: 300,
+};
+
 export interface AnalysisResponse {
   success: boolean;
   items?: FoodItem[];

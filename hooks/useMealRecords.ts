@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNutritionStore } from "./useNutritionStore";
+import { usePatientContext, useTargetUserId, useCanEdit, useIsCaregiverMode } from "./usePatientContext";
 import { uploadMealImage, deleteMealImage } from "@/lib/supabase/storage";
 import { toast } from "./useToast";
 import { getDevAuthState } from "@/lib/devAuth";
@@ -83,22 +85,39 @@ const sumNutrition = (records: MealRecordWithItems[]): NutritionData => {
 
 export function useMealRecords(): UseMealRecordsReturn {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const tCg = useTranslations("Caregiver");
   const localStore = useNutritionStore();
   const [dbRecords, setDbRecords] = useState<MealRecordWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const supabase = createClient();
+  // 보호자 모드 지원
+  const activePatient = usePatientContext((s) => s.activePatient);
+  const queryUserId = useTargetUserId(user?.id);
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
+
+  const supabaseRef = useRef(createClient());
+
+  // 환자 전환 시 캐시 초기화
+  const prevPatientIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (prevPatientIdRef.current !== undefined && prevPatientIdRef.current !== activePatient?.id) {
+      setDbRecords([]);
+      setIsLoading(true);
+    }
+    prevPatientIdRef.current = activePatient?.id ?? null;
+  }, [activePatient?.id]);
 
   // Supabase에서 식사 기록 조회
   const fetchRecords = useCallback(async () => {
-    if (!user) {
+    if (!queryUserId) {
       setIsLoading(false);
       return;
     }
 
     // Dev Auth 모드에서는 Supabase 조회 스킵 (localStorage 사용)
     const devAuthState = getDevAuthState();
-    if (devAuthState.enabled) {
+    if (devAuthState.enabled && !isCaregiverMode) {
       console.log("[useMealRecords] Dev Auth 모드 - localStorage 사용");
       setIsLoading(false);
       return;
@@ -111,10 +130,10 @@ export function useMealRecords(): UseMealRecordsReturn {
       weekAgo.setDate(weekAgo.getDate() - 7);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: mealRecords, error: mealError } = await (supabase as any)
+      const { data: mealRecords, error: mealError } = await (supabaseRef.current as any)
         .from("meal_records")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", queryUserId)
         .gte("timestamp", weekAgo.toISOString())
         .order("timestamp", { ascending: false });
 
@@ -125,7 +144,7 @@ export function useMealRecords(): UseMealRecordsReturn {
       const recordIds = (mealRecords as any[])?.map((r: any) => r.id) || [];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: foodItems, error: foodError } = await (supabase as any)
+      const { data: foodItems, error: foodError } = await (supabaseRef.current as any)
         .from("food_items")
         .select("*")
         .in("meal_record_id", recordIds);
@@ -170,22 +189,25 @@ export function useMealRecords(): UseMealRecordsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user, supabase]);
+  }, [queryUserId, isCaregiverMode]);
 
-  // 초기 로드
+  // 초기 로드 + 환자 전환 시 재fetch
   useEffect(() => {
     if (!authLoading) {
-      if (isAuthenticated) {
+      if (isAuthenticated || isCaregiverMode) {
         fetchRecords();
       } else {
         setIsLoading(false);
       }
     }
-  }, [authLoading, isAuthenticated, fetchRecords]);
+  }, [authLoading, isAuthenticated, isCaregiverMode, fetchRecords]);
 
   // 인증 상태에 따른 데이터 소스 선택
+  // 보호자 모드: 항상 Supabase (환자 데이터는 DB 전용)
   // Dev Auth 모드에서는 localStorage 사용
   const mealRecords: MealRecordWithItems[] = useMemo(() => {
+    if (isCaregiverMode) return dbRecords;
+
     const devAuthState = getDevAuthState();
     const useLocalStorage = !isAuthenticated || devAuthState.enabled;
 
@@ -219,9 +241,21 @@ export function useMealRecords(): UseMealRecordsReturn {
         totalNutrition: record.totalNutrition,
       };
 
-      // Dev Auth 모드 또는 비로그인: 로컬 스토어에만 저장
+      // 보호자 모드: 오프라인 시 에러
+      if (isCaregiverMode && !navigator.onLine) {
+        toast.error(tCg("offlineNotAvailable"));
+        return;
+      }
+
+      // 보호자 모드: canEdit 검증
+      if (isCaregiverMode && !canEdit) {
+        toast.error(tCg("noEditPermission"));
+        return;
+      }
+
+      // Dev Auth 모드 또는 비로그인 (보호자 모드 아닐 때): 로컬 스토어에만 저장
       const devAuthState = getDevAuthState();
-      if (!isAuthenticated || devAuthState.enabled) {
+      if (!isCaregiverMode && (!isAuthenticated || devAuthState.enabled)) {
         localStore.addMealRecord(localRecord);
         if (devAuthState.enabled) {
           console.log("[useMealRecords] Dev Auth 모드 - localStorage에 저장");
@@ -230,22 +264,23 @@ export function useMealRecords(): UseMealRecordsReturn {
         return;
       }
 
-      if (!user) return;
+      if (!queryUserId || !user) return;
 
       try {
         // 이미지 업로드 (있는 경우)
         let imageUrl: string | null = null;
         if (imageBase64) {
-          const { url } = await uploadMealImage(imageBase64, user.id);
+          const { url } = await uploadMealImage(imageBase64, queryUserId);
           imageUrl = url;
         }
 
         // 식사 기록 저장
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: mealRecord, error: mealError } = await (supabase as any)
+        const { data: mealRecord, error: mealError } = await (supabaseRef.current as any)
           .from("meal_records")
           .insert({
-            user_id: user.id,
+            user_id: queryUserId,
+            created_by: user.id,
             timestamp: record.timestamp,
             meal_type: record.mealType,
             image_url: imageUrl,
@@ -268,7 +303,7 @@ export function useMealRecords(): UseMealRecordsReturn {
         }));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: foodError } = await (supabase as any)
+        const { error: foodError } = await (supabaseRef.current as any)
           .from("food_items")
           .insert(foodItemsToInsert);
 
@@ -287,8 +322,8 @@ export function useMealRecords(): UseMealRecordsReturn {
             error.message.includes("connection") ||
             error.message.includes("fetch"));
 
-        if (isNetworkError || !navigator.onLine) {
-          // 오프라인: 로컬에 저장하고 나중에 동기화
+        if ((isNetworkError || !navigator.onLine) && !isCaregiverMode) {
+          // 오프라인 + 자기 데이터: 로컬에 저장하고 나중에 동기화
           localStore.addMealRecord(localRecord);
           toast.warning("오프라인 상태입니다. 기록이 로컬에 저장되었습니다.");
         } else {
@@ -297,15 +332,21 @@ export function useMealRecords(): UseMealRecordsReturn {
         }
       }
     },
-    [isAuthenticated, user, supabase, localStore, fetchRecords]
+    [isAuthenticated, user, queryUserId, canEdit, isCaregiverMode, localStore, fetchRecords]
   );
 
   // 식사 기록 삭제
   const removeMealRecord = useCallback(
     async (id: string) => {
-      // Dev Auth 모드 또는 비로그인: 로컬 스토어에서만 삭제
+      // 보호자 모드: canEdit 검증
+      if (isCaregiverMode && !canEdit) {
+        toast.error(tCg("noEditPermission"));
+        return;
+      }
+
+      // Dev Auth 모드 또는 비로그인 (보호자 모드 아닐 때): 로컬 스토어에서만 삭제
       const devAuthState = getDevAuthState();
-      if (!isAuthenticated || devAuthState.enabled) {
+      if (!isCaregiverMode && (!isAuthenticated || devAuthState.enabled)) {
         localStore.removeMealRecord(id);
         if (devAuthState.enabled) {
           console.log("[useMealRecords] Dev Auth 모드 - localStorage에서 삭제");
@@ -325,7 +366,7 @@ export function useMealRecords(): UseMealRecordsReturn {
 
         // 식사 기록 삭제 (cascade로 food_items도 삭제됨)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseRef.current as any)
           .from("meal_records")
           .delete()
           .eq("id", id);
@@ -341,7 +382,7 @@ export function useMealRecords(): UseMealRecordsReturn {
         throw error;
       }
     },
-    [isAuthenticated, dbRecords, supabase, localStore, fetchRecords]
+    [isAuthenticated, canEdit, isCaregiverMode, dbRecords, localStore, fetchRecords]
   );
 
   // 오늘의 식사

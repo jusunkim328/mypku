@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useTheme } from "next-themes";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { Page, Navbar, Block, Button, Card, Preloader, NumberInput } from "@/components/ui";
+import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { Sun, Monitor, Moon, User, Download, Upload, Database, Users } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsCaregiverMode, useCanEdit, usePatientContext } from "@/hooks/usePatientContext";
 import { toast } from "@/hooks/useToast";
 import { downloadJSON, getExportSummary } from "@/lib/dataExport";
 import { openFileAndImport, openFileAndImportToSupabase } from "@/lib/dataImport";
@@ -15,8 +16,11 @@ import type { Locale } from "@/i18n/routing";
 import type { DailyGoals } from "@/types/nutrition";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import FormulaSettingsCard from "@/components/settings/FormulaSettingsCard";
+import DailyGoalsCard from "@/components/settings/DailyGoalsCard";
 import FamilyInvite from "@/components/family/FamilyInvite";
 import FamilyMembers from "@/components/family/FamilyMembers";
+import PatientSelector from "@/components/caregiver/PatientSelector";
+import PatientBanner from "@/components/caregiver/PatientBanner";
 import { useFamilyShare } from "@/hooks/useFamilyShare";
 
 const languages: { code: Locale; name: string }[] = [
@@ -27,7 +31,7 @@ const languages: { code: Locale; name: string }[] = [
 
 // 테마 토글 컴포넌트
 function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const t = useTranslations("SettingsPage");
 
@@ -38,8 +42,6 @@ function ThemeToggle() {
   if (!mounted) {
     return <div className="w-12 h-7 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />;
   }
-
-  const isDark = resolvedTheme === "dark";
 
   return (
     <div className="flex items-center gap-3">
@@ -218,7 +220,6 @@ function DataManagement({ isAuthenticated, userId }: { isAuthenticated: boolean;
 
 export default function SettingsClient() {
   const t = useTranslations("SettingsPage");
-  const tNutrients = useTranslations("Nutrients");
   const tCommon = useTranslations("Common");
   const tAuth = useTranslations("Auth");
   const locale = useLocale() as Locale;
@@ -226,6 +227,9 @@ export default function SettingsClient() {
   const pathname = usePathname();
   const { dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useUserSettings();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
+  const isCaregiverMode = useIsCaregiverMode();
+  const canEdit = useCanEdit();
+  const activePatient = usePatientContext((s) => s.activePatient);
   const { caregivers, patients, isLoading: familyLoading, sendInvite, removeLink } = useFamilyShare();
 
   // authLoading 타임아웃 (3초 후 강제로 로딩 완료 처리)
@@ -259,6 +263,37 @@ export default function SettingsClient() {
   }, [dailyGoals]);
 
   const hasAnyChanges = hasGoalsChanges || hasFormulaChanges;
+
+  // 대상 전환 시 미저장 변경 경고 — zustand 액션을 래핑하여 confirm 삽입
+  const hasAnyChangesRef = useRef(hasAnyChanges);
+  hasAnyChangesRef.current = hasAnyChanges;
+
+  useEffect(() => {
+    const originalSet = usePatientContext.getState().setActivePatient;
+    const originalClear = usePatientContext.getState().clearActivePatient;
+
+    usePatientContext.setState({
+      setActivePatient: (patient, permissions) => {
+        if (hasAnyChangesRef.current) {
+          if (!window.confirm(t("unsavedChangesWarning"))) return;
+        }
+        originalSet(patient, permissions);
+      },
+      clearActivePatient: () => {
+        if (hasAnyChangesRef.current) {
+          if (!window.confirm(t("unsavedChangesWarning"))) return;
+        }
+        originalClear();
+      },
+    });
+
+    return () => {
+      usePatientContext.setState({
+        setActivePatient: originalSet,
+        clearActivePatient: originalClear,
+      });
+    };
+  }, [t]);
 
   // URL 해시 앵커 스크롤 (예: /settings#formula)
   useEffect(() => {
@@ -323,7 +358,11 @@ export default function SettingsClient() {
     setIsSavingGoals(true);
     try {
       await setDailyGoals(draftGoals);
-      toast.success(t("goalsSaved"));
+      if (isCaregiverMode && activePatient) {
+        toast.success(t("patientGoalsSaved", { name: activePatient.name || activePatient.email }));
+      } else {
+        toast.success(t("goalsSaved"));
+      }
     } catch {
       toast.error(t("saveFailed"));
     } finally {
@@ -368,219 +407,171 @@ export default function SettingsClient() {
             </Button>
           </Link>
         }
+        right={isAuthenticated && <PatientSelector />}
       />
 
       <Block className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
-        {/* 계정 */}
-        <Card className="p-4 md:p-5 lg:p-6">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            {tAuth("account")}
-          </h3>
-          {isAuthenticated ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                {user?.user_metadata?.avatar_url ? (
-                  <img
-                    src={user.user_metadata.avatar_url}
-                    alt="Profile"
-                    className="w-12 h-12 rounded-full ring-2 ring-primary-200 dark:ring-primary-700"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold text-lg">
-                    {user?.email?.[0]?.toUpperCase() || "U"}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                    {user?.user_metadata?.full_name || user?.email}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-                </div>
-              </div>
-              <Button
-                small
-                outline
-                danger
-                onClick={handleLogout}
-                className="w-full"
-              >
-                {tAuth("logout")}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                  <User className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{tAuth("guestMode")}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{tAuth("guestModeActive")}</p>
-                </div>
-              </div>
-              <Link href="/auth/login" className="block">
-                <Button small className="w-full">
-                  {tAuth("login")}
-                </Button>
-              </Link>
-              <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-                {tAuth("loginForSync")}
-              </p>
-            </div>
-          )}
-        </Card>
-
-        {/* 테마 설정 */}
-        <Card className="p-4 md:p-5 lg:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            {t("theme") || "Theme"}
-          </h3>
-          <ThemeToggle />
-        </Card>
-
-        {/* 알림 설정 */}
-        <NotificationSettings />
-
-        {/* 포뮬러 설정 */}
-        <FormulaSettingsCard onChangesStateChange={setHasFormulaChanges} />
-
-        {/* 가족 공유 */}
-        {isAuthenticated && (
-          <Card className="p-4 md:p-5 lg:p-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {t("familySharing")}
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {t("familySharingDesc")}
-            </p>
-            <FamilyMembers
-              caregivers={caregivers}
-              patients={patients}
-              isLoading={familyLoading}
-              removeLink={removeLink}
-            />
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t("inviteCaregiver")}
-              </p>
-              <FamilyInvite sendInvite={sendInvite} />
-            </div>
-          </Card>
+        {/* 보호자 모드 배너 */}
+        {isCaregiverMode && (
+          <div className="lg:col-span-2">
+            <PatientBanner />
+          </div>
         )}
 
-        {/* 데이터 관리 */}
-        <DataManagement isAuthenticated={isAuthenticated} userId={user?.id} />
+        {/* 환자 선택 시: 환자 관련 설정만 표시 */}
+        {isCaregiverMode ? (
+          <>
+            {/* 환자 포뮬러 설정 (NOTE: 아래 else 분기에도 동일 컴포넌트 존재, props 변경 시 양쪽 동기화 필요) */}
+            <FormulaSettingsCard onChangesStateChange={setHasFormulaChanges} />
 
-        {/* 언어 설정 */}
-        <Card className="p-4 md:p-5 lg:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            {t("language")}
-          </h3>
-          <div className="flex gap-2">
-            {languages.map((lang) => (
-              <Button
-                key={lang.code}
-                small
-                outline={locale !== lang.code}
-                onClick={() => handleLanguageChange(lang.code)}
-              >
-                {lang.name}
-              </Button>
-            ))}
-          </div>
-        </Card>
+            {/* 환자 일일 목표 설정 */}
+            <DailyGoalsCard
+              draftGoals={draftGoals}
+              setDraftGoals={setDraftGoals}
+              disabled={!canEdit}
+              getExchanges={getExchanges}
+              hasChanges={hasGoalsChanges}
+              onSave={handleSaveGoals}
+              onCancel={handleCancelGoals}
+              isSaving={isSavingGoals}
+            />
+          </>
+        ) : (
+          <>
+            {/* 계정 */}
+            <Card className="p-4 md:p-5 lg:p-6">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                {tAuth("account")}
+              </h3>
+              {isAuthenticated ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    {user?.user_metadata?.avatar_url ? (
+                      <img
+                        src={user.user_metadata.avatar_url}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full ring-2 ring-primary-200 dark:ring-primary-700"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold text-lg">
+                        {user?.email?.[0]?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                        {user?.user_metadata?.full_name || user?.email}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                    </div>
+                  </div>
+                  <Button
+                    small
+                    outline
+                    danger
+                    onClick={handleLogout}
+                    className="w-full"
+                  >
+                    {tAuth("logout")}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                      <User className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{tAuth("guestMode")}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{tAuth("guestModeActive")}</p>
+                    </div>
+                  </div>
+                  <Link href="/auth/login" className="block">
+                    <Button small className="w-full">
+                      {tAuth("login")}
+                    </Button>
+                  </Link>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
+                    {tAuth("loginForSync")}
+                  </p>
+                </div>
+              )}
+            </Card>
 
-        {/* 일일 목표 설정 */}
-        <Card className="p-4 md:p-5 lg:p-6 lg:col-span-2">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            {t("dailyGoals")}
-          </h3>
-          <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
-            {/* Phe 목표 (PKU 전용) */}
-            <div>
-              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                {tNutrients("phenylalanine")} (mg)
-              </label>
-              <NumberInput
-                value={draftGoals.phenylalanine_mg || 300}
-                onChange={(value) => setDraftGoals((prev) => ({ ...prev, phenylalanine_mg: value }))}
-                min={50}
-                max={1000}
-                defaultValue={300}
-                className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-              />
-              <p className="text-xs text-primary-600 dark:text-primary-400 mt-1.5 font-medium">
-                = {getExchanges(draftGoals.phenylalanine_mg || 300)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = 50mg)
-              </p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                {tNutrients("calories")} (kcal)
-              </label>
-              <NumberInput
-                value={draftGoals.calories}
-                onChange={(value) => setDraftGoals((prev) => ({ ...prev, calories: value }))}
-                min={500}
-                max={5000}
-                defaultValue={2000}
-                className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                {tNutrients("protein")} (g)
-              </label>
-              <NumberInput
-                value={draftGoals.protein_g}
-                onChange={(value) => setDraftGoals((prev) => ({ ...prev, protein_g: value }))}
-                min={10}
-                max={200}
-                defaultValue={50}
-                className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                {tNutrients("carbs")} (g)
-              </label>
-              <NumberInput
-                value={draftGoals.carbs_g}
-                onChange={(value) => setDraftGoals((prev) => ({ ...prev, carbs_g: value }))}
-                min={50}
-                max={500}
-                defaultValue={250}
-                className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                {tNutrients("fat")} (g)
-              </label>
-              <NumberInput
-                value={draftGoals.fat_g}
-                onChange={(value) => setDraftGoals((prev) => ({ ...prev, fat_g: value }))}
-                min={10}
-                max={200}
-                defaultValue={65}
-                className="w-full mt-1.5 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-              />
-            </div>
-          </div>
-          {/* 저장/취소 버튼 */}
-          {hasGoalsChanges && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-2">
-              <Button outline onClick={handleCancelGoals}>
-                {tCommon("cancel")}
-              </Button>
-              <Button onClick={handleSaveGoals} disabled={isSavingGoals}>
-                {isSavingGoals ? tCommon("loading") : tCommon("save")}
-              </Button>
-            </div>
-          )}
-        </Card>
+            {/* 테마 설정 */}
+            <Card className="p-4 md:p-5 lg:p-6">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                {t("theme") || "Theme"}
+              </h3>
+              <ThemeToggle />
+            </Card>
+
+            {/* 알림 설정 */}
+            <NotificationSettings />
+
+            {/* 포뮬러 설정 (NOTE: 위 isCaregiverMode 분기에도 동일 컴포넌트 존재, props 변경 시 양쪽 동기화 필요) */}
+            <FormulaSettingsCard onChangesStateChange={setHasFormulaChanges} />
+
+            {/* 가족 공유 */}
+            {isAuthenticated && (
+              <Card className="p-4 md:p-5 lg:p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {t("familySharing")}
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {t("familySharingDesc")}
+                </p>
+                <FamilyMembers
+                  caregivers={caregivers}
+                  patients={patients}
+                  isLoading={familyLoading}
+                  removeLink={removeLink}
+                />
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("inviteCaregiver")}
+                  </p>
+                  <FamilyInvite sendInvite={sendInvite} />
+                </div>
+              </Card>
+            )}
+
+            {/* 데이터 관리 */}
+            <DataManagement isAuthenticated={isAuthenticated} userId={user?.id} />
+
+            {/* 언어 설정 */}
+            <Card className="p-4 md:p-5 lg:p-6">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                {t("language")}
+              </h3>
+              <div className="flex gap-2">
+                {languages.map((lang) => (
+                  <Button
+                    key={lang.code}
+                    small
+                    outline={locale !== lang.code}
+                    onClick={() => handleLanguageChange(lang.code)}
+                  >
+                    {lang.name}
+                  </Button>
+                ))}
+              </div>
+            </Card>
+
+            {/* 일일 목표 설정 */}
+            <DailyGoalsCard
+              draftGoals={draftGoals}
+              setDraftGoals={setDraftGoals}
+              getExchanges={getExchanges}
+              hasChanges={hasGoalsChanges}
+              onSave={handleSaveGoals}
+              onCancel={handleCancelGoals}
+              isSaving={isSavingGoals}
+            />
+          </>
+        )}
 
         {/* 앱 정보 */}
         <Card className="p-4 md:p-5 lg:p-6 lg:col-span-2">

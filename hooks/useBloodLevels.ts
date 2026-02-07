@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePatientContext, useTargetUserId, useCanEdit, useIsCaregiverMode } from "./usePatientContext";
 import { getDevAuthState } from "@/lib/devAuth";
 
 // 단위 변환: 1 mg/dL = 60.54 µmol/L
@@ -111,22 +112,38 @@ export function useBloodLevels(): UseBloodLevelsReturn {
   const [dbRecords, setDbRecords] = useState<BloodLevelRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const supabase = createClient();
+  // 보호자 모드 지원
+  const activePatient = usePatientContext((s) => s.activePatient);
+  const queryUserId = useTargetUserId(user?.id);
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
+
+  const supabaseRef = useRef(createClient());
+
+  // 환자 전환 시 캐시 초기화
+  const prevPatientIdRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (prevPatientIdRef.current !== undefined && prevPatientIdRef.current !== activePatient?.id) {
+      setDbRecords([]);
+      setIsLoading(true);
+    }
+    prevPatientIdRef.current = activePatient?.id ?? null;
+  }, [activePatient?.id]);
 
   // Supabase에서 기록 조회
   const fetchRecords = useCallback(async () => {
-    if (!user) return;
+    if (!queryUserId) return;
 
     const devAuthState = getDevAuthState();
-    if (devAuthState.enabled) return;
+    if (devAuthState.enabled && !isCaregiverMode) return;
 
     setIsLoading(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const { data, error } = await (supabaseRef.current as any)
         .from("blood_levels")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", queryUserId)
         .order("collected_at", { ascending: false })
         .limit(50);
 
@@ -151,17 +168,18 @@ export function useBloodLevels(): UseBloodLevelsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [user, supabase]);
+  }, [queryUserId, isCaregiverMode]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated || isCaregiverMode) {
       fetchRecords();
     }
-  }, [isAuthenticated, fetchRecords]);
+  }, [isAuthenticated, isCaregiverMode, fetchRecords]);
 
   // 데이터 소스 선택
+  // 보호자 모드: 항상 Supabase
   const devAuthState = getDevAuthState();
-  const useLocal = !isAuthenticated || devAuthState.enabled;
+  const useLocal = isCaregiverMode ? false : (!isAuthenticated || devAuthState.enabled);
   const records = useLocal ? localStore.records : dbRecords;
   const settings = localStore.settings;
 
@@ -188,20 +206,26 @@ export function useBloodLevels(): UseBloodLevelsReturn {
         createdAt: new Date().toISOString(),
       };
 
-      // localStorage에 항상 저장
-      localStore.addRecord(record);
+      // 보호자 모드: canEdit 검증
+      if (isCaregiverMode && !canEdit) return;
+
+      // 보호자 모드가 아닐 때만 localStorage에 저장
+      if (!isCaregiverMode) {
+        localStore.addRecord(record);
+      }
 
       if (useLocal) return;
 
       // Supabase 저장
-      if (!user) return;
+      if (!queryUserId || !user) return;
 
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseRef.current as any)
           .from("blood_levels")
           .insert({
-            user_id: user.id,
+            user_id: queryUserId,
+            created_by: user.id,
             collected_at: data.collectedAt,
             raw_value: data.value,
             raw_unit: data.unit,
@@ -217,19 +241,23 @@ export function useBloodLevels(): UseBloodLevelsReturn {
         console.error("[useBloodLevels] 저장 실패:", error);
       }
     },
-    [user, useLocal, supabase, localStore, settings, fetchRecords]
+    [user, queryUserId, canEdit, isCaregiverMode, useLocal, localStore, settings, fetchRecords]
   );
 
   // 기록 삭제
   const removeRecord = useCallback(
     async (id: string) => {
-      localStore.removeRecord(id);
+      if (isCaregiverMode && !canEdit) return;
+
+      if (!isCaregiverMode) {
+        localStore.removeRecord(id);
+      }
 
       if (useLocal) return;
 
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase as any)
+        const { error } = await (supabaseRef.current as any)
           .from("blood_levels")
           .delete()
           .eq("id", id);
@@ -240,7 +268,7 @@ export function useBloodLevels(): UseBloodLevelsReturn {
         console.error("[useBloodLevels] 삭제 실패:", error);
       }
     },
-    [useLocal, supabase, localStore, fetchRecords]
+    [canEdit, isCaregiverMode, useLocal, localStore, fetchRecords]
   );
 
   // 설정 업데이트

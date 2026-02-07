@@ -16,6 +16,7 @@ import {
 } from "@/lib/pkuFoodDatabase";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
+import { useCanEdit } from "@/hooks/usePatientContext";
 import { toast } from "@/hooks/useToast";
 import type { MealType, FoodItem, PKUSafetyLevel } from "@/types/nutrition";
 
@@ -59,6 +60,7 @@ export default function FoodsClient() {
 
   const { getExchanges } = useUserSettings();
   const { addMealRecord } = useMealRecords();
+  const canEdit = useCanEdit();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<FoodCategory | "all" | "low-protein">("all");
@@ -322,13 +324,15 @@ export default function FoodsClient() {
                   </div>
 
                   {/* 추가 버튼 */}
-                  <button
-                    onClick={() => handleOpenAddModal(food)}
-                    className="ml-3 flex-shrink-0 p-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors"
-                    title={t("addToMeal")}
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => handleOpenAddModal(food)}
+                      className="ml-3 flex-shrink-0 p-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors"
+                      title={t("addToMeal")}
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
               </Card>
             ))}
@@ -338,7 +342,7 @@ export default function FoodsClient() {
       </main>
 
       {/* 식사에 추가 모달 */}
-      {showAddModal && selectedFood && (
+      {canEdit && showAddModal && selectedFood && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-sm p-5 shadow-xl">
             <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{t("addToMeal")}</h3>

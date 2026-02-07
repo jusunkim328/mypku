@@ -20,7 +20,8 @@ export interface CaregiverLink {
 }
 
 export type SendInviteFn = (
-  email: string
+  email: string,
+  permissions?: string[]
 ) => Promise<{ success: boolean; inviteUrl?: string; error?: string }>;
 
 export type RemoveLinkFn = (
@@ -60,7 +61,7 @@ export function useFamilyShare(): UseFamilyShareReturn {
   const [caregivers, setCaregivers] = useState<CaregiverLink[]>([]);
   const [patients, setPatients] = useState<CaregiverLink[]>([]);
   const [pendingInvites, setPendingInvites] = useState<CaregiverLink[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const supabaseRef = useRef(createClient());
 
   const fetchLinks = useCallback(async () => {
@@ -126,57 +127,38 @@ export function useFamilyShare(): UseFamilyShareReturn {
   useEffect(() => {
     if (isAuthenticated) {
       fetchLinks();
+    } else {
+      setIsLoading(false);
     }
   }, [isAuthenticated, fetchLinks]);
 
-  // Realtime 구독
+  // 페이지 포커스 시 링크 갱신 (탭 전환 후 돌아왔을 때)
+  const lastFetchRef = useRef(0);
   useEffect(() => {
-    if (!user || !isAuthenticated) return;
-
-    const devAuthState = getDevAuthState();
-    if (devAuthState.enabled) return;
-
-    const supabase = supabaseRef.current;
-
-    const channel = supabase
-      .channel(`family-links:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "caregiver_links",
-          filter: `patient_profile_id=eq.${user.id}`,
-        },
-        () => { fetchLinks(); }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "caregiver_links",
-          filter: `caregiver_user_id=eq.${user.id}`,
-        },
-        () => { fetchLinks(); }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+    const throttledFetch = () => {
+      const now = Date.now();
+      if (now - lastFetchRef.current < 2000) return;
+      lastFetchRef.current = now;
+      if (isAuthenticated) fetchLinks();
     };
-  }, [user, isAuthenticated, fetchLinks]);
+    window.addEventListener("focus", throttledFetch);
+    document.addEventListener("visibilitychange", throttledFetch);
+    return () => {
+      window.removeEventListener("focus", throttledFetch);
+      document.removeEventListener("visibilitychange", throttledFetch);
+    };
+  }, [isAuthenticated, fetchLinks]);
 
   // 초대 생성 → inviteUrl 반환
   const sendInvite: SendInviteFn = useCallback(
-    async (email) => {
+    async (email, permissions) => {
       if (!user) return { success: false, error: "notAuthenticated" };
 
       try {
         const response = await fetch("/api/invite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, permissions }),
         });
 
         const result = await response.json();

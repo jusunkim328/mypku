@@ -9,6 +9,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsViewingOwnData, useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import { showPheWarning } from "@/lib/notifications";
 import NutrientRing from "@/components/dashboard/NutrientRing";
 import PheRemainingCard from "@/components/dashboard/PheRemainingCard";
@@ -16,25 +17,32 @@ import DailyGoalCard from "@/components/dashboard/DailyGoalCard";
 import StreakBadge from "@/components/dashboard/StreakBadge";
 import WaterTracker from "@/components/dashboard/WaterTracker";
 import FormulaWidget from "@/components/dashboard/FormulaWidget";
+import PatientSelector from "@/components/caregiver/PatientSelector";
+import PatientBanner from "@/components/caregiver/PatientBanner";
 import Disclaimer from "@/components/common/Disclaimer";
 
 export default function HomeClient() {
   const t = useTranslations("HomePage");
   const tNutrients = useTranslations("Nutrients");
   const router = useRouter();
-  const { dailyGoals, _hasHydrated, getExchanges, getExchangeGoal, quickSetupCompleted, onboardingCompleted } = useUserSettings();
+  const { dailyGoals, _hasHydrated, getExchanges, getExchangeGoal, quickSetupCompleted, onboardingCompleted, authLoading } = useUserSettings();
   const { pheWarnings, permission } = useNotificationStore();
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
+  const isViewingOwnData = useIsViewingOwnData();
+  const canEdit = useCanEdit();
+  const isCaregiverMode = useIsCaregiverMode();
 
   const lastWarningRef = useRef<number>(0);
 
-  // 첫 방문 시 온보딩 페이지로 리다이렉트
+  // 첫 방문 시 온보딩 페이지로 리다이렉트 (보호자 모드에서는 건너뛰기)
   useEffect(() => {
-    if (_hasHydrated && !quickSetupCompleted && !onboardingCompleted) {
+    if (!_hasHydrated) return;
+    if (isAuthenticated && authLoading) return; // profile 로딩 대기
+    if (!quickSetupCompleted && !onboardingCompleted && isViewingOwnData) {
       router.push("/onboarding");
     }
-  }, [_hasHydrated, quickSetupCompleted, onboardingCompleted, router]);
+  }, [_hasHydrated, quickSetupCompleted, onboardingCompleted, isViewingOwnData, isAuthenticated, authLoading, router]);
 
   // Phe 한도 경고 알림 (PKU 전용)
   useEffect(() => {
@@ -89,8 +97,9 @@ export default function HomeClient() {
               </div>
             </div>
 
-            {/* 오른쪽: 프로필/설정 */}
+            {/* 오른쪽: 환자 선택 + 프로필/설정 */}
             <div className="flex items-center gap-2">
+              {isAuthenticated && <PatientSelector />}
               {!authLoading && (
                 isAuthenticated ? (
                   <Link href="/settings">
@@ -118,6 +127,9 @@ export default function HomeClient() {
           </div>
         </div>
       </header>
+
+      {/* 보호자 모드 배너 */}
+      <PatientBanner />
 
       <Block className="space-y-4">
         {/* Phe 잔여량 카드 (PKU 핵심 지표) */}
@@ -184,17 +196,21 @@ export default function HomeClient() {
 
         {/* 식사 기록 버튼 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <Link href="/analyze" className="col-span-2 md:col-span-4">
-            <Button large className="w-full">
-              {t("takePhoto")}
-            </Button>
-          </Link>
-          <Link href="/scan" className="md:col-span-2">
-            <Button large outline className="w-full flex items-center justify-center gap-2">
-              <ScanBarcode className="w-5 h-5" />
-              {t("scanBarcode")}
-            </Button>
-          </Link>
+          {canEdit && (
+            <>
+              <Link href="/analyze" className="col-span-2 md:col-span-4">
+                <Button large className="w-full">
+                  {t("takePhoto")}
+                </Button>
+              </Link>
+              <Link href="/scan" className="md:col-span-2">
+                <Button large outline className="w-full flex items-center justify-center gap-2">
+                  <ScanBarcode className="w-5 h-5" />
+                  {t("scanBarcode")}
+                </Button>
+              </Link>
+            </>
+          )}
           <Link href="/history" className="md:col-span-2">
             <Button large outline className="w-full">
               {t("viewHistory")}

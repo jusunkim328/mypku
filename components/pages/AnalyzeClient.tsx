@@ -9,6 +9,7 @@ import AnalysisResult from "@/components/analyze/AnalysisResult";
 import VoiceInput from "@/components/analyze/VoiceInput";
 import FoodSearchInput from "@/components/analyze/FoodSearchInput";
 import { useMealRecords } from "@/hooks/useMealRecords";
+import { useCanEdit } from "@/hooks/usePatientContext";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useStreakStore } from "@/hooks/useStreakStore";
 import { toast } from "@/hooks/useToast";
@@ -56,6 +57,7 @@ export default function AnalyzeClient() {
   const tMeals = useTranslations("MealTypes");
   const tVoice = useTranslations("VoiceInput");
   const { addMealRecord } = useMealRecords();
+  const canEdit = useCanEdit();
   const { streakMilestones, permission } = useNotificationStore();
   const { currentStreak } = useStreakStore();
 
@@ -388,7 +390,7 @@ export default function AnalyzeClient() {
             </Card>
 
             {/* 저장 버튼 */}
-            <Button large onClick={handleSave} loading={isSaving} className="w-full">
+            <Button large onClick={handleSave} loading={isSaving} disabled={!canEdit} className="w-full">
               {t("saveRecord")}
             </Button>
           </>

@@ -117,13 +117,18 @@
     "importToCloud": "Import JSON file to add records to your cloud account.",
     "importToCloudDesc": "Records from backup file will be added to your cloud. Duplicate records are automatically skipped.",
     "formulaSettings": "Formula Settings",
-    "formulaNotConfigured": "Formula not configured yet. Set up in onboarding.",
+    "formulaNotConfigured": "Formula not configured yet.",
     "formulaDisableConfirm": "Disable formula tracking?",
     "formulaSaved": "Formula settings saved!",
-    "goToOnboarding": "Go to Onboarding",
+    "setupFormula": "Set Up Formula",
     "familySharing": "Family Sharing",
     "familySharingDesc": "Share records with your spouse or caregivers. Everyone invited can view and edit the same data in real-time.",
-    "inviteCaregiver": "Invite Caregiver"
+    "inviteCaregiver": "Invite Caregiver",
+    "patientSettings": "{name}'s Settings",
+    "mySettings": "My Settings",
+    "patientFormulaNotConfigured": "Patient's formula not configured yet.",
+    "patientGoalsSaved": "{name}'s daily goals saved!",
+    "patientFormulaSaved": "{name}'s formula settings saved!"
   },
   "Auth": {
     "login": "Login",
@@ -601,7 +606,7 @@
     "loginToAccept": "Sign in to accept this family sharing invitation.",
     "loginReturnHint": "After signing in, you'll be redirected back here automatically.",
     "invitedAs": "Invited as: {email}",
-    "inviteDescription": "By accepting, you'll be able to view and edit shared PKU records together.",
+    "inviteDescription": "By accepting, you'll be able to access shared PKU records.",
     "acceptInvite": "Accept Invite",
     "accepting": "Accepting invitation...",
     "inviteAccepted": "Invitation Accepted!",
@@ -641,6 +646,20 @@
     "error_alreadyLinked": "You are already linked to this profile.",
     "error_expired": "This invitation has expired. Please ask for a new one.",
     "error_emailMismatch": "This invitation was sent to a different email. Please sign in with the invited email address."
+  },
+  "Caregiver": {
+    "myData": "My Data",
+    "viewingPatient": "Viewing {name}'s data",
+    "backToMyData": "Back to My Data",
+    "viewOnly": "View Only",
+    "canEdit": "Can Edit",
+    "selectPatient": "Switch Patient",
+    "noEditPermission": "You have view-only access",
+    "recordAddedFor": "Record added for {name}",
+    "linkRevoked": "Access to {name}'s data has been revoked",
+    "permEditor": "Editor (View & Edit)",
+    "permViewer": "Viewer (Read Only)",
+    "offlineNotAvailable": "Internet connection required in caregiver mode"
   },
   "PheRemaining": {
     "title": "Daily Phe Budget",

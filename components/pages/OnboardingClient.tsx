@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { Button } from "@/components/ui";
+import { Button, Preloader } from "@/components/ui";
 import { ChevronRight, ChevronLeft, Rocket } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,14 +29,22 @@ interface OnboardingData {
 export default function OnboardingClient() {
   const t = useTranslations("Onboarding");
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const {
+    onboardingCompleted,
     setDailyGoals,
-    setQuickSetupCompleted,
-    setOnboardingCompleted,
+    completeOnboarding,
     setDiagnosisAgeGroup,
     setFormulaSettings,
   } = useUserSettings();
+
+  // 이미 완료된 사용자가 /onboarding 직접 접근 시 홈으로
+  useEffect(() => {
+    if (authLoading) return;
+    if (onboardingCompleted) {
+      router.replace("/");
+    }
+  }, [onboardingCompleted, authLoading, router]);
 
   const totalSteps = isAuthenticated ? 5 : 4;
   const [currentStep, setCurrentStep] = useState(1);
@@ -91,9 +99,8 @@ export default function OnboardingClient() {
         });
       }
 
-      // Mark both as completed (backward compat + new)
-      setQuickSetupCompleted(true);
-      setOnboardingCompleted(true);
+      // Mark both as completed — 단일 DB 호출로 동시 저장
+      await completeOnboarding();
 
       router.push("/");
     } catch (error) {
@@ -107,10 +114,9 @@ export default function OnboardingClient() {
     saveAndComplete();
   };
 
-  const handleSkip = () => {
-    // Apply defaults and mark complete
-    setQuickSetupCompleted(true);
-    setOnboardingCompleted(true);
+  const handleSkip = async () => {
+    // Apply defaults and mark complete — 단일 DB 호출로 동시 저장
+    await completeOnboarding();
     router.push("/");
   };
 
@@ -119,6 +125,15 @@ export default function OnboardingClient() {
   // Step 4 (Confirm) is where we show the "get started" button for guests
   // Step 5 (FamilyInvite) is the last for logged-in users
   const isConfirmStep = currentStep === 4;
+
+  // 로딩 중이거나 이미 완료된 사용자 → 리다이렉트 대기
+  if (authLoading || onboardingCompleted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50/50 to-white dark:from-gray-900 dark:to-gray-950">
+        <Preloader />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 to-white dark:from-gray-900 dark:to-gray-950">
