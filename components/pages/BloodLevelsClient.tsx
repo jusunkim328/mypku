@@ -10,6 +10,7 @@ import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import BloodLevelForm from "@/components/blood/BloodLevelForm";
 import BloodLevelCard from "@/components/blood/BloodLevelCard";
 import BloodLevelChart from "@/components/blood/BloodLevelChart";
+import BloodTestReminderBanner from "@/components/blood/BloodTestReminderBanner";
 
 export default function BloodLevelsClient() {
   const t = useTranslations("BloodLevels");
@@ -100,6 +101,9 @@ export default function BloodLevelsClient() {
       />
 
       <Block className="space-y-4">
+        {/* 혈중 검사 리마인더 배너 */}
+        <BloodTestReminderBanner />
+
         {/* 설정 패널 */}
         {showSettings && (
           <Card className="p-4 space-y-4">
@@ -180,6 +184,30 @@ export default function BloodLevelsClient() {
             <p className="text-xs text-gray-500 dark:text-gray-400">
               {t("targetHint")}
             </p>
+
+            {/* 검사 리마인더 간격 */}
+            <div>
+              <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                {t("reminderInterval")}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {([7, 14, 30, null] as const).map((value) => (
+                  <button
+                    key={String(value)}
+                    onClick={() => handleTempSettingsChange({ reminderIntervalDays: value })}
+                    className={`py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${
+                      tempSettings.reminderIntervalDays === value
+                        ? "bg-primary-500 text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                    }`}
+                  >
+                    {value === null
+                      ? t("intervalNever")
+                      : t(`interval${value}days`)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* 저장/취소 버튼 */}
             <div className="flex gap-2 pt-2">

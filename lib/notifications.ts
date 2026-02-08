@@ -127,6 +127,17 @@ export function showGoalAchievement(): void {
 }
 
 /**
+ * 혈중 Phe 검사 리마인더 알림
+ */
+export function showBloodTestReminder(daysSinceLastTest: number): void {
+  showNotification("Blood Test Reminder", {
+    body: `Your last blood Phe test was ${daysSinceLastTest} days ago. Consider scheduling a test.`,
+    tag: "blood-test-reminder",
+    requireInteraction: false,
+  });
+}
+
+/**
  * 시간 기반 리마인더 스케줄링
  */
 export function scheduleMealReminder(

@@ -519,7 +519,12 @@
     "movingAvgLegend": "7-day average",
     "bloodPheLine": "Blood Phe",
     "dailyPheLine": "Daily Phe Intake",
-    "movingAvgLine": "7-Day Avg"
+    "movingAvgLine": "7-Day Avg",
+    "reminderInterval": "Test Reminder",
+    "interval7days": "7 days",
+    "interval14days": "14 days",
+    "interval30days": "30 days",
+    "intervalNever": "Off"
   },
   "Learn": {
     "title": "PKU Guide",
@@ -740,6 +745,14 @@
     "featureBarcodeOcr": "Photo barcode recognition",
     "loginButton": "Sign in with Google",
     "freeFeatures": "Manual food entry and barcode scanning remain free for all users."
+  },
+  "BloodTestReminder": {
+    "noRecordsTitle": "No blood test results yet",
+    "noRecordsDesc": "Record your first blood Phe test to start tracking.",
+    "goToBloodLevels": "Record a test",
+    "overdueTitle": "Blood test reminder",
+    "overdueDesc": "Last test was {days} days ago. Consider scheduling a blood Phe test.",
+    "addRecord": "Add result"
   },
   "PheRemaining": {
     "title": "Daily Phe Budget",

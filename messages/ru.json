@@ -519,7 +519,12 @@
     "movingAvgLegend": "Среднее за 7 дней",
     "bloodPheLine": "Phe в крови",
     "dailyPheLine": "Суточное потребление Phe",
-    "movingAvgLine": "Среднее за 7 дней"
+    "movingAvgLine": "Среднее за 7 дней",
+    "reminderInterval": "Напоминание об анализе",
+    "interval7days": "7 дней",
+    "interval14days": "14 дней",
+    "interval30days": "30 дней",
+    "intervalNever": "Выкл."
   },
   "Learn": {
     "title": "Гид по ФКУ",
@@ -740,6 +745,14 @@
     "featureBarcodeOcr": "Распознавание штрих-кода по фото",
     "loginButton": "Войти через Google",
     "freeFeatures": "Ручной ввод продуктов и сканирование штрих-кодов доступны всем пользователям бесплатно."
+  },
+  "BloodTestReminder": {
+    "noRecordsTitle": "Результатов анализов пока нет",
+    "noRecordsDesc": "Запишите первый анализ крови на Phe для начала отслеживания.",
+    "goToBloodLevels": "Записать анализ",
+    "overdueTitle": "Напоминание об анализе крови",
+    "overdueDesc": "Последний анализ был {days} дней назад. Запланируйте анализ крови на Phe.",
+    "addRecord": "Добавить результат"
   },
   "PheRemaining": {
     "title": "Суточный бюджет Phe",

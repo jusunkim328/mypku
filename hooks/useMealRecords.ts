@@ -99,13 +99,14 @@ export function useMealRecords(): UseMealRecordsReturn {
   const supabaseRef = useRef(createClient());
 
   // 환자 전환 시 캐시 초기화
-  const prevPatientIdRef = useRef<string | null | undefined>(undefined);
+  // 주의: undefined ?? null 변환 시 StrictMode에서 null !== undefined 비교 오류 발생
+  const prevPatientIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (prevPatientIdRef.current !== undefined && prevPatientIdRef.current !== activePatient?.id) {
       setDbRecords([]);
       setIsLoading(true);
     }
-    prevPatientIdRef.current = activePatient?.id ?? null;
+    prevPatientIdRef.current = activePatient?.id;
   }, [activePatient?.id]);
 
   // Supabase에서 식사 기록 조회

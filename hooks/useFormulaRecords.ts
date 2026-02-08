@@ -69,12 +69,13 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
   const today = getTodayDateStr();
 
   // 환자 전환 시 캐시 초기화
-  const prevPatientIdRef = useRef<string | null | undefined>(undefined);
+  // 주의: undefined ?? null 변환 시 StrictMode에서 null !== undefined 비교 오류 발생
+  const prevPatientIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (prevPatientIdRef.current !== undefined && prevPatientIdRef.current !== activePatient?.id) {
       setDbIntakes([]);
     }
-    prevPatientIdRef.current = activePatient?.id ?? null;
+    prevPatientIdRef.current = activePatient?.id;
   }, [activePatient?.id]);
 
   const isFormulaActive = formulaSettings?.isActive ?? false;

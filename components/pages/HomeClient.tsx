@@ -19,6 +19,7 @@ import WaterTracker from "@/components/dashboard/WaterTracker";
 import FormulaWidget from "@/components/dashboard/FormulaWidget";
 import PatientSelector from "@/components/caregiver/PatientSelector";
 import PatientBanner from "@/components/caregiver/PatientBanner";
+import BloodTestReminderBanner from "@/components/blood/BloodTestReminderBanner";
 import Disclaimer from "@/components/common/Disclaimer";
 
 export default function HomeClient() {
@@ -132,6 +133,9 @@ export default function HomeClient() {
       <PatientBanner />
 
       <Block className="space-y-4">
+        {/* 혈중 검사 리마인더 배너 */}
+        <BloodTestReminderBanner compact />
+
         {/* Phe 잔여량 카드 (PKU 핵심 지표) */}
         <PheRemainingCard
           used={todayNutrition.phenylalanine_mg || 0}

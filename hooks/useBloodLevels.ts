@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { createClient } from "@/lib/supabase/client";
@@ -32,6 +32,7 @@ export interface BloodLevelSettings {
   unit: BloodUnit;
   targetMin: number; // µmol/L
   targetMax: number; // µmol/L
+  reminderIntervalDays: number | null; // null = 끄기, 7 | 14 | 30
 }
 
 // localStorage 스토어 (비로그인용)
@@ -53,6 +54,7 @@ export const useBloodLevelStore = create<BloodLevelStoreState>()(
         unit: "umol",
         targetMin: 120,
         targetMax: 360,
+        reminderIntervalDays: 14,
       },
 
       addRecord: (record) =>
@@ -84,6 +86,9 @@ export const useBloodLevelStore = create<BloodLevelStoreState>()(
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
+        if (state && state.settings.reminderIntervalDays === undefined) {
+          state.setSettings({ reminderIntervalDays: 14 });
+        }
       },
     }
   )
@@ -104,6 +109,9 @@ interface UseBloodLevelsReturn {
   updateSettings: (settings: Partial<BloodLevelSettings>) => void;
   getLatestRecord: () => BloodLevelRecord | null;
   getStatusLabel: (normalizedUmol: number) => "low" | "normal" | "high";
+  daysSinceLastTest: number | null;
+  daysUntilNextTest: number | null;
+  isTestOverdue: boolean;
 }
 
 export function useBloodLevels(): UseBloodLevelsReturn {
@@ -121,13 +129,15 @@ export function useBloodLevels(): UseBloodLevelsReturn {
   const supabaseRef = useRef(createClient());
 
   // 환자 전환 시 캐시 초기화
-  const prevPatientIdRef = useRef<string | null | undefined>(undefined);
+  // 주의: undefined ?? null 변환 시 StrictMode에서 null !== undefined 비교 오류 발생
+  // → 저장값과 비교값을 동일하게 유지 (undefined 그대로 보존)
+  const prevPatientIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (prevPatientIdRef.current !== undefined && prevPatientIdRef.current !== activePatient?.id) {
       setDbRecords([]);
       setIsLoading(true);
     }
-    prevPatientIdRef.current = activePatient?.id ?? null;
+    prevPatientIdRef.current = activePatient?.id;
   }, [activePatient?.id]);
 
   // Supabase에서 기록 조회
@@ -294,6 +304,28 @@ export function useBloodLevels(): UseBloodLevelsReturn {
     [settings.targetMin, settings.targetMax]
   );
 
+  // 리마인더 관련 값 (useMemo로 1회 계산)
+  const daysSinceLastTest = useMemo((): number | null => {
+    const latest = records.length > 0 ? records[0] : null;
+    if (!latest) return null;
+    const diffMs = Date.now() - new Date(latest.collectedAt).getTime();
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  }, [records]);
+
+  const daysUntilNextTest = useMemo((): number | null => {
+    const interval = settings.reminderIntervalDays;
+    if (!interval) return null;
+    if (daysSinceLastTest === null) return null;
+    return Math.max(interval - daysSinceLastTest, 0);
+  }, [settings.reminderIntervalDays, daysSinceLastTest]);
+
+  const isTestOverdue = useMemo((): boolean => {
+    const interval = settings.reminderIntervalDays;
+    if (!interval) return false;
+    if (daysSinceLastTest === null) return false;
+    return daysSinceLastTest >= interval;
+  }, [settings.reminderIntervalDays, daysSinceLastTest]);
+
   return {
     records,
     settings,
@@ -303,5 +335,8 @@ export function useBloodLevels(): UseBloodLevelsReturn {
     updateSettings,
     getLatestRecord,
     getStatusLabel,
+    daysSinceLastTest,
+    daysUntilNextTest,
+    isTestOverdue,
   };
 }

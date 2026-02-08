@@ -519,7 +519,12 @@
     "movingAvgLegend": "7일 평균",
     "bloodPheLine": "혈중 Phe",
     "dailyPheLine": "일일 Phe 섭취량",
-    "movingAvgLine": "7일 평균"
+    "movingAvgLine": "7일 평균",
+    "reminderInterval": "검사 리마인더",
+    "interval7days": "7일",
+    "interval14days": "14일",
+    "interval30days": "30일",
+    "intervalNever": "끄기"
   },
   "Learn": {
     "title": "PKU 가이드",
@@ -740,6 +745,14 @@
     "featureBarcodeOcr": "사진 바코드 인식",
     "loginButton": "Google로 로그인",
     "freeFeatures": "수동 음식 입력과 바코드 스캔은 모든 사용자가 무료로 이용할 수 있습니다."
+  },
+  "BloodTestReminder": {
+    "noRecordsTitle": "아직 혈중 검사 결과가 없습니다",
+    "noRecordsDesc": "첫 번째 혈중 Phe 검사를 기록하고 추적을 시작하세요.",
+    "goToBloodLevels": "검사 기록하기",
+    "overdueTitle": "혈중 검사 리마인더",
+    "overdueDesc": "마지막 검사가 {days}일 전입니다. 혈중 Phe 검사 일정을 확인하세요.",
+    "addRecord": "결과 추가"
   },
   "PheRemaining": {
     "title": "오늘의 Phe 예산",
