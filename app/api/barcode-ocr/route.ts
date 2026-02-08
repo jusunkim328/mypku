@@ -1,7 +1,17 @@
+import { NextResponse } from "next/server";
 import { extractBarcodeFromImage } from "@/lib/gemini";
+import { requireAuth } from "@/lib/apiAuth";
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireAuth();
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const { imageBase64 } = await request.json();
 
     if (!imageBase64) {

@@ -7,6 +7,7 @@ import { Button, Preloader } from "@/components/ui";
 import { ChevronRight, ChevronLeft, Rocket } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBloodLevels, mgDlToUmol } from "@/hooks/useBloodLevels";
 import { PKU_PHE_DEFAULTS, PKU_EXCHANGE } from "@/lib/constants";
 import OnboardingProgress from "@/components/onboarding/OnboardingProgress";
 import StepWelcome from "@/components/onboarding/StepWelcome";
@@ -15,10 +16,13 @@ import StepFormula from "@/components/onboarding/StepFormula";
 import StepConfirm from "@/components/onboarding/StepConfirm";
 import StepFamilyInvite from "@/components/onboarding/StepFamilyInvite";
 
-interface OnboardingData {
+export interface OnboardingData {
   diagnosisAgeGroup: string | null;
   pheAllowance: number;
   exchangeUnit: number;
+  bloodPheTargetMin?: number;
+  bloodPheTargetMax?: number;
+  bloodPheUnit?: "umol/L" | "mg/dL";
   usesFormula: boolean;
   formulaName: string;
   formulaServingAmount: number;
@@ -37,6 +41,7 @@ export default function OnboardingClient() {
     setDiagnosisAgeGroup,
     setFormulaSettings,
   } = useUserSettings();
+  const { updateSettings: updateBloodSettings } = useBloodLevels();
 
   // 이미 완료된 사용자가 /onboarding 직접 접근 시 홈으로
   useEffect(() => {
@@ -87,6 +92,22 @@ export default function OnboardingClient() {
 
       // Save diagnosis age group
       setDiagnosisAgeGroup(data.diagnosisAgeGroup);
+
+      // Save blood Phe target if extracted via OCR
+      if (data.bloodPheTargetMin || data.bloodPheTargetMax) {
+        const isMgDl = data.bloodPheUnit === "mg/dL";
+        const bloodUpdates: { targetMin?: number; targetMax?: number; unit?: "umol" | "mg_dl" } = {};
+        if (data.bloodPheTargetMin) {
+          bloodUpdates.targetMin = isMgDl ? mgDlToUmol(data.bloodPheTargetMin) : data.bloodPheTargetMin;
+        }
+        if (data.bloodPheTargetMax) {
+          bloodUpdates.targetMax = isMgDl ? mgDlToUmol(data.bloodPheTargetMax) : data.bloodPheTargetMax;
+        }
+        if (data.bloodPheUnit) {
+          bloodUpdates.unit = isMgDl ? "mg_dl" : "umol";
+        }
+        updateBloodSettings(bloodUpdates);
+      }
 
       // Save formula settings if active
       if (data.usesFormula) {

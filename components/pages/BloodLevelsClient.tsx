@@ -9,6 +9,7 @@ import { useBloodLevels, useBloodLevelStore, mgDlToUmol, umolToMgDl, type BloodU
 import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import BloodLevelForm from "@/components/blood/BloodLevelForm";
 import BloodLevelCard from "@/components/blood/BloodLevelCard";
+import BloodLevelChart from "@/components/blood/BloodLevelChart";
 
 export default function BloodLevelsClient() {
   const t = useTranslations("BloodLevels");
@@ -202,6 +203,15 @@ export default function BloodLevelsClient() {
               </button>
             </div>
           </Card>
+        )}
+
+        {/* 트렌드 차트 */}
+        {records.length > 0 && (
+          <BloodLevelChart
+            records={records}
+            settings={settings}
+            displayUnit={settings.unit}
+          />
         )}
 
         {/* 새 기록 추가 (view-only 보호자에겐 숨김) */}

@@ -2,17 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { CheckCircle2 } from "lucide-react";
-
-interface OnboardingData {
-  diagnosisAgeGroup: string | null;
-  pheAllowance: number;
-  exchangeUnit: number;
-  usesFormula: boolean;
-  formulaName: string;
-  formulaServingAmount: number;
-  formulaServingUnit: string;
-  formulaTimeSlots: string[];
-}
+import type { OnboardingData } from "@/components/pages/OnboardingClient";
 
 interface StepConfirmProps {
   data: OnboardingData;
@@ -71,6 +61,12 @@ export default function StepConfirm({ data }: StepConfirmProps) {
           value={`${calculateExchanges(data.pheAllowance)} ${tNutrients("exchanges")}`}
           highlight
         />
+        {(data.bloodPheTargetMin || data.bloodPheTargetMax) && (
+          <SummaryRow
+            label={t("summaryBloodTarget")}
+            value={`${data.bloodPheTargetMin ?? "?"} – ${data.bloodPheTargetMax ?? "?"} ${data.bloodPheUnit ?? ""}`}
+          />
+        )}
         <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
           <SummaryRow
             label={t("summaryFormula")}

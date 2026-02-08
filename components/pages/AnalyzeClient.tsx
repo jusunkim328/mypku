@@ -9,6 +9,8 @@ import AnalysisResult from "@/components/analyze/AnalysisResult";
 import VoiceInput from "@/components/analyze/VoiceInput";
 import FoodSearchInput from "@/components/analyze/FoodSearchInput";
 import { useMealRecords } from "@/hooks/useMealRecords";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginPromptCard from "@/components/common/LoginPromptCard";
 import { useCanEdit } from "@/hooks/usePatientContext";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useStreakStore } from "@/hooks/useStreakStore";
@@ -57,6 +59,7 @@ export default function AnalyzeClient() {
   const tMeals = useTranslations("MealTypes");
   const tVoice = useTranslations("VoiceInput");
   const { addMealRecord } = useMealRecords();
+  const { isAuthenticated } = useAuth();
   const canEdit = useCanEdit();
   const { streakMilestones, permission } = useNotificationStore();
   const { currentStreak } = useStreakStore();
@@ -96,6 +99,11 @@ export default function AnalyzeClient() {
         3,
         1000
       );
+
+      if (response.status === 401) {
+        setAnalysisState("idle");
+        return;
+      }
 
       const data = await response.json();
 
@@ -146,6 +154,11 @@ export default function AnalyzeClient() {
         3,
         1000
       );
+
+      if (response.status === 401) {
+        setAnalysisState("idle");
+        return;
+      }
 
       const data = await response.json();
 
@@ -292,26 +305,34 @@ export default function AnalyzeClient() {
 
         {/* 이미지 업로더 */}
         {inputMode === "image" && (
-          <ImageUploader
-            imageBase64={imageBase64}
-            onImageSelect={handleImageSelect}
-          />
+          isAuthenticated ? (
+            <ImageUploader
+              imageBase64={imageBase64}
+              onImageSelect={handleImageSelect}
+            />
+          ) : (
+            <LoginPromptCard features={["featureAnalyze"]} />
+          )
         )}
 
         {/* 음성 입력 */}
         {inputMode === "voice" && analysisState !== "success" && (
-          <Card className="p-6">
-            <VoiceInput
-              onTranscript={handleVoiceTranscript}
-              onError={(err) => toast.error(err)}
-              disabled={analysisState === "loading"}
-            />
-            {voiceText && (
-              <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-                <p className="text-sm text-indigo-800 dark:text-indigo-300">&ldquo;{voiceText}&rdquo;</p>
-              </div>
-            )}
-          </Card>
+          isAuthenticated ? (
+            <Card className="p-6">
+              <VoiceInput
+                onTranscript={handleVoiceTranscript}
+                onError={(err) => toast.error(err)}
+                disabled={analysisState === "loading"}
+              />
+              {voiceText && (
+                <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                  <p className="text-sm text-indigo-800 dark:text-indigo-300">&ldquo;{voiceText}&rdquo;</p>
+                </div>
+              )}
+            </Card>
+          ) : (
+            <LoginPromptCard features={["featureVoice"]} />
+          )
         )}
 
         {/* 수동 입력 */}
@@ -342,7 +363,7 @@ export default function AnalyzeClient() {
         )}
 
         {/* 분석 버튼 (이미지 모드) */}
-        {inputMode === "image" && imageBase64 && analysisState !== "success" && (
+        {isAuthenticated && inputMode === "image" && imageBase64 && analysisState !== "success" && (
           <Button
             large
             onClick={handleAnalyze}

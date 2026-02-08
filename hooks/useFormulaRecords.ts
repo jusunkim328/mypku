@@ -15,6 +15,12 @@ interface FormulaIntake {
   completedAt: string | null;
 }
 
+interface FormulaDaySummary {
+  date: string;
+  completedSlots: number;
+  totalSlots: number;
+}
+
 interface UseFormulaRecordsReturn {
   // 포뮬러 활성 여부
   isFormulaActive: boolean;
@@ -34,6 +40,9 @@ interface UseFormulaRecordsReturn {
 
   // 오늘 완료 수
   completedCount: number;
+
+  // 날짜 범위 포뮬러 요약 조회
+  fetchFormulaSummary: (dates: string[]) => Promise<FormulaDaySummary[]>;
 
   // 로딩 상태
   isLoading: boolean;
@@ -84,8 +93,7 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
 
     setIsLoading(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabaseRef.current as any)
+      const { data, error } = await supabaseRef.current
         .from("formula_intakes")
         .select("*")
         .eq("user_id", queryUserId)
@@ -93,11 +101,10 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
 
       if (error) throw error;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const intakes: FormulaIntake[] = ((data as any[]) || []).map((row: any) => ({
+      const intakes: FormulaIntake[] = (data || []).map((row) => ({
         date: row.date,
         slot: row.time_slot,
-        completed: row.completed,
+        completed: row.completed ?? false,
         completedAt: row.completed_at,
       }));
 
@@ -162,8 +169,7 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
       const newCompleted = !currentlyCompleted;
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabaseRef.current as any)
+        const { error } = await supabaseRef.current
           .from("formula_intakes")
           .upsert(
             {
@@ -214,6 +220,64 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
     [isAuthenticated, user, queryUserId, canEdit, isCaregiverMode, localStore, today, isSlotCompleted]
   );
 
+  // 날짜 범위 포뮬러 요약 조회 (DB 또는 localStorage)
+  const fetchFormulaSummary = useCallback(
+    async (dates: string[]): Promise<FormulaDaySummary[]> => {
+      if (!isFormulaActive || dates.length === 0) {
+        return dates.map((date) => ({ date, completedSlots: 0, totalSlots: timeSlots.length }));
+      }
+
+      const devAuthState = getDevAuthState();
+      const useLocal = !isAuthenticated || devAuthState.enabled;
+
+      if (useLocal && !isCaregiverMode) {
+        // localStorage에서 날짜별 조회
+        return dates.map((date) => ({
+          date,
+          completedSlots: localStore.getCompletedCount(date, timeSlots),
+          totalSlots: timeSlots.length,
+        }));
+      }
+
+      // DB에서 날짜 범위 조회
+      if (!queryUserId) {
+        return dates.map((date) => ({ date, completedSlots: 0, totalSlots: timeSlots.length }));
+      }
+
+      try {
+        const sortedDates = [...dates].sort();
+        const startDate = sortedDates[0];
+        const endDate = sortedDates[sortedDates.length - 1];
+
+        const { data, error } = await supabaseRef.current
+          .from("formula_intakes")
+          .select("date, time_slot, completed")
+          .eq("user_id", queryUserId)
+          .gte("date", startDate)
+          .lte("date", endDate)
+          .eq("completed", true);
+
+        if (error) throw error;
+
+        // 날짜별 완료 슬롯 수 집계
+        const countByDate: Record<string, number> = {};
+        for (const row of data || []) {
+          countByDate[row.date] = (countByDate[row.date] || 0) + 1;
+        }
+
+        return dates.map((date) => ({
+          date,
+          completedSlots: countByDate[date] ?? 0,
+          totalSlots: timeSlots.length,
+        }));
+      } catch (error) {
+        console.error("[useFormulaRecords] 범위 조회 실패:", error);
+        return dates.map((date) => ({ date, completedSlots: 0, totalSlots: timeSlots.length }));
+      }
+    },
+    [isFormulaActive, isAuthenticated, isCaregiverMode, queryUserId, localStore, timeSlots]
+  );
+
   return {
     isFormulaActive,
     timeSlots,
@@ -222,6 +286,7 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
     toggleSlot,
     isSlotCompleted,
     completedCount,
+    fetchFormulaSummary,
     isLoading,
   };
 }

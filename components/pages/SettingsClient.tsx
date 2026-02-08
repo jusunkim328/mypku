@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useTheme } from "next-themes";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
-import { Sun, Monitor, Moon, User, Download, Upload, Database, Users } from "lucide-react";
+import { Sun, Monitor, Moon, User, Download, Upload, Database, Users, FileText } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsCaregiverMode, useCanEdit, usePatientContext } from "@/hooks/usePatientContext";
@@ -21,6 +21,7 @@ import FamilyInvite from "@/components/family/FamilyInvite";
 import FamilyMembers from "@/components/family/FamilyMembers";
 import PatientSelector from "@/components/caregiver/PatientSelector";
 import PatientBanner from "@/components/caregiver/PatientBanner";
+import ExportButton from "@/components/export/ExportButton";
 import { useFamilyShare } from "@/hooks/useFamilyShare";
 
 const languages: { code: Locale; name: string }[] = [
@@ -537,6 +538,20 @@ export default function SettingsClient() {
                 </div>
               </Card>
             )}
+
+            {/* 의료 보고서 내보내기 */}
+            <Card className="p-4 md:p-5 lg:p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {t("medicalReport")}
+                </h3>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {t("medicalReportDesc")}
+              </p>
+              <ExportButton />
+            </Card>
 
             {/* 데이터 관리 */}
             <DataManagement isAuthenticated={isAuthenticated} userId={user?.id} />

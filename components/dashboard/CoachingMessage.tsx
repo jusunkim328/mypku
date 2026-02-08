@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Card, Button, Preloader } from "@/components/ui";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginPromptCard from "@/components/common/LoginPromptCard";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useMealRecords } from "@/hooks/useMealRecords";
 
@@ -48,6 +50,7 @@ function setCachedMessage(message: string, locale: string): void {
 export default function CoachingMessage() {
   const t = useTranslations("Coaching");
   const locale = useLocale();
+  const { isAuthenticated } = useAuth();
   const { dailyGoals } = useUserSettings();
   const { getWeeklyData, isLoading: recordsLoading } = useMealRecords();
   const [message, setMessage] = useState<string>("");
@@ -73,6 +76,8 @@ export default function CoachingMessage() {
   }, [locale, getWeeklyData, recordsLoading]);
 
   const fetchCoaching = async () => {
+    if (!isAuthenticated) return;
+
     setIsLoading(true);
     setError("");
 
@@ -86,6 +91,11 @@ export default function CoachingMessage() {
           locale,
         }),
       });
+
+      if (response.status === 401) {
+        setIsLoading(false);
+        return;
+      }
 
       const data = await response.json();
 
@@ -108,6 +118,23 @@ export default function CoachingMessage() {
       <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40">
         <div className="flex items-center justify-center py-4">
           <Preloader className="!w-6 !h-6" />
+        </div>
+      </Card>
+    );
+  }
+
+  // 비인증 시 LoginPromptCard 표시 (데이터 유무와 무관하게 로그인 유도 우선)
+  if (!isAuthenticated) {
+    return (
+      <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">🤖</div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-1">
+              {t("title")}
+            </h3>
+            <LoginPromptCard compact features={["featureCoaching"]} />
+          </div>
         </div>
       </Card>
     );

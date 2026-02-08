@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateCoaching } from "@/lib/gemini";
+import { requireAuth } from "@/lib/apiAuth";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const { weeklyData, dailyGoals, locale } = await request.json();
 
     if (!process.env.GEMINI_API_KEY) {

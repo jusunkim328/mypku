@@ -10,7 +10,7 @@ PKU(페닐케톤뇨증) 환자를 위한 AI 기반 맞춤형 식단 관리 PWA.
 
 - **대상**: PKU 환자 (신생아~성인), 보호자
 - **핵심 기능**: Gemini Vision 음식 분석 + 페닐알라닌(Phe) 추적 + Exchange 단위 관리
-- **서비스 언어**: 영어 (기본), 한국어
+- **서비스 언어**: 영어 (기본), 한국어, 러시아어
 - **개발 커뮤니케이션**: 한국어
 
 ---
@@ -21,6 +21,9 @@ PKU(페닐케톤뇨증) 환자를 위한 AI 기반 맞춤형 식단 관리 PWA.
 bun dev          # 개발 서버 (localhost:3000)
 bun build        # 프로덕션 빌드
 bun lint         # ESLint 검사
+bun test         # Vitest watch 모드
+bun test:run     # Vitest 단회 실행
+bun test:coverage # 커버리지 리포트
 ```
 
 ### Docker 환경
@@ -39,8 +42,9 @@ docker-compose down                    # 컨테이너 종료
 Frontend: Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS
 Backend: Next.js API Routes + Supabase (Auth/DB/Storage) + Gemini API
 상태관리: Zustand 5.x (localStorage persist)
-다국어: next-intl (en, ko)
+다국어: next-intl (en, ko, ru)
 PWA: Serwist (Service Worker)
+테스트: Vitest + Testing Library
 배포: Vercel
 ```
 
@@ -51,9 +55,9 @@ PWA: Serwist (Service Worker)
 ### 데이터 흐름
 
 ```
-[사진/음성/바코드] → API Route → Gemini/외부 API → FoodItem[] → Zustand Store
-                                                         ↓
-                              비로그인: localStorage ← useMealRecords → 로그인: Supabase DB
+[사진/음성/바코드/진단서] → API Route → Gemini/외부 API → FoodItem[] → Zustand Store
+                                                               ↓
+                                비로그인: localStorage ← useMealRecords → 로그인: Supabase DB
 ```
 
 ### 인증 흐름
@@ -66,16 +70,33 @@ PWA: Serwist (Service Worker)
 
 ### 다국어 라우팅
 
-- `/` → 영어 (기본)
+- `/` → 영어 (기본, `localePrefix: "as-needed"`)
 - `/ko` → 한국어
+- `/ru` → 러시아어
 - `Link`, `useRouter`, `usePathname`은 반드시 `@/i18n/navigation`에서 import
 - 번역 텍스트는 `useTranslations()` 훅 사용
+- 번역 파일: `messages/en.json`, `messages/ko.json`, `messages/ru.json`
 
 ### 클라이언트/서버 분리
 
 - 페이지 파일 (`app/[locale]/*/page.tsx`): 서버 컴포넌트, 메타데이터 정의
 - 클라이언트 로직: `components/pages/*Client.tsx`에 `"use client"` 디렉티브와 함께 작성
 - Gemini API 호출: 반드시 `app/api/` 라우트를 통해서만 (GEMINI_API_KEY 서버 전용)
+
+### 보호자 모드 (Caregiver)
+
+보호자가 연결된 환자의 데이터를 조회할 수 있는 기능.
+
+```
+보호자: sendInvite(이메일) → caregiver_links (pending) → 초대 토큰
+환자: /invite/[token] → acceptInvite() → caregiver_links (accepted)
+보호자: PatientSelector → setActivePatient() → 환자 데이터 조회 (RLS)
+```
+
+- `hooks/usePatientContext.ts`: 현재 보고 있는 환자 선택 (Zustand, 메모리 전용)
+- `hooks/useFamilyShare.ts`: 가족 공유 초대/수락/취소
+- `useCanEdit()` / `useTargetUserId()`: 편집 권한 및 대상 사용자 결정
+- `caregiver_links` 테이블의 RLS 정책으로 데이터 접근 제한
 
 ---
 
@@ -86,9 +107,19 @@ PWA: Serwist (Service Worker)
 - **서버**: `lib/supabase/server.ts` (async, cookies() 사용)
 - **미들웨어**: `lib/supabase/middleware.ts` (세션 갱신)
 
+### API 라우트 인증 패턴
+인증 필요 API에서 `lib/apiAuth.ts`의 `requireAuth()` 사용:
+```typescript
+const auth = await requireAuth();
+if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+const { supabase, user } = auth;
+```
+
 ### 상태 관리 (Zustand)
-- `hooks/useNutritionStore.ts`: 영양 데이터, 일일 목표, 퀵셋업 상태
+- `hooks/useNutritionStore.ts`: 영양 데이터, 일일 목표
 - `hooks/useMealRecords.ts`: Supabase/localStorage 통합 식사 기록
+- `hooks/useFormulaRecords.ts`: 포뮬러 섭취 추적
+- `hooks/useBloodLevels.ts`: 혈중 검사 기록
 - `hooks/useStreakStore.ts`: 연속 기록 추적
 - `hooks/useBadgeStore.ts`: 뱃지/업적
 
@@ -96,10 +127,12 @@ PWA: Serwist (Service Worker)
 - `hooks/useUserSettings.ts`: 로그인/비로그인 상태에 따른 데이터 소스 통합
 - `contexts/AuthContext.tsx`: profile, dailyGoals 상태 관리 + Supabase 동기화
 - 로그인 시 Supabase 우선, 비로그인 시 localStorage 사용
+- 로그인 전환 시 `migrateLocalDataIfNeeded()`로 로컬 데이터 자동 마이그레이션
 - DB nullable 필드는 기본값 적용 (`dbGoals.calories ?? 2000`)
 
 ### PKU 전용 기능
-- `components/quicksetup/QuickSetup.tsx`: 첫 방문 시 Phe 허용량/Exchange 단위 설정
+- `components/onboarding/`: 온보딩 플로우에서 Phe 허용량/Exchange 단위 설정
+- `components/onboarding/DiagnosisOCR.tsx`: 진단서 사진으로 설정값 자동 추출
 - `components/dashboard/PheRemainingCard.tsx`: 일일 Phe 잔여량 표시 (녹→노→빨 프로그레스)
 - Exchange 계산: 1 Exchange = 50mg Phe (기본값, 커스터마이즈 가능)
 - PKU Safety Level: `safe` (≤20mg), `caution` (≤100mg), `avoid` (>100mg)
@@ -122,15 +155,19 @@ PWA: Serwist (Service Worker)
 ## DB 스키마 (Supabase)
 
 ```
-profiles          # 사용자 프로필 (auth.users 연동)
-health_conditions # PKU 건강 상태 (별도 동의 필요)
-daily_goals       # 일일 영양 목표
-meal_records      # 식사 기록 (total_nutrition: JSONB)
-food_items        # 개별 음식 아이템 (nutrition: JSONB)
-pku_foods         # PKU 식품 DB (외부 API 캐싱)
+profiles              # 사용자 프로필 (auth.users 연동)
+health_conditions     # PKU 건강 상태 (별도 동의 필요)
+daily_goals           # 일일 영양 목표
+meal_records          # 식사 기록 (total_nutrition: JSONB)
+food_items            # 개별 음식 아이템 (nutrition: JSONB)
+pku_foods             # PKU 식품 DB (외부 API 캐싱)
+blood_level_records   # 혈중 Phe 검사 기록
+formula_settings      # 포뮬러(특수분유) 설정
+caregiver_links       # 보호자-환자 관계 (초대/수락/거부)
 ```
 
 - 모든 테이블에 RLS 정책 적용 (auth.uid() 기반)
+- `caregiver_links`는 보호자/환자 양쪽 RLS 정책이 별도 적용
 - Storage 버킷: `meal-images` (Public)
 
 ---

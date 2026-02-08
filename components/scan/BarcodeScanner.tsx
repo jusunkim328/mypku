@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Camera, AlertCircle, Loader2, ImageIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginPromptCard from "@/components/common/LoginPromptCard";
 
 // 바코드 체크섬 검증
 function validateBarcode(barcode: string): boolean {
@@ -129,6 +131,7 @@ interface BarcodeScannerProps {
 
 export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps) {
   const t = useTranslations("BarcodeScanner");
+  const { isAuthenticated } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -469,6 +472,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!isAuthenticated) return;
 
     // 스캔 중이면 중지
     if (isScanning) stopScanning();
@@ -736,46 +740,55 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
 
       {/* 사진으로 바코드 인식 */}
       <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 lg:max-w-2xl lg:mx-auto">
-        <div className="flex items-center justify-between">
+        {isAuthenticated ? (
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t("photoUploadTitle")}
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {t("photoUploadHint")}
+              </p>
+            </div>
+            <label className="cursor-pointer">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={isUploading}
+              />
+              <span
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isUploading
+                    ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-wait"
+                    : "bg-indigo-600 text-white hover:bg-indigo-700"
+                }`}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t("photoUploading")}
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-4 h-4" />
+                    {t("photoUploadButton")}
+                  </>
+                )}
+              </span>
+            </label>
+          </div>
+        ) : (
           <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               {t("photoUploadTitle")}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              {t("photoUploadHint")}
-            </p>
+            <LoginPromptCard compact features={["featureBarcodeOcr"]} />
           </div>
-          <label className="cursor-pointer">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleImageUpload}
-              className="hidden"
-              disabled={isUploading}
-            />
-            <span
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                isUploading
-                  ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-wait"
-                  : "bg-indigo-600 text-white hover:bg-indigo-700"
-              }`}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t("photoUploading")}
-                </>
-              ) : (
-                <>
-                  <ImageIcon className="w-4 h-4" />
-                  {t("photoUploadButton")}
-                </>
-              )}
-            </span>
-          </label>
-        </div>
+        )}
       </div>
 
       {/* 수동 바코드 입력 */}
