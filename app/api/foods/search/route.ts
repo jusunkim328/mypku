@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { searchExternalFoods } from "@/lib/foodDataApis";
+import { sanitizeFilterValue } from "@/lib/sanitize";
 
 // 서버용 Supabase 클라이언트
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -154,10 +155,11 @@ export async function GET(request: NextRequest) {
     }
 
     // 1. DB 검색 (limit 여유있게 가져와서 정렬 후 자르기)
+    const safeQuery = sanitizeFilterValue(query.trim());
     let queryBuilder = supabase
       .from("pku_foods")
       .select("*")
-      .or(`name.ilike.%${query}%,name_ko.ilike.%${query}%,name_de.ilike.%${query}%`)
+      .or(`name.ilike.%${safeQuery}%,name_ko.ilike.%${safeQuery}%,name_de.ilike.%${safeQuery}%`)
       .limit(limit * 3); // 정렬 후 자르기 위해 여유있게
 
     if (category) {
@@ -173,7 +175,7 @@ export async function GET(request: NextRequest) {
     if (dbError) {
       console.error("DB 검색 에러:", dbError);
       return NextResponse.json(
-        { error: "데이터베이스 검색 오류", details: dbError.message },
+        { error: "데이터베이스 검색 오류" },
         { status: 500 }
       );
     }
@@ -233,6 +235,7 @@ export async function GET(request: NextRequest) {
 
         supabase
           .from("pku_foods")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .upsert(insertData as any, { onConflict: "name,source" })
           .then(({ error }) => {
             if (error) {
@@ -267,10 +270,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("식품 검색 API 에러:", error);
     return NextResponse.json(
-      {
-        error: "서버 오류",
-        details: error instanceof Error ? error.message : "알 수 없는 오류",
-      },
+      { error: "서버 오류" },
       { status: 500 }
     );
   }

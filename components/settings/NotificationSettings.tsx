@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card, Toggle, Button } from "@/components/ui";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
-import { getNotificationPermission } from "@/lib/notifications";
 import { toast } from "@/hooks/useToast";
 
 export default function NotificationSettings() {
@@ -44,7 +43,7 @@ export default function NotificationSettings() {
       } else if (result === "denied") {
         toast.error(t("permissionDenied"));
       }
-    } catch (error) {
+    } catch {
       toast.error(t("permissionError"));
     }
   };

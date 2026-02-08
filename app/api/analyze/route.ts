@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeFood } from "@/lib/gemini";
 import { requireAuth } from "@/lib/apiAuth";
+import { sanitizeFilterValue } from "@/lib/sanitize";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AnalysisResponse, FoodItem, NutritionData } from "@/types/nutrition";
 
@@ -19,11 +20,13 @@ async function searchPKUFoodByName(
   fat_g: number | null;
 } | null> {
   try {
+    const safeName = sanitizeFilterValue(name);
+
     // 정확한 이름 매칭 먼저 시도
     const { data: exactMatch } = await supabase
       .from("pku_foods")
       .select("phenylalanine_mg, protein_g, calories, carbs_g, fat_g")
-      .or(`name.ilike.${name},name_ko.ilike.${name}`)
+      .or(`name.ilike.${safeName},name_ko.ilike.${safeName}`)
       .limit(1)
       .single();
 
@@ -35,7 +38,7 @@ async function searchPKUFoodByName(
     const { data: partialMatch } = await supabase
       .from("pku_foods")
       .select("phenylalanine_mg, protein_g, calories, carbs_g, fat_g")
-      .or(`name.ilike.%${name}%,name_ko.ilike.%${name}%`)
+      .or(`name.ilike.%${safeName}%,name_ko.ilike.%${safeName}%`)
       .order("phenylalanine_mg", { ascending: true })
       .limit(1)
       .single();
@@ -116,6 +119,14 @@ export async function POST(
       );
     }
 
+    // Base64 페이로드 크기 제한 (10MB ≈ 13.3M chars)
+    if (typeof imageBase64 !== "string" || imageBase64.length > 13_300_000) {
+      return NextResponse.json(
+        { success: false, error: "이미지 크기가 너무 큽니다." },
+        { status: 413 }
+      );
+    }
+
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
         { success: false, error: "API 키가 설정되지 않았습니다." },
@@ -139,10 +150,7 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "분석 중 오류가 발생했습니다.",
+        error: "분석 중 오류가 발생했습니다.",
       },
       { status: 500 }
     );

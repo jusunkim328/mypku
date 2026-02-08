@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Baby, User, GraduationCap, Briefcase, Heart } from "lucide-react";
+import { Baby, GraduationCap, Briefcase, Heart } from "lucide-react";
 
 type AgeGroup = "newborn" | "child" | "teen" | "adult";
 

@@ -14,6 +14,16 @@ export async function POST(request: NextRequest) {
 
     const { weeklyData, dailyGoals, locale } = await request.json();
 
+    // 입력 크기 검증 (Gemini API 토큰 비용 방지)
+    const weeklyStr = JSON.stringify(weeklyData ?? null);
+    const goalsStr = JSON.stringify(dailyGoals ?? null);
+    if (weeklyStr.length > 50_000 || goalsStr.length > 5_000) {
+      return NextResponse.json(
+        { success: false, error: "Input data too large" },
+        { status: 413 }
+      );
+    }
+
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
         { success: false, error: "API key is not configured." },
@@ -37,7 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "코칭 메시지 생성 중 오류가 발생했습니다.",
+        error: "코칭 메시지 생성 중 오류가 발생했습니다.",
       },
       { status: 500 }
     );

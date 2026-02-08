@@ -9,7 +9,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { useAuth } from "@/contexts/AuthContext";
-import { useIsViewingOwnData, useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
+import { useIsViewingOwnData, useCanEdit } from "@/hooks/usePatientContext";
 import { showPheWarning } from "@/lib/notifications";
 import NutrientRing from "@/components/dashboard/NutrientRing";
 import PheRemainingCard from "@/components/dashboard/PheRemainingCard";
@@ -31,7 +31,6 @@ export default function HomeClient() {
   const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
   const isViewingOwnData = useIsViewingOwnData();
   const canEdit = useCanEdit();
-  const isCaregiverMode = useIsCaregiverMode();
 
   const lastWarningRef = useRef<number>(0);
 
@@ -104,6 +103,7 @@ export default function HomeClient() {
                 isAuthenticated ? (
                   <Link href="/settings">
                     {user?.user_metadata?.avatar_url ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={user.user_metadata.avatar_url}
                         alt="Settings"

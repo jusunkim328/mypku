@@ -78,6 +78,7 @@ export default function ImageUploader({
       {imageBase64 ? (
         <div className="space-y-3 md:space-y-4">
           <div className="relative aspect-video md:aspect-[16/10] rounded-lg md:rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageBase64}
               alt={tImg("selectedImage")}

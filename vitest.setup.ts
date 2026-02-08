@@ -1,0 +1,37 @@
+import "@testing-library/jest-dom";
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      store[key] = String(value);
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+    get length() {
+      return Object.keys(store).length;
+    },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+  };
+})();
+
+Object.defineProperty(globalThis, "localStorage", {
+  value: localStorageMock,
+});
+
+// Mock crypto.randomUUID
+if (!globalThis.crypto?.randomUUID) {
+  let counter = 0;
+  Object.defineProperty(globalThis, "crypto", {
+    value: {
+      ...globalThis.crypto,
+      randomUUID: () => `test-uuid-${++counter}`,
+    },
+  });
+}

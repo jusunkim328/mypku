@@ -189,6 +189,7 @@ export default function ScanClient() {
                 {/* 제품 정보 */}
                 <div className="flex gap-4">
                   {scanResult.product.image_url && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={scanResult.product.image_url}
                       alt={scanResult.product.name}

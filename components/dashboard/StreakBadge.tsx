@@ -22,7 +22,7 @@ export default function StreakBadge({ compact = false }: StreakBadgeProps) {
       );
       calculateStreak(logDates);
     }
-  }, [mealRecords, _hasHydrated]);
+  }, [mealRecords, _hasHydrated, calculateStreak]);
 
   const status = getStreakStatus();
 

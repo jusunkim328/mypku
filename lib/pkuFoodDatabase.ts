@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { searchExternalFoods, fetchKoreanFoods, fetchUSDAFoods } from "./foodDataApis";
+import { searchExternalFoods } from "./foodDataApis";
 
 export interface PKUFood {
   id: string;
@@ -219,6 +219,7 @@ async function cacheExternalFoods(
 
   const { error } = await supabase
     .from("pku_foods")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .upsert(insertData as any, { onConflict: "name,source" });
 
   if (error) {
@@ -324,6 +325,7 @@ export async function addPKUFood(food: Omit<PKUFood, "id">): Promise<PKUFood | n
 
   const { data, error } = await supabase
     .from("pku_foods")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .insert([food] as any)
     .select()
     .single();

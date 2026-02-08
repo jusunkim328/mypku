@@ -18,7 +18,7 @@ export default function NutrientRing({
   current,
   goal,
   unit,
-  color,
+  color: _color,
   warning = false,
   exchangeValue,
   exchangeGoal,

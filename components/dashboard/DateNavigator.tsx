@@ -10,7 +10,6 @@ interface DateNavigatorProps {
 }
 
 export default function DateNavigator({ selectedDate, onDateChange }: DateNavigatorProps) {
-  const t = useTranslations("DateNavigator");
   const tCommon = useTranslations("Common");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);

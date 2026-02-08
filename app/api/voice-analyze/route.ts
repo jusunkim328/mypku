@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Analysis failed",
+        error: "Analysis failed",
       },
       { status: 500 }
     );

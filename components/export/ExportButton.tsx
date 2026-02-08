@@ -30,7 +30,7 @@ export default function ExportButton() {
 
   const { user } = useAuth();
   const { mealRecords } = useMealRecords();
-  const { isFormulaActive, fetchFormulaSummary } = useFormulaRecords();
+  const { fetchFormulaSummary } = useFormulaRecords();
   const { records: bloodRecords } = useBloodLevels();
   const { dailyGoals } = useUserSettings();
   const targetUserId = useTargetUserId(user?.id);
@@ -137,7 +137,7 @@ export default function ExportButton() {
       dailyGoals,
       phePerExchange: PHE_PER_EXCHANGE,
     };
-  }, [mealRecords, isFormulaActive, fetchFormulaSummary, bloodRecords, dailyGoals]);
+  }, [mealRecords, fetchFormulaSummary, bloodRecords, dailyGoals]);
 
   const handleExport = useCallback(async (days: ExportPeriod) => {
     if (isExporting) return;

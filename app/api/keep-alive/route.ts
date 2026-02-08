@@ -29,7 +29,7 @@ export async function GET() {
     const timestamp = new Date().toISOString();
 
     // 1. Database activity: Simple query
-    const { data: profilesCount, error: dbError } = await supabase
+    const { error: dbError } = await supabase
       .from('profiles')
       .select('count')
       .limit(1);
@@ -39,14 +39,14 @@ export async function GET() {
     }
 
     // 2. Auth activity: Check session
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    const { error: authError } = await supabase.auth.getSession();
 
     if (authError) {
       console.error('Auth check error:', authError);
     }
 
     // 3. Storage activity: List buckets (lightweight operation)
-    const { data: buckets, error: storageError } = await supabase.storage.listBuckets();
+    const { error: storageError } = await supabase.storage.listBuckets();
 
     if (storageError) {
       console.error('Storage check error:', storageError);
@@ -55,22 +55,12 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       timestamp,
-      activities: {
-        database: !dbError,
-        auth: !authError,
-        storage: !storageError,
-      },
-      message: '✅ Supabase project activity generated successfully',
     });
 
   } catch (error) {
     console.error('Keep-alive error:', error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      },
+      { success: false },
       { status: 500 }
     );
   }

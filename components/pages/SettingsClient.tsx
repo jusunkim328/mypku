@@ -34,7 +34,6 @@ const languages: { code: Locale; name: string }[] = [
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const t = useTranslations("SettingsPage");
 
   useEffect(() => {
     setMounted(true);
@@ -448,6 +447,7 @@ export default function SettingsClient() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     {user?.user_metadata?.avatar_url ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={user.user_metadata.avatar_url}
                         alt="Profile"

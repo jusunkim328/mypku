@@ -60,7 +60,7 @@ export function readJSONFile(file: File): Promise<unknown> {
         const content = e.target?.result as string;
         const data = JSON.parse(content);
         resolve(data);
-      } catch (error) {
+      } catch {
         reject(new Error("Invalid JSON file"));
       }
     };

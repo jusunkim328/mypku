@@ -337,6 +337,7 @@ export async function GET(request: NextRequest) {
           // 국가 정보 (ISO 코드)
           barcode_country: barcodeCountry?.code || null,
           contributed_from: contributedFrom?.code || null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
         { onConflict: "name,source" }
       );

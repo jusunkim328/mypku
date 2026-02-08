@@ -21,6 +21,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (typeof imageBase64 !== "string" || imageBase64.length > 13_300_000) {
+      return Response.json(
+        { success: false, error: "Image too large" },
+        { status: 413 }
+      );
+    }
+
     const barcode = await extractBarcodeFromImage(imageBase64);
 
     if (barcode && barcode !== "NOT_FOUND") {

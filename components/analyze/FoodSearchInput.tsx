@@ -45,7 +45,6 @@ const pkuFoodToFoodItem = (food: PKUFood, weight: number): FoodItem => {
 
 export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) {
   const t = useTranslations("FoodsPage");
-  const tCommon = useTranslations("Common");
   const tNutrients = useTranslations("Nutrients");
 
   const { getExchanges } = useUserSettings();

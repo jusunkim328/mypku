@@ -38,6 +38,13 @@ export async function POST(
       );
     }
 
+    if (typeof imageBase64 !== "string" || imageBase64.length > 13_300_000) {
+      return NextResponse.json(
+        { success: false, error: "Image too large" },
+        { status: 413 }
+      );
+    }
+
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
         { success: false, error: "API key not configured" },

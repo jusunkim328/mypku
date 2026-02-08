@@ -58,19 +58,6 @@ export default function HistoryClient() {
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
-  // 최근 7일 기록 (주간 차트용)
-  const recentRecords = mealRecords
-    .filter((record) => {
-      const recordDate = new Date(record.timestamp);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return recordDate >= weekAgo;
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
     const today = new Date();
