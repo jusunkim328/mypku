@@ -86,7 +86,7 @@ export default function FormulaWidget() {
               onClick={() => toggleSlot(slot)}
               disabled={viewOnly}
               className={`
-                flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all transform
+                flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] rounded-xl transition-all transform
                 ${viewOnly ? "cursor-not-allowed opacity-60" : "active:scale-[0.97]"}
                 ${
                   completed
@@ -106,13 +106,13 @@ export default function FormulaWidget() {
                 {t(slot)}
               </span>
               <div
-                className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                   completed
                     ? "bg-purple-500 text-white"
                     : "border-2 border-gray-300 dark:border-gray-600"
                 }`}
               >
-                {completed && <Check className="w-3 h-3" />}
+                {completed && <Check className="w-3.5 h-3.5" />}
               </div>
             </button>
           );

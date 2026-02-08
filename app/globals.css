@@ -231,6 +231,11 @@ body {
   50% { opacity: 0.5; }
 }
 
+@keyframes undo-shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -497,4 +502,24 @@ body {
 .dark .input-focus:focus {
   border-color: var(--pku-primary-400);
   --tw-ring-color: rgba(74, 222, 128, 0.2);
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+  .no-print,
+  nav,
+  header.sticky,
+  .bottom-nav,
+  footer {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .print-break {
+    page-break-after: always;
+  }
 }

@@ -3,13 +3,23 @@
 import { useTranslations } from "next-intl";
 import { Card, Button, NumberInput } from "@/components/ui";
 import { DEFAULT_DAILY_GOALS } from "@/types/nutrition";
+import { PKU_EXCHANGE } from "@/lib/constants";
 import type { DailyGoals } from "@/types/nutrition";
+
+const EXCHANGE_OPTIONS = [
+  { value: PKU_EXCHANGE.STANDARD, label: "50mg" },
+  { value: 25, label: "25mg" },
+  { value: 20, label: "20mg" },
+  { value: PKU_EXCHANGE.DETAILED, label: "15mg" },
+];
 
 interface DailyGoalsCardProps {
   draftGoals: DailyGoals;
   setDraftGoals: React.Dispatch<React.SetStateAction<DailyGoals>>;
   disabled?: boolean;
   getExchanges: (phe: number) => number;
+  phePerExchange: number;
+  onPhePerExchangeChange: (value: number) => void;
   hasChanges: boolean;
   onSave: () => void;
   onCancel: () => void;
@@ -24,6 +34,8 @@ export default function DailyGoalsCard({
   setDraftGoals,
   disabled,
   getExchanges,
+  phePerExchange,
+  onPhePerExchangeChange,
   hasChanges,
   onSave,
   onCancel,
@@ -53,7 +65,31 @@ export default function DailyGoalsCard({
             className={inputClassName}
           />
           <p className="text-xs text-primary-600 dark:text-primary-400 mt-1.5 font-medium">
-            = {getExchanges(draftGoals.phenylalanine_mg || DEFAULT_DAILY_GOALS.phenylalanine_mg)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = 50mg)
+            = {getExchanges(draftGoals.phenylalanine_mg || DEFAULT_DAILY_GOALS.phenylalanine_mg)} {tNutrients("exchanges")} (1 {tNutrients("exchange")} = {phePerExchange}mg)
+          </p>
+        </div>
+        <div>
+          <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+            {t("exchangeUnit")}
+          </label>
+          <div className="flex gap-2 mt-1.5">
+            {EXCHANGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => onPhePerExchangeChange(opt.value)}
+                disabled={disabled}
+                className={`flex-1 px-2 py-2 text-sm font-medium rounded-xl border transition-all ${
+                  phePerExchange === opt.value
+                    ? "bg-primary-500 text-white border-primary-500"
+                    : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-primary-400"
+                } disabled:opacity-50`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            {t("exchangeUnitHint")}
           </p>
         </div>
         <div>

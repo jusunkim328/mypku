@@ -13,6 +13,8 @@ interface BloodLevelCardProps {
   currentTargetMax: number;
   onDelete: (id: string) => void;
   viewOnly?: boolean;
+  isPending?: boolean;
+  onScheduleDelete?: (id: string, label: string, onConfirm: () => Promise<void>) => void;
 }
 
 export default function BloodLevelCard({
@@ -22,6 +24,8 @@ export default function BloodLevelCard({
   currentTargetMax,
   onDelete,
   viewOnly = false,
+  isPending = false,
+  onScheduleDelete,
 }: BloodLevelCardProps) {
   const t = useTranslations("BloodLevels");
 
@@ -60,13 +64,19 @@ export default function BloodLevelCard({
     Math.abs(record.targetMax - currentTargetMax) > 1;
 
   const handleDelete = () => {
-    if (window.confirm(t("deleteConfirm"))) {
-      onDelete(record.id);
+    if (onScheduleDelete) {
+      onScheduleDelete(record.id, dateStr, async () => {
+        onDelete(record.id);
+      });
+    } else {
+      if (window.confirm(t("deleteConfirm"))) {
+        onDelete(record.id);
+      }
     }
   };
 
   return (
-    <div className={`rounded-xl border p-4 ${statusBg}`}>
+    <div className={`rounded-xl border p-4 ${statusBg} ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-sm text-gray-500 dark:text-gray-400">{dateStr}</p>

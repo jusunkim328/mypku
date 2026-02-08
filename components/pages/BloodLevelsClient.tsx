@@ -7,6 +7,7 @@ import { Page, Navbar, Block, Button, Card, Preloader } from "@/components/ui";
 import { Droplets, Settings2, Check } from "lucide-react";
 import { useBloodLevels, useBloodLevelStore, mgDlToUmol, umolToMgDl, type BloodUnit, type BloodLevelSettings } from "@/hooks/useBloodLevels";
 import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 import BloodLevelForm from "@/components/blood/BloodLevelForm";
 import BloodLevelCard from "@/components/blood/BloodLevelCard";
 import BloodLevelChart from "@/components/blood/BloodLevelChart";
@@ -29,6 +30,7 @@ export default function BloodLevelsClient() {
   const canEdit = useCanEdit();
   const isCaregiverMode = useIsCaregiverMode();
   const viewOnly = isCaregiverMode && !canEdit;
+  const { pendingIds, scheduleDelete } = useUndoDelete();
   const [showSettings, setShowSettings] = useState(false);
 
   // 임시 설정 상태 (저장 전까지 반영 안 됨)
@@ -263,7 +265,9 @@ export default function BloodLevelsClient() {
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               {t("history")} ({records.length})
             </h3>
-            {records.map((record) => (
+            {records
+              .filter((record) => !pendingIds.has(record.id))
+              .map((record) => (
               <BloodLevelCard
                 key={record.id}
                 record={record}
@@ -272,6 +276,7 @@ export default function BloodLevelsClient() {
                 currentTargetMax={settings.targetMax}
                 onDelete={removeRecord}
                 viewOnly={viewOnly}
+                onScheduleDelete={scheduleDelete}
               />
             ))}
           </div>

@@ -8,10 +8,13 @@ import { ChevronDown } from "lucide-react";
 import { useMealRecords } from "@/hooks/useMealRecords";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
+import { useUndoDelete } from "@/hooks/useUndoDelete";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
 import CoachingMessage from "@/components/dashboard/CoachingMessage";
 import CalendarView from "@/components/dashboard/CalendarView";
 import DateNavigator from "@/components/dashboard/DateNavigator";
+import AddToFavoriteButton from "@/components/favorites/AddToFavoriteButton";
+import type { MealType } from "@/types/nutrition";
 
 export default function HistoryClient() {
   const t = useTranslations("HistoryPage");
@@ -24,6 +27,7 @@ export default function HistoryClient() {
   const canEdit = useCanEdit();
   const isCaregiverMode = useIsCaregiverMode();
   const viewOnly = isCaregiverMode && !canEdit;
+  const { pendingIds, scheduleDelete } = useUndoDelete();
 
   // 날짜 선택 상태
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -50,9 +54,9 @@ export default function HistoryClient() {
     );
   };
 
-  // 선택된 날짜의 기록 필터링
+  // 선택된 날짜의 기록 필터링 (pending delete 제외)
   const selectedDateRecords = mealRecords
-    .filter((record) => isSameDate(record.timestamp, selectedDate))
+    .filter((record) => !pendingIds.has(record.id) && isSameDate(record.timestamp, selectedDate))
     .sort(
       (a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -187,20 +191,33 @@ export default function HistoryClient() {
                             </span>
                           </div>
                         </div>
-                        {!viewOnly && (
-                          <Button
-                            small
-                            clear
-                            danger
-                            onClick={async () => {
-                              if (confirm(t("deleteConfirm"))) {
-                                await removeMealRecord(record.id);
-                              }
-                            }}
-                          >
-                            {tCommon("delete")}
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {!viewOnly && record.items.length > 0 && (
+                            <AddToFavoriteButton
+                              items={record.items}
+                              totalNutrition={record.totalNutrition}
+                              mealType={record.mealType as MealType}
+                            />
+                          )}
+                          {!viewOnly && (
+                            <Button
+                              small
+                              clear
+                              danger
+                              onClick={() => {
+                                scheduleDelete(
+                                  record.id,
+                                  record.items?.[0]?.name || t("phe"),
+                                  async () => {
+                                    await removeMealRecord(record.id);
+                                  }
+                                );
+                              }}
+                            >
+                              {tCommon("delete")}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Card>

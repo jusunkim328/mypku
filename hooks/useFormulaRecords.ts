@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFormulaStore } from "./useFormulaStore";
@@ -79,7 +79,11 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
   }, [activePatient?.id]);
 
   const isFormulaActive = formulaSettings?.isActive ?? false;
-  const timeSlots = formulaSettings?.timeSlots ?? [];
+  const timeSlots = useMemo(
+    () => formulaSettings?.timeSlots ?? [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(formulaSettings?.timeSlots)]
+  );
   const formulaName = formulaSettings?.formulaName ?? "PKU Formula";
   const servingLabel = formulaSettings
     ? `${formulaSettings.servingAmount}${formulaSettings.servingUnit}`

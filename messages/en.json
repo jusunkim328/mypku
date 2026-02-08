@@ -77,7 +77,10 @@
     "manualEntry": "Manual Entry",
     "manualEntryDesc": "Search and add foods from the PKU database",
     "unconfirmedWarning": "{count} item(s) unconfirmed. Confirm to add to daily tracking.",
-    "confirmedSummary": "Confirmed: {phe}mg Phe ({exchanges} Exchanges)"
+    "confirmedSummary": "Confirmed: {phe}mg Phe ({exchanges} Exchanges)",
+    "switchToManual": "Enter food manually",
+    "aiEstimate": "AI Estimate",
+    "aiEstimateHint": "Values are AI-estimated. Please verify."
   },
   "HistoryPage": {
     "title": "Meal History",
@@ -94,6 +97,8 @@
     "pkuModeDesc": "Enable phenylalanine tracking",
     "pkuModeExplain": "In PKU mode, phenylalanine intake is prioritized and the daily goal is set to 300mg.",
     "dailyGoals": "Daily Goals",
+    "exchangeUnit": "Exchange Unit",
+    "exchangeUnitHint": "1 Exchange = selected mg of Phe. UK: 50mg, US/AU: 15mg",
     "appInfo": "App Info",
     "version": "MyPKU v0.1.0",
     "hackathon": "Gemini 3 Hackathon Project",
@@ -130,7 +135,9 @@
     "patientGoalsSaved": "{name}'s daily goals saved!",
     "patientFormulaSaved": "{name}'s formula settings saved!",
     "medicalReport": "Medical Report",
-    "medicalReportDesc": "Generate a CSV summary of the last 7 days for your healthcare provider."
+    "medicalReportDesc": "Generate a CSV summary of the last 7 days for your healthcare provider.",
+    "preferManualEntry": "Manual Entry Mode",
+    "preferManualEntryDesc": "Always start with manual food search instead of camera"
   },
   "Auth": {
     "login": "Login",
@@ -236,7 +243,8 @@
     "source_manual": "Manual",
     "source_usda": "USDA",
     "source_kfda": "KFDA",
-    "source_voice": "Voice"
+    "source_voice": "Voice",
+    "aiEstimate": "AI Estimate"
   },
   "NutrientRing": {
     "goal": "Goal",
@@ -697,7 +705,33 @@
     "period1m": "Last 1 month",
     "period3m": "Last 3 months",
     "period6m": "Last 6 months",
-    "period1y": "Last 1 year"
+    "period1y": "Last 1 year",
+    "printPdf": "Print / PDF"
+  },
+  "Report": {
+    "title": "Medical Report",
+    "subtitle": "PKU Management Summary",
+    "patient": "Patient",
+    "generatedAt": "Generated on {date}",
+    "period": "Period: {start} — {end}",
+    "pheSummary": "Phenylalanine Summary",
+    "avgDaily": "Average Daily Phe",
+    "maxDaily": "Highest Daily Phe",
+    "minDaily": "Lowest Daily Phe",
+    "daysOverLimit": "Days Over Limit",
+    "bloodLevels": "Blood Phe Test Results",
+    "formulaCompliance": "Formula Compliance",
+    "avgCompletion": "Average Completion Rate",
+    "printReport": "Print / Save as PDF",
+    "noData": "No data for this period",
+    "date": "Date",
+    "value": "Value",
+    "status": "Status",
+    "inRange": "In range",
+    "aboveRange": "Above range",
+    "belowRange": "Below range",
+    "daysTracked": "Days Tracked",
+    "exchangeAvg": "Avg Daily Exchanges"
   },
   "DiagnosisOCR": {
     "privacyTitle": "Privacy Notice",
@@ -753,6 +787,35 @@
     "overdueTitle": "Blood test reminder",
     "overdueDesc": "Last test was {days} days ago. Consider scheduling a blood Phe test.",
     "addRecord": "Add result"
+  },
+  "BottomNav": {
+    "home": "Home",
+    "record": "Record",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "Undo": {
+    "deleted": "\"{name}\" deleted",
+    "undo": "Undo",
+    "undoSuccess": "Restored"
+  },
+  "OfflineBanner": {
+    "message": "You're offline. Some features may not work.",
+    "analyzing": "Internet required for AI analysis"
+  },
+  "Favorites": {
+    "title": "Favorites",
+    "addFavorite": "Save as Favorite",
+    "namePlaceholder": "Enter a name for this meal",
+    "reRecord": "Log Again",
+    "recorded": "Recorded!",
+    "noFavorites": "No favorites yet",
+    "noFavoritesHint": "Save meals you eat often for quick logging",
+    "removeFavorite": "Remove from favorites",
+    "usedCount": "Logged {count} times",
+    "added": "Saved to favorites!",
+    "removed": "Removed from favorites",
+    "tab": "Favorites"
   },
   "PheRemaining": {
     "title": "Daily Phe Budget",

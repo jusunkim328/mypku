@@ -26,7 +26,7 @@ export default function AnalysisResult({
   const t = useTranslations("AnalyzePage");
   const tCommon = useTranslations("Common");
   const tNutrients = useTranslations("Nutrients");
-  const { getExchanges } = useUserSettings();
+  const { getExchanges, phePerExchange } = useUserSettings();
 
   // AI가 반환한 총 exchanges 계산 (있으면 사용, 없으면 기존 방식)
   const totalExchanges = items.reduce(
@@ -112,7 +112,7 @@ export default function AnalysisResult({
                 {tNutrients("exchanges")}
               </p>
               <p className="text-xs text-indigo-200">
-                1 Exchange = 50mg Phe
+                1 Exchange = {phePerExchange}mg Phe
               </p>
             </div>
           </div>

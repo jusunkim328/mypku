@@ -77,7 +77,10 @@
     "manualEntry": "Ручной ввод",
     "manualEntryDesc": "Найдите и добавьте продукты из базы данных ФКУ",
     "unconfirmedWarning": "{count} элемент(ов) не подтверждено. Подтвердите для добавления в суточный учёт.",
-    "confirmedSummary": "Подтверждено: {phe} мг Phe ({exchanges} обменов)"
+    "confirmedSummary": "Подтверждено: {phe} мг Phe ({exchanges} обменов)",
+    "switchToManual": "Ввести вручную",
+    "aiEstimate": "Оценка ИИ",
+    "aiEstimateHint": "Значения оценены ИИ. Пожалуйста, проверьте."
   },
   "HistoryPage": {
     "title": "История питания",
@@ -94,6 +97,8 @@
     "pkuModeDesc": "Включить отслеживание фенилаланина",
     "pkuModeExplain": "В режиме ФКУ приоритет отдаётся потреблению фенилаланина, суточная цель — 300 мг.",
     "dailyGoals": "Суточные цели",
+    "exchangeUnit": "Единица обмена",
+    "exchangeUnitHint": "1 Exchange = выбранное кол-во мг Phe. Великобритания: 50мг, США/Австралия: 15мг",
     "appInfo": "О приложении",
     "version": "MyPKU v0.1.0",
     "hackathon": "Проект хакатона Gemini 3",
@@ -130,7 +135,9 @@
     "patientGoalsSaved": "Ежедневные цели {name} сохранены!",
     "patientFormulaSaved": "Настройки формулы {name} сохранены!",
     "medicalReport": "Медицинский отчёт",
-    "medicalReportDesc": "Создайте CSV-отчёт за последние 7 дней для вашего врача."
+    "medicalReportDesc": "Создайте CSV-отчёт за последние 7 дней для вашего врача.",
+    "preferManualEntry": "Ручной ввод",
+    "preferManualEntryDesc": "Всегда начинать с ручного поиска вместо камеры"
   },
   "Auth": {
     "login": "Войти",
@@ -697,7 +704,33 @@
     "period1m": "Последний месяц",
     "period3m": "Последние 3 месяца",
     "period6m": "Последние 6 месяцев",
-    "period1y": "Последний год"
+    "period1y": "Последний год",
+    "printPdf": "Печать / PDF"
+  },
+  "Report": {
+    "title": "Медицинский отчёт",
+    "subtitle": "Сводка управления ФКУ",
+    "patient": "Пациент",
+    "generatedAt": "Сформировано: {date}",
+    "period": "Период: {start} — {end}",
+    "pheSummary": "Сводка по фенилаланину",
+    "avgDaily": "Среднесуточный Phe",
+    "maxDaily": "Максимальный суточный Phe",
+    "minDaily": "Минимальный суточный Phe",
+    "daysOverLimit": "Дней выше нормы",
+    "bloodLevels": "Результаты анализов крови",
+    "formulaCompliance": "Приём смеси",
+    "avgCompletion": "Средний процент выполнения",
+    "printReport": "Печать / Сохранить в PDF",
+    "noData": "Нет данных за этот период",
+    "date": "Дата",
+    "value": "Значение",
+    "status": "Статус",
+    "inRange": "В пределах нормы",
+    "aboveRange": "Выше нормы",
+    "belowRange": "Ниже нормы",
+    "daysTracked": "Дней с записями",
+    "exchangeAvg": "Среднесуточные Exchange"
   },
   "DiagnosisOCR": {
     "privacyTitle": "Уведомление о конфиденциальности",
@@ -753,6 +786,35 @@
     "overdueTitle": "Напоминание об анализе крови",
     "overdueDesc": "Последний анализ был {days} дней назад. Запланируйте анализ крови на Phe.",
     "addRecord": "Добавить результат"
+  },
+  "BottomNav": {
+    "home": "Главная",
+    "record": "Запись",
+    "history": "История",
+    "settings": "Настройки"
+  },
+  "Undo": {
+    "deleted": "\"{name}\" удалено",
+    "undo": "Отменить",
+    "undoSuccess": "Восстановлено"
+  },
+  "OfflineBanner": {
+    "message": "Нет подключения к интернету. Некоторые функции недоступны.",
+    "analyzing": "Для анализа ИИ требуется подключение к интернету"
+  },
+  "Favorites": {
+    "title": "Избранное",
+    "addFavorite": "Добавить в избранное",
+    "namePlaceholder": "Введите название блюда",
+    "reRecord": "Записать снова",
+    "recorded": "Записано!",
+    "noFavorites": "Избранного нет",
+    "noFavoritesHint": "Сохраняйте частые блюда для быстрой записи",
+    "removeFavorite": "Удалить из избранного",
+    "usedCount": "Записано {count} раз",
+    "added": "Добавлено в избранное!",
+    "removed": "Удалено из избранного",
+    "tab": "Избранное"
   },
   "PheRemaining": {
     "title": "Суточный бюджет Phe",

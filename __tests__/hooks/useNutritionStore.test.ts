@@ -223,6 +223,28 @@ describe("useNutritionStore", () => {
 
       expect(useNutritionStore.getState().getTodayExchanges()).toBe(3);
     });
+
+    it("setPhePerExchange: 커스텀 Exchange 단위가 계산에 반영된다", () => {
+      const state = useNutritionStore.getState();
+
+      // 기본값 50mg
+      expect(state.phePerExchange).toBe(50);
+      expect(state.getExchanges(150)).toBe(3);
+
+      // 15mg으로 변경
+      state.setPhePerExchange(15);
+      const updated = useNutritionStore.getState();
+      expect(updated.phePerExchange).toBe(15);
+      expect(updated.getExchanges(150)).toBe(10);
+      expect(updated.getExchanges(45)).toBe(3);
+
+      // 25mg으로 변경
+      updated.setPhePerExchange(25);
+      expect(useNutritionStore.getState().getExchanges(100)).toBe(4);
+
+      // 원복
+      useNutritionStore.getState().setPhePerExchange(50);
+    });
   });
 
   describe("수분 섭취", () => {

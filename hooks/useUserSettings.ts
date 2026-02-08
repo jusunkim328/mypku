@@ -346,7 +346,9 @@ export function useUserSettings() {
     ownDailyGoals,
     setDailyGoals,
 
-    // Exchange 계산 함수 (PKU 전용)
+    // Exchange 설정 및 계산 함수 (PKU 전용)
+    phePerExchange: localStore.phePerExchange,
+    setPhePerExchange: localStore.setPhePerExchange,
     getExchanges,
     getTodayExchanges,
     getExchangeGoal,

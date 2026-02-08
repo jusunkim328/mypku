@@ -129,12 +129,15 @@ function getConfidenceLevel(confidence: number): ConfidenceLevel {
  */
 function adjustPkuSafety(
   safety: PKUSafetyLevel,
-  confidence: number
+  confidence: number,
+  protein_g?: number
 ): PKUSafetyLevel {
   // 신뢰도 50% 미만이면 무조건 avoid
   if (confidence < 0.5) return "avoid";
   // 신뢰도 70% 미만이고 safe면 caution으로 격하
   if (confidence < 0.7 && safety === "safe") return "caution";
+  // 고단백(>10g)인데 safe이고 신뢰도 85% 미만이면 caution으로 격하
+  if (protein_g && protein_g > 10 && safety === "safe" && confidence < 0.85) return "caution";
   return safety;
 }
 
@@ -178,7 +181,8 @@ export async function analyzeFood(imageBase64: string): Promise<{
     const confidenceLevel = getConfidenceLevel(food.confidence);
     const adjustedSafety = adjustPkuSafety(
       food.pku_safety as PKUSafetyLevel,
-      food.confidence
+      food.confidence,
+      food.protein_g
     );
 
     return {
@@ -266,7 +270,8 @@ Return a JSON with foods array containing:
     const confidenceLevel = getConfidenceLevel(food.confidence);
     const adjustedSafety = adjustPkuSafety(
       food.pku_safety as PKUSafetyLevel,
-      food.confidence
+      food.confidence,
+      food.protein_g
     );
 
     return {

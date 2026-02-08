@@ -8,8 +8,11 @@ import { ScanBarcode, Database, Settings, Droplets, GraduationCap } from "lucide
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
+import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
+import type { FavoriteMeal } from "@/hooks/useFavoriteMeals";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsViewingOwnData, useCanEdit } from "@/hooks/usePatientContext";
+import { toast } from "@/hooks/useToast";
 import { showPheWarning } from "@/lib/notifications";
 import NutrientRing from "@/components/dashboard/NutrientRing";
 import PheRemainingCard from "@/components/dashboard/PheRemainingCard";
@@ -20,20 +23,37 @@ import FormulaWidget from "@/components/dashboard/FormulaWidget";
 import PatientSelector from "@/components/caregiver/PatientSelector";
 import PatientBanner from "@/components/caregiver/PatientBanner";
 import BloodTestReminderBanner from "@/components/blood/BloodTestReminderBanner";
+import FavoriteMealCard from "@/components/favorites/FavoriteMealCard";
 import Disclaimer from "@/components/common/Disclaimer";
 
 export default function HomeClient() {
   const t = useTranslations("HomePage");
+  const tFav = useTranslations("Favorites");
   const tNutrients = useTranslations("Nutrients");
   const router = useRouter();
   const { dailyGoals, _hasHydrated, getExchanges, getExchangeGoal, quickSetupCompleted, onboardingCompleted, authLoading } = useUserSettings();
   const { pheWarnings, permission } = useNotificationStore();
   const { user, isAuthenticated } = useAuth();
-  const { mealRecords, getTodayNutrition, isLoading: recordsLoading } = useMealRecords();
+  const { mealRecords, getTodayNutrition, addMealRecord, isLoading: recordsLoading } = useMealRecords();
+  const { favorites, recordUse } = useFavoriteMeals();
   const isViewingOwnData = useIsViewingOwnData();
   const canEdit = useCanEdit();
 
   const lastWarningRef = useRef<number>(0);
+
+  // 즐겨찾기 빠른 재기록
+  const handleReRecord = async (fav: FavoriteMeal) => {
+    await addMealRecord({
+      timestamp: new Date().toISOString(),
+      mealType: fav.mealType,
+      imageUrl: null,
+      items: fav.items,
+      totalNutrition: fav.totalNutrition,
+      aiConfidence: null,
+    });
+    await recordUse(fav.id);
+    toast.success(tFav("recorded"));
+  };
 
   // 첫 방문 시 온보딩 페이지로 리다이렉트 (보호자 모드에서는 건너뛰기)
   useEffect(() => {
@@ -177,6 +197,25 @@ export default function HomeClient() {
             />
           </div>
         </Card>
+
+        {/* 즐겨찾기 빠른 재기록 */}
+        {favorites.length > 0 && (
+          <Card className="p-4" elevated>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+              {tFav("title")}
+            </h3>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+              {favorites.slice(0, 5).map((fav) => (
+                <FavoriteMealCard
+                  key={fav.id}
+                  favorite={fav}
+                  onReRecord={handleReRecord}
+                  compact
+                />
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* 스트릭 배지 */}
         <StreakBadge />

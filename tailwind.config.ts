@@ -5,7 +5,6 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/konsta/react/**/*.{js,ts,jsx,tsx,mjs}",
   ],
   darkMode: "class",
   theme: {
@@ -35,24 +34,12 @@ const config: Config = {
           700: "var(--pku-accent-700)",
           DEFAULT: "var(--pku-accent-500)",
         },
-        // PKU 테마 색상 (레거시 호환성)
-        pku: {
-          primary: "var(--pku-primary)",
-          secondary: "var(--pku-secondary)",
-          warning: "var(--pku-warning)",
-          danger: "var(--pku-danger)",
-          success: "var(--pku-success)",
-          info: "var(--pku-info)",
-        },
         // Surface & Background
         surface: {
           primary: "var(--bg-primary)",
           secondary: "var(--bg-secondary)",
           tertiary: "var(--bg-tertiary)",
         },
-        // Konsta 기본 색상 (레거시 호환성)
-        "ios-light-surface": "#efeff4",
-        "ios-dark-surface": "#000000",
       },
       fontFamily: {
         sans: [

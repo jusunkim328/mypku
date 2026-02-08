@@ -294,7 +294,7 @@ export default function BloodLevelChart({
           <button
             key={opt.days}
             onClick={() => setPeriod(opt.days)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            className={`px-3 py-2 min-h-[44px] text-xs font-medium rounded-lg transition-colors ${
               period === opt.days
                 ? "bg-primary-500 text-white"
                 : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -318,7 +318,7 @@ export default function BloodLevelChart({
             <button
               key={opt.mode}
               onClick={() => setViewMode(opt.mode)}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+              className={`px-3 py-2 min-h-[44px] text-xs font-medium rounded-md transition-colors ${
                 viewMode === opt.mode
                   ? "bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"

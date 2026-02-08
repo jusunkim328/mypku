@@ -144,6 +144,42 @@ export type Database = {
           },
         ]
       }
+      favorite_meals: {
+        Row: {
+          created_at: string | null
+          id: string
+          items: Json
+          last_used_at: string | null
+          meal_type: string | null
+          name: string
+          total_nutrition: Json
+          use_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          last_used_at?: string | null
+          meal_type?: string | null
+          name: string
+          total_nutrition?: Json
+          use_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          last_used_at?: string | null
+          meal_type?: string | null
+          name?: string
+          total_nutrition?: Json
+          use_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       food_items: {
         Row: {
           confidence: number | null
@@ -657,16 +693,9 @@ export const Constants = {
   },
 } as const
 
-// 편의 타입 (기존 코드 호환성 유지)
+// Custom type aliases for convenience
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type DailyGoals = Database["public"]["Tables"]["daily_goals"]["Row"];
-export type MealRecord = Database["public"]["Tables"]["meal_records"]["Row"];
-export type FoodItem = Database["public"]["Tables"]["food_items"]["Row"];
-export type HealthCondition = Database["public"]["Tables"]["health_conditions"]["Row"];
-export type PKUFoodRow = Database["public"]["Tables"]["pku_foods"]["Row"];
-export type PKUFoodInsert = Database["public"]["Tables"]["pku_foods"]["Insert"];
-export type CaregiverLinkRow = Database["public"]["Tables"]["caregiver_links"]["Row"];
-export type BloodLevelRow = Database["public"]["Tables"]["blood_levels"]["Row"];
-export type FormulaIntakeRow = Database["public"]["Tables"]["formula_intakes"]["Row"];
-export type FormulaSettingRow = Database["public"]["Tables"]["formula_settings"]["Row"];
-export type WaterIntakeRow = Database["public"]["Tables"]["water_intakes"]["Row"];
+export type MealRecordRow = Database["public"]["Tables"]["meal_records"]["Row"];
+export type FoodItemRow = Database["public"]["Tables"]["food_items"]["Row"];
+export type FavoriteMealRow = Database["public"]["Tables"]["favorite_meals"]["Row"];

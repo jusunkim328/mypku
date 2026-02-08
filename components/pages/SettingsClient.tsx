@@ -10,6 +10,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsCaregiverMode, useCanEdit, usePatientContext } from "@/hooks/usePatientContext";
 import { toast } from "@/hooks/useToast";
+import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { downloadJSON, getExportSummary } from "@/lib/dataExport";
 import { openFileAndImport, openFileAndImportToSupabase } from "@/lib/dataImport";
 import type { Locale } from "@/i18n/routing";
@@ -225,12 +226,13 @@ export default function SettingsClient() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
-  const { dailyGoals, setDailyGoals, _hasHydrated, getExchanges } = useUserSettings();
+  const { dailyGoals, setDailyGoals, _hasHydrated, getExchanges, phePerExchange, setPhePerExchange } = useUserSettings();
   const { user, isAuthenticated, isLoading: authLoading, signOut } = useAuth();
   const isCaregiverMode = useIsCaregiverMode();
   const canEdit = useCanEdit();
   const activePatient = usePatientContext((s) => s.activePatient);
   const { caregivers, patients, isLoading: familyLoading, sendInvite, removeLink } = useFamilyShare();
+  const { preferManualEntry, setPreferManualEntry } = useNutritionStore();
 
   // authLoading 타임아웃 (3초 후 강제로 로딩 완료 처리)
   const [authTimeout, setAuthTimeout] = useState(false);
@@ -430,6 +432,8 @@ export default function SettingsClient() {
               setDraftGoals={setDraftGoals}
               disabled={!canEdit}
               getExchanges={getExchanges}
+              phePerExchange={phePerExchange}
+              onPhePerExchangeChange={setPhePerExchange}
               hasChanges={hasGoalsChanges}
               onSave={handleSaveGoals}
               onCancel={handleCancelGoals}
@@ -556,6 +560,32 @@ export default function SettingsClient() {
             {/* 데이터 관리 */}
             <DataManagement isAuthenticated={isAuthenticated} userId={user?.id} />
 
+            {/* 수동 입력 모드 토글 */}
+            <Card className="p-4 md:p-5 lg:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {t("preferManualEntry")}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                    {t("preferManualEntryDesc")}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setPreferManualEntry(!preferManualEntry)}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${
+                    preferManualEntry ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${
+                      preferManualEntry ? "translate-x-5" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+            </Card>
+
             {/* 언어 설정 */}
             <Card className="p-4 md:p-5 lg:p-6">
               <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
@@ -580,6 +610,8 @@ export default function SettingsClient() {
               draftGoals={draftGoals}
               setDraftGoals={setDraftGoals}
               getExchanges={getExchanges}
+              phePerExchange={phePerExchange}
+              onPhePerExchangeChange={setPhePerExchange}
               hasChanges={hasGoalsChanges}
               onSave={handleSaveGoals}
               onCancel={handleCancelGoals}

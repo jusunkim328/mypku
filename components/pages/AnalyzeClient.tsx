@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card } from "@/components/ui";
@@ -12,14 +12,34 @@ import { useMealRecords } from "@/hooks/useMealRecords";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginPromptCard from "@/components/common/LoginPromptCard";
 import { useCanEdit } from "@/hooks/usePatientContext";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useStreakStore } from "@/hooks/useStreakStore";
 import { toast } from "@/hooks/useToast";
 import { showStreakCelebration } from "@/lib/notifications";
+import { recommendMealType } from "@/lib/mealTypeRecommend";
+import { startRecording, logRecordingMetrics } from "@/lib/analytics";
+import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
+import FavoriteMealCard from "@/components/favorites/FavoriteMealCard";
+import { Heart } from "lucide-react";
 import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
 type AnalysisState = "idle" | "loading" | "success" | "error";
-type InputMode = "image" | "voice" | "manual";
+type InputMode = "image" | "voice" | "manual" | "favorites";
+
+function calculateTotalNutrition(items: FoodItem[]): NutritionData {
+  return items.reduce(
+    (acc, item) => ({
+      calories: acc.calories + item.nutrition.calories,
+      protein_g: acc.protein_g + item.nutrition.protein_g,
+      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
+      fat_g: acc.fat_g + item.nutrition.fat_g,
+      phenylalanine_mg: (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
+    }),
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
+  );
+}
 
 // Exponential Backoff로 재시도
 async function fetchWithRetry(
@@ -58,11 +78,16 @@ export default function AnalyzeClient() {
   const tCommon = useTranslations("Common");
   const tMeals = useTranslations("MealTypes");
   const tVoice = useTranslations("VoiceInput");
+  const tOffline = useTranslations("OfflineBanner");
   const { addMealRecord } = useMealRecords();
   const { isAuthenticated } = useAuth();
   const canEdit = useCanEdit();
   const { streakMilestones, permission } = useNotificationStore();
   const { currentStreak } = useStreakStore();
+  const preferManualEntry = useNutritionStore((s) => s.preferManualEntry);
+  const isOnline = useNetworkStatus();
+  const { favorites, removeFavorite } = useFavoriteMeals();
+  const tFav = useTranslations("Favorites");
 
   const [inputMode, setInputMode] = useState<InputMode>("image");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -72,7 +97,16 @@ export default function AnalyzeClient() {
   const [items, setItems] = useState<FoodItem[]>([]);
   const [totalNutrition, setTotalNutrition] = useState<NutritionData | null>(null);
   const [error, setError] = useState<string>("");
-  const [selectedMealType, setSelectedMealType] = useState<MealType>("lunch");
+  const [selectedMealType, setSelectedMealType] = useState<MealType>(recommendMealType);
+
+  // After hydration, respect preferManualEntry setting
+  const initialModeSet = useRef(false);
+  useEffect(() => {
+    if (!initialModeSet.current && preferManualEntry) {
+      setInputMode("manual");
+      initialModeSet.current = true;
+    }
+  }, [preferManualEntry]);
 
   const handleImageSelect = (base64: string) => {
     setImageBase64(base64);
@@ -87,6 +121,7 @@ export default function AnalyzeClient() {
     setVoiceText(text);
     setAnalysisState("loading");
     setError("");
+    startRecording();
 
     try {
       const response = await fetchWithRetry(
@@ -111,6 +146,7 @@ export default function AnalyzeClient() {
         setItems(data.items);
         setTotalNutrition(data.totalNutrition);
         setAnalysisState("success");
+        logRecordingMetrics("analysis_complete");
         toast.success(t("analysisComplete"));
       } else {
         const errorMessage = data.error || t("analysisFailed");
@@ -142,6 +178,7 @@ export default function AnalyzeClient() {
 
     setAnalysisState("loading");
     setError("");
+    startRecording();
 
     try {
       const response = await fetchWithRetry(
@@ -166,6 +203,7 @@ export default function AnalyzeClient() {
         setItems(data.items);
         setTotalNutrition(data.totalNutrition);
         setAnalysisState("success");
+        logRecordingMetrics("analysis_complete");
         toast.success(t("analysisComplete"));
       } else {
         const errorMessage = data.error || t("analysisFailed");
@@ -198,6 +236,7 @@ export default function AnalyzeClient() {
         imageBase64 || undefined
       );
       toast.success(t("recordSaved"));
+      logRecordingMetrics("save_complete");
 
       // 스트릭 마일스톤 알림
       if (streakMilestones && permission === "granted") {
@@ -224,18 +263,7 @@ export default function AnalyzeClient() {
     const updatedItems = items.map((item) =>
       item.id === id ? { ...item, ...updates } : item
     );
-    const newTotal = updatedItems.reduce(
-      (acc, item) => ({
-        calories: acc.calories + item.nutrition.calories,
-        protein_g: acc.protein_g + item.nutrition.protein_g,
-        carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-        fat_g: acc.fat_g + item.nutrition.fat_g,
-        phenylalanine_mg:
-          (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-      }),
-      { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-    );
-    setTotalNutrition(newTotal);
+    setTotalNutrition(calculateTotalNutrition(updatedItems));
   };
 
   const mealTypes: { value: MealType; labelKey: keyof IntlMessages["MealTypes"] }[] = [
@@ -301,6 +329,17 @@ export default function AnalyzeClient() {
             </svg>
             {t("manualEntry")}
           </button>
+          <button
+            onClick={() => handleModeChange("favorites")}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+              inputMode === "favorites"
+                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-gray-600 dark:text-gray-400"
+            }`}
+          >
+            <Heart className="w-4 h-4" />
+            {tFav("tab")}
+          </button>
         </div>
 
         {/* 이미지 업로더 */}
@@ -343,22 +382,36 @@ export default function AnalyzeClient() {
               onFoodSelect={(food) => {
                 const newItems = [...items, food];
                 setItems(newItems);
-                // 총 영양소 계산
-                const newTotal = newItems.reduce(
-                  (acc, item) => ({
-                    calories: acc.calories + item.nutrition.calories,
-                    protein_g: acc.protein_g + item.nutrition.protein_g,
-                    carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-                    fat_g: acc.fat_g + item.nutrition.fat_g,
-                    phenylalanine_mg:
-                      (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-                  }),
-                  { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-                );
-                setTotalNutrition(newTotal);
+                setTotalNutrition(calculateTotalNutrition(newItems));
                 setAnalysisState("success");
               }}
             />
+          </Card>
+        )}
+
+        {/* 즐겨찾기 */}
+        {inputMode === "favorites" && (
+          <Card className="p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{tFav("noFavoritesHint")}</p>
+            {favorites.length === 0 ? (
+              <p className="text-center text-gray-400 py-8">{tFav("noFavorites")}</p>
+            ) : (
+              <div className="space-y-3">
+                {favorites.map((fav) => (
+                  <FavoriteMealCard
+                    key={fav.id}
+                    favorite={fav}
+                    onReRecord={(f) => {
+                      setItems(f.items);
+                      setTotalNutrition(f.totalNutrition);
+                      setSelectedMealType(f.mealType);
+                      setAnalysisState("success");
+                    }}
+                    onRemove={(id) => removeFavorite(id)}
+                  />
+                ))}
+              </div>
+            )}
           </Card>
         )}
 
@@ -368,19 +421,31 @@ export default function AnalyzeClient() {
             large
             onClick={handleAnalyze}
             loading={analysisState === "loading"}
+            disabled={!isOnline}
             className="w-full"
           >
             {analysisState === "loading" ? t("analyzing") : t("startAnalysis")}
           </Button>
         )}
 
+        {!isOnline && inputMode === "image" && imageBase64 && (
+          <p className="text-sm text-amber-600 dark:text-amber-400 text-center">
+            {tOffline("analyzing")}
+          </p>
+        )}
+
         {/* 에러 메시지 */}
         {analysisState === "error" && (
           <Card className="p-4 bg-red-50 dark:bg-red-900/30">
             <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-            <Button small outline className="mt-2" onClick={handleAnalyze}>
-              {tCommon("retry")}
-            </Button>
+            <div className="flex gap-2 mt-3">
+              <Button small outline onClick={handleAnalyze}>
+                {tCommon("retry")}
+              </Button>
+              <Button small onClick={() => handleModeChange("manual")}>
+                {t("switchToManual")}
+              </Button>
+            </div>
           </Card>
         )}
 

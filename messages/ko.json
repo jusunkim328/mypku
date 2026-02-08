@@ -77,7 +77,10 @@
     "manualEntry": "직접 입력",
     "manualEntryDesc": "PKU 식품 DB에서 음식을 검색하여 추가하세요",
     "unconfirmedWarning": "{count}개 항목이 미확정 상태입니다. 확정하면 일일 추적에 반영됩니다.",
-    "confirmedSummary": "확정됨: {phe}mg Phe ({exchanges} Exchanges)"
+    "confirmedSummary": "확정됨: {phe}mg Phe ({exchanges} Exchanges)",
+    "switchToManual": "수동으로 입력하기",
+    "aiEstimate": "AI 추정값",
+    "aiEstimateHint": "AI가 추정한 값입니다. 확인해주세요."
   },
   "HistoryPage": {
     "title": "식사 기록",
@@ -94,6 +97,8 @@
     "pkuModeDesc": "페닐알라닌 추적 활성화",
     "pkuModeExplain": "PKU 모드에서는 페닐알라닌 섭취량을 우선 표시하고, 일일 목표를 300mg으로 설정합니다.",
     "dailyGoals": "일일 목표",
+    "exchangeUnit": "Exchange 단위",
+    "exchangeUnitHint": "1 Exchange = 선택한 mg의 Phe. 영국: 50mg, 미국/호주: 15mg",
     "appInfo": "앱 정보",
     "version": "MyPKU v0.1.0",
     "hackathon": "Gemini 3 해커톤 프로젝트",
@@ -130,7 +135,9 @@
     "patientGoalsSaved": "{name}님의 일일 목표가 저장되었습니다!",
     "patientFormulaSaved": "{name}님의 포뮬러 설정이 저장되었습니다!",
     "medicalReport": "의료 보고서",
-    "medicalReportDesc": "최근 7일간의 CSV 요약 보고서를 생성하여 의료진과 공유하세요."
+    "medicalReportDesc": "최근 7일간의 CSV 요약 보고서를 생성하여 의료진과 공유하세요.",
+    "preferManualEntry": "수동 입력 모드",
+    "preferManualEntryDesc": "카메라 대신 항상 수동 검색으로 시작"
   },
   "Auth": {
     "login": "로그인",
@@ -697,7 +704,33 @@
     "period1m": "최근 1개월",
     "period3m": "최근 3개월",
     "period6m": "최근 6개월",
-    "period1y": "최근 1년"
+    "period1y": "최근 1년",
+    "printPdf": "인쇄 / PDF"
+  },
+  "Report": {
+    "title": "의료 보고서",
+    "subtitle": "PKU 관리 요약",
+    "patient": "환자",
+    "generatedAt": "생성일: {date}",
+    "period": "기간: {start} — {end}",
+    "pheSummary": "페닐알라닌 요약",
+    "avgDaily": "일평균 Phe",
+    "maxDaily": "최고 일일 Phe",
+    "minDaily": "최저 일일 Phe",
+    "daysOverLimit": "목표 초과 일수",
+    "bloodLevels": "혈중 Phe 검사 결과",
+    "formulaCompliance": "포뮬러 복용 현황",
+    "avgCompletion": "평균 완료율",
+    "printReport": "인쇄 / PDF 저장",
+    "noData": "해당 기간에 데이터가 없습니다",
+    "date": "날짜",
+    "value": "수치",
+    "status": "상태",
+    "inRange": "정상 범위",
+    "aboveRange": "상한 초과",
+    "belowRange": "하한 미달",
+    "daysTracked": "기록 일수",
+    "exchangeAvg": "일평균 Exchange"
   },
   "DiagnosisOCR": {
     "privacyTitle": "개인정보 보호 안내",
@@ -753,6 +786,35 @@
     "overdueTitle": "혈중 검사 리마인더",
     "overdueDesc": "마지막 검사가 {days}일 전입니다. 혈중 Phe 검사 일정을 확인하세요.",
     "addRecord": "결과 추가"
+  },
+  "BottomNav": {
+    "home": "홈",
+    "record": "기록",
+    "history": "기록보기",
+    "settings": "설정"
+  },
+  "Undo": {
+    "deleted": "\"{name}\" 삭제됨",
+    "undo": "되돌리기",
+    "undoSuccess": "복원됨"
+  },
+  "OfflineBanner": {
+    "message": "오프라인 상태입니다. 일부 기능을 사용할 수 없습니다.",
+    "analyzing": "AI 분석에 인터넷 연결이 필요합니다"
+  },
+  "Favorites": {
+    "title": "즐겨찾기",
+    "addFavorite": "즐겨찾기에 추가",
+    "namePlaceholder": "이 식사의 이름을 입력하세요",
+    "reRecord": "다시 기록",
+    "recorded": "기록 완료!",
+    "noFavorites": "즐겨찾기가 없습니다",
+    "noFavoritesHint": "자주 먹는 식사를 저장하여 빠르게 기록하세요",
+    "removeFavorite": "즐겨찾기에서 삭제",
+    "usedCount": "{count}회 기록됨",
+    "added": "즐겨찾기에 추가됨!",
+    "removed": "즐겨찾기에서 삭제됨",
+    "tab": "즐겨찾기"
   },
   "PheRemaining": {
     "title": "오늘의 Phe 예산",

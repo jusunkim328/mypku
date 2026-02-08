@@ -123,6 +123,12 @@ export default function FoodItemCard({ item, onUpdate, onConfirm, showConfirmBut
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</h4>
+              {/* AI 추정값 배지 */}
+              {(source === "ai" || source === "voice") && !item.userVerified && !isConfirmed && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  {t("aiEstimate")}
+                </span>
+              )}
               {/* 확정 배지 */}
               {isConfirmed && (
                 <span className="inline-flex items-center gap-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-medium">

@@ -8,6 +8,7 @@ import { ChevronRight, ChevronLeft, Rocket } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBloodLevels, mgDlToUmol } from "@/hooks/useBloodLevels";
+import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { PKU_PHE_DEFAULTS, PKU_EXCHANGE } from "@/lib/constants";
 import OnboardingProgress from "@/components/onboarding/OnboardingProgress";
 import StepWelcome from "@/components/onboarding/StepWelcome";
@@ -42,6 +43,7 @@ export default function OnboardingClient() {
     setFormulaSettings,
   } = useUserSettings();
   const { updateSettings: updateBloodSettings } = useBloodLevels();
+  const setPhePerExchange = useNutritionStore((s) => s.setPhePerExchange);
 
   // 이미 완료된 사용자가 /onboarding 직접 접근 시 홈으로
   useEffect(() => {
@@ -92,6 +94,9 @@ export default function OnboardingClient() {
 
       // Save diagnosis age group
       setDiagnosisAgeGroup(data.diagnosisAgeGroup);
+
+      // Save exchange unit
+      setPhePerExchange(data.exchangeUnit);
 
       // Save blood Phe target if extracted via OCR
       if (data.bloodPheTargetMin || data.bloodPheTargetMax) {

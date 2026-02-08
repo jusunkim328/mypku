@@ -7,9 +7,9 @@ import { Loader2 } from "lucide-react";
 export { NumberInput } from "./NumberInput";
 
 // Page 컴포넌트
-export function Page({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function Page({ children, className = "", noBottomNav = false }: { children: React.ReactNode; className?: string; noBottomNav?: boolean }) {
   return (
-    <div className={`min-h-screen bg-gradient-warm bg-pattern-dots animate-fade-in ${className}`}>
+    <div className={`min-h-screen bg-gradient-warm bg-pattern-dots animate-fade-in ${!noBottomNav ? "pb-16 md:pb-0" : ""} ${className}`}>
       <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto">
         {children}
       </div>

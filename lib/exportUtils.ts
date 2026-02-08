@@ -36,8 +36,6 @@ export interface ExportData {
 
 // --- Helpers ---
 
-const PHE_PER_EXCHANGE = 50;
-
 const formatDate = (iso: string): string => {
   // YYYY-MM-DD format
   return iso.split("T")[0];
@@ -71,7 +69,7 @@ export function generateCsv(data: ExportData): string {
     phePerExchange,
   } = data;
 
-  const exchUnit = phePerExchange || PHE_PER_EXCHANGE;
+  const exchUnit = phePerExchange;
   const lines: string[] = [];
 
   // --- Header ---

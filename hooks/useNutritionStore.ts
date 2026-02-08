@@ -65,10 +65,16 @@ interface NutritionState {
   getMealsByDate: (date: Date) => MealRecord[];
   getMonthlyData: (year: number, month: number) => Record<string, NutritionData>;
 
-  // Exchange 계산 (PKU 전용: 1 Exchange = 50mg Phe)
+  // Exchange 설정 및 계산
+  phePerExchange: number; // 1 Exchange = Xmg Phe (기본 50)
+  setPhePerExchange: (value: number) => void;
   getExchanges: (phenylalanine_mg: number) => number;
   getTodayExchanges: () => number;
   getExchangeGoal: () => number;
+
+  // 수동 입력 모드 선호
+  preferManualEntry: boolean;
+  setPreferManualEntry: (prefer: boolean) => void;
 
   // 하이드레이션 상태
   _hasHydrated: boolean;
@@ -111,9 +117,6 @@ const isSameDate = (dateString: string, targetDate: Date): boolean => {
 const isToday = (dateString: string): boolean => {
   return isSameDate(dateString, new Date());
 };
-
-// Exchange 상수 (1 Exchange = 50mg Phe)
-const PHE_PER_EXCHANGE = 50;
 
 // 최근 7일 내인지 확인
 const isWithinWeek = (dateString: string): boolean => {
@@ -315,9 +318,14 @@ export const useNutritionStore = create<NutritionState>()(
         return result;
       },
 
-      // Exchange 계산 (1 Exchange = 50mg Phe)
+      // Exchange 설정
+      phePerExchange: 50,
+      setPhePerExchange: (value) => set({ phePerExchange: value }),
+
+      // Exchange 계산
       getExchanges: (phenylalanine_mg: number) => {
-        return Math.round((phenylalanine_mg / PHE_PER_EXCHANGE) * 10) / 10;
+        const phePerEx = get().phePerExchange || 50;
+        return Math.round((phenylalanine_mg / phePerEx) * 10) / 10;
       },
 
       // 오늘의 Exchange 합계
@@ -326,11 +334,14 @@ export const useNutritionStore = create<NutritionState>()(
         return get().getExchanges(todayNutrition.phenylalanine_mg || 0);
       },
 
-      // Exchange 목표 (일일 Phe 목표 / 50)
+      // Exchange 목표
       getExchangeGoal: () => {
         const pheGoal = get().dailyGoals.phenylalanine_mg || 300;
         return get().getExchanges(pheGoal);
       },
+
+      preferManualEntry: false,
+      setPreferManualEntry: (prefer) => set({ preferManualEntry: prefer }),
 
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
@@ -347,6 +358,8 @@ export const useNutritionStore = create<NutritionState>()(
         mealRecords: state.mealRecords,
         waterIntakes: state.waterIntakes,
         waterGoal: state.waterGoal,
+        phePerExchange: state.phePerExchange,
+        preferManualEntry: state.preferManualEntry,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
