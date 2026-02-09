@@ -4,7 +4,6 @@ import {
   Serwist,
   CacheFirst,
   StaleWhileRevalidate,
-  NetworkFirst,
   ExpirationPlugin,
   CacheableResponsePlugin,
 } from "serwist";
@@ -75,20 +74,6 @@ const serwist = new Serwist({
           new ExpirationPlugin({
             maxEntries: 100,
             maxAgeSeconds: 24 * 60 * 60, // 24시간
-          }),
-        ],
-      }),
-    },
-    // AI API (analyze, coaching) - NetworkFirst (타임아웃 30초)
-    {
-      matcher: /\/api\/(analyze|coaching)/i,
-      handler: new NetworkFirst({
-        cacheName: "ai-api-cache",
-        networkTimeoutSeconds: 30,
-        plugins: [
-          new ExpirationPlugin({
-            maxEntries: 50,
-            maxAgeSeconds: 60 * 60, // 1시간
           }),
         ],
       }),

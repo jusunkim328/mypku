@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { requireAuth } from "@/lib/apiAuth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { withRetry } from "@/lib/retry";
 import type { FoodItem, PKUSafetyLevel } from "@/types/nutrition";
 
@@ -62,6 +63,14 @@ Transcript:
 export async function POST(req: NextRequest) {
   const auth = await requireAuth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const rl = checkRateLimit(`live-extract:${auth.user.id}`, RATE_LIMITS.AI_ANALYZE);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } }
+    );
+  }
 
   try {
     const { transcript } = await req.json();

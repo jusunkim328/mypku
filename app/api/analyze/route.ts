@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeFood } from "@/lib/gemini";
 import { requireAuth } from "@/lib/apiAuth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { sanitizeFilterValue } from "@/lib/sanitize";
 import { calculateTotalNutrition } from "@/lib/nutrition";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -98,6 +99,14 @@ export async function POST(
       return NextResponse.json(
         { success: false, error: "Authentication required" },
         { status: 401 }
+      );
+    }
+
+    const rl = checkRateLimit(`analyze:${auth.user.id}`, RATE_LIMITS.AI_ANALYZE);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } }
       );
     }
 

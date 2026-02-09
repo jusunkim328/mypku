@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { extractBarcodeFromImage } from "@/lib/gemini";
 import { requireAuth } from "@/lib/apiAuth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +10,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
         { status: 401 }
+      );
+    }
+
+    const rl = checkRateLimit(`barcode-ocr:${auth.user.id}`, RATE_LIMITS.BARCODE_OCR);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } }
       );
     }
 

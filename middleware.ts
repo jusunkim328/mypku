@@ -10,10 +10,8 @@ export async function middleware(request: NextRequest) {
 
   // /auth/callback은 locale 처리 없이 Supabase 세션만 처리
   if (pathname.startsWith("/auth/callback")) {
-    console.log("[middleware] Processing /auth/callback");
     const response = NextResponse.next({ request });
     const result = await updateSessionWithResponse(request, response);
-    console.log("[middleware] Cookies after callback:", result.headers.getSetCookie());
     return result;
   }
 

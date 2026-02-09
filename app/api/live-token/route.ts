@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { requireAuth } from "@/lib/apiAuth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
 import { GEMINI_LIVE_MODEL } from "@/lib/constants/gemini";
 
 export async function POST() {
   const auth = await requireAuth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const rl = checkRateLimit(`live-token:${auth.user.id}`, RATE_LIMITS.LIVE_TOKEN);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } }
+    );
+  }
 
   try {
     const apiKey = process.env.GEMINI_API_KEY;
