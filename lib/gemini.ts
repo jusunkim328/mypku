@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenAI, MediaResolution, ThinkingLevel } from "@google/genai";
 import { PKU_ANALYSIS_PROMPT } from "./prompts";
 import type {
   FoodItem,
@@ -9,7 +9,10 @@ import type {
 } from "@/types/nutrition";
 
 // 서버 사이드에서만 사용 (API Route에서 호출)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
+// Gemini 3 모델
+const GEMINI_MODEL = "gemini-3-flash-preview";
 
 // Exponential Backoff 설정
 const RETRY_CONFIG = {
@@ -62,36 +65,36 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// Structured Output 스키마 (PKU 전용)
-const pkuAnalysisSchema = {
-  type: SchemaType.OBJECT,
+// Gemini 3 Structured Output — PKU 분석 JSON Schema
+const pkuAnalysisJsonSchema = {
+  type: "object",
   properties: {
     foods: {
-      type: SchemaType.ARRAY,
+      type: "array",
       items: {
-        type: SchemaType.OBJECT,
+        type: "object",
         properties: {
-          name: { type: SchemaType.STRING },
-          estimated_weight_g: { type: SchemaType.NUMBER },
-          calories: { type: SchemaType.NUMBER },
-          protein_g: { type: SchemaType.NUMBER },
-          carbs_g: { type: SchemaType.NUMBER },
-          fat_g: { type: SchemaType.NUMBER },
-          confidence: { type: SchemaType.NUMBER },
+          name: { type: "string" },
+          estimated_weight_g: { type: "number" },
+          calories: { type: "number" },
+          protein_g: { type: "number" },
+          carbs_g: { type: "number" },
+          fat_g: { type: "number" },
+          confidence: { type: "number" },
           confidence_level: {
-            type: SchemaType.STRING,
+            type: "string",
             enum: ["high", "medium", "low"],
           },
           // PKU 필수 필드
-          phe_mg: { type: SchemaType.NUMBER },
+          phe_mg: { type: "number" },
           pku_safety: {
-            type: SchemaType.STRING,
+            type: "string",
             enum: ["safe", "caution", "avoid"],
           },
-          exchanges: { type: SchemaType.NUMBER },
+          exchanges: { type: "number" },
           alternatives: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING },
+            type: "array",
+            items: { type: "string" },
           },
         },
         required: [
@@ -145,35 +148,35 @@ export async function analyzeFood(imageBase64: string): Promise<{
   items: FoodItem[];
   totalNutrition: NutritionData;
 }> {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: pkuAnalysisSchema,
-    },
-  });
-
   // Base64에서 MIME 타입 추출
   const mimeMatch = imageBase64.match(/^data:(.+);base64,/);
   const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
   const base64Data = imageBase64.replace(/^data:.+;base64,/, "");
 
-  const result = await withRetry(
+  const response = await withRetry(
     () =>
-      model.generateContent([
-        PKU_ANALYSIS_PROMPT,
-        {
-          inlineData: {
-            mimeType,
-            data: base64Data,
-          },
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: [
+          PKU_ANALYSIS_PROMPT,
+          { inlineData: { mimeType, data: base64Data } },
+        ],
+        config: {
+          // Gemini 3: Google Search Grounding — 실시간 웹 검색으로 정확한 Phe 데이터 보강
+          tools: [{ googleSearch: {} }],
+          responseMimeType: "application/json",
+          responseJsonSchema: pkuAnalysisJsonSchema,
+          // Gemini 3: Thinking Level — 복잡한 영양 분석에 deep thinking 적용
+          thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+          // Gemini 3: Media Resolution — 고해상도 이미지 분석으로 음식 정확 식별
+          mediaResolution: MediaResolution.MEDIA_RESOLUTION_HIGH,
         },
-      ]),
+      }),
     "analyzeFood"
   );
 
-  const response = result.response;
-  const text = response.text();
+  const text = response.text;
+  if (!text) throw new Error("Empty response from Gemini");
 
   const parsed: GeminiAnalysisResult = JSON.parse(text);
 
@@ -227,14 +230,6 @@ export async function analyzeFoodByText(foodDescription: string, locale: string 
   items: FoodItem[];
   totalNutrition: NutritionData;
 }> {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: pkuAnalysisSchema,
-    },
-  });
-
   const prompt = `${PKU_ANALYSIS_PROMPT}
 
 ## Food Description to Analyze
@@ -257,12 +252,25 @@ Return a JSON with foods array containing:
 - exchanges (phe_mg / 50)
 - alternatives (array of low-phe substitutes if pku_safety is "caution" or "avoid")`;
 
-  const result = await withRetry(
-    () => model.generateContent(prompt),
+  const response = await withRetry(
+    () =>
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          // Gemini 3: Google Search Grounding — 텍스트 기반 검색으로 정확한 Phe 데이터
+          tools: [{ googleSearch: {} }],
+          responseMimeType: "application/json",
+          responseJsonSchema: pkuAnalysisJsonSchema,
+          // Gemini 3: Thinking Level — 영양 분석에 deep thinking
+          thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+        },
+      }),
     "analyzeFoodByText"
   );
-  const response = result.response;
-  const text = response.text();
+
+  const text = response.text;
+  if (!text) throw new Error("Empty response from Gemini");
 
   const parsed: GeminiAnalysisResult = JSON.parse(text);
 
@@ -331,28 +339,30 @@ Return format: Just the numbers, nothing else.`;
 export async function extractBarcodeFromImage(
   imageBase64: string
 ): Promise<string | null> {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
   // Base64에서 MIME 타입 추출
   const mimeMatch = imageBase64.match(/^data:(.+);base64,/);
   const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
   const base64Data = imageBase64.replace(/^data:.+;base64,/, "");
 
-  const result = await withRetry(
+  const response = await withRetry(
     () =>
-      model.generateContent([
-        BARCODE_OCR_PROMPT,
-        {
-          inlineData: {
-            mimeType,
-            data: base64Data,
-          },
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: [
+          BARCODE_OCR_PROMPT,
+          { inlineData: { mimeType, data: base64Data } },
+        ],
+        config: {
+          // Gemini 3: Thinking Level — 단순 OCR에는 low thinking으로 빠른 응답
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          // Gemini 3: Media Resolution — 바코드 인식에 중간 해상도 충분
+          mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
         },
-      ]),
+      }),
     "extractBarcode"
   );
 
-  const text = result.response.text().trim();
+  const text = (response.text || "").trim();
 
   // 숫자만 추출 (8-14자리)
   const match = text.match(/^\d{8,14}$/);
@@ -364,10 +374,6 @@ export async function generateCoaching(
   dailyGoals: string,
   locale: string = "en"
 ): Promise<string> {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-  });
-
   const langInstructions: Record<string, string> = {
     ko: "응답은 한국어로 작성하세요.",
     ru: "Напишите ответ на русском языке.",
@@ -399,9 +405,18 @@ ${dailyGoals}
 
 ${languageInstruction} Respond in plain text only (not JSON).`;
 
-  const result = await withRetry(
-    () => model.generateContent(prompt),
+  const response = await withRetry(
+    () =>
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          // Gemini 3: Thinking Level — 간결한 코칭 메시지에 low thinking
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+        },
+      }),
     "generateCoaching"
   );
-  return result.response.text();
+
+  return response.text || "";
 }

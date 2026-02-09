@@ -1,87 +1,146 @@
-# MyPKU - AI 기반 맞춤형 식단 관리 서비스
+# MyPKU
 
-PKU(페닐케톤뇨증) 환자와 일반 사용자를 위한 AI 기반 맞춤형 식단 관리 웹 서비스입니다.
+AI-powered diet management for PKU patients. Analyze meals through photos, live video conversation, voice, and barcode scanning to track daily phenylalanine intake.
 
-## 핵심 기능
+Built with Gemini 3 and Gemini Live API for the [Google Gemini API Developer Competition](https://gemini3.devpost.com/).
 
-- **음식 사진 분석**: Gemini 3 Vision API로 음식 사진에서 영양성분 자동 추출
-- **듀얼 모드 UI**: PKU 모드(페닐알라닌 추적) / 일반 모드(칼로리 추적)
-- **일일 대시보드**: 오늘의 영양소 섭취량 시각화
-- **AI 코칭**: 주간 섭취량 기반 맞춤형 피드백 메시지
-- **식사 히스토리**: 최근 7일간 기록 조회
+## What is PKU?
 
-## 기술 스택
+Phenylketonuria (PKU) is a genetic metabolic disorder where the body can't break down phenylalanine (Phe), an amino acid in most proteins. Patients must limit Phe to 200-500mg per day for life. To put that in perspective, a single egg contains about 330mg. Going over causes neurological damage.
 
-- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS
-- **AI**: Gemini 3 Pro Vision API (2단계 프롬프트 엔지니어링)
-- **상태관리**: Zustand (LocalStorage persist)
-- **차트**: Recharts
-- **배포**: Vercel
+Most PKU families track Phe manually with paper charts and memorized food lists. MyPKU replaces that with AI-powered meal analysis that gives Phe estimates in seconds.
 
-## 시작하기
+## How We Use Gemini
 
-### 환경 변수 설정
+MyPKU uses 6 Gemini API capabilities across 5 endpoints:
+
+**Live Meal Analysis** (`gemini-2.5-flash-native-audio-preview`)
+- Real-time video + audio over WebSocket. Patient shows food on camera and talks about portions.
+- Function Calling (`log_pku_food_analysis`) extracts structured `FoodItem[]` mid-conversation.
+- Ephemeral auth tokens issued server-side. API key never reaches the browser.
+
+**Photo Analysis** (`gemini-3-flash-preview`)
+- Thinking Level: `HIGH` for multi-item Phe estimation with reasoning chains.
+- Google Search Grounding to look up Phe values for regional and brand-specific foods.
+- Structured Output (`responseJsonSchema`) guarantees valid JSON with `phe_mg`, `pku_safety`, `exchanges`.
+- Media Resolution: `HIGH` to catch ingredient details that affect Phe (sesame seeds, sauce, garnish).
+
+**Text/Voice Analysis** (`gemini-3-flash-preview`)
+- Same Thinking HIGH + Search Grounding + Structured Output pipeline as photo analysis.
+- Accepts natural language food descriptions ("200g bibimbap without egg").
+
+**Barcode OCR** (`gemini-3-flash-preview`)
+- Thinking Level: `LOW` for fast digit extraction.
+- Media Resolution: `MEDIUM` (sufficient for printed barcodes).
+- Fallback when zxing-wasm can't read damaged or curved labels.
+
+**Diagnosis OCR** (`gemini-3-flash-preview`)
+- Extracts Phe limits and dietary parameters from photographed PKU diagnosis letters.
+- Thinking Level: `HIGH` + Structured Output for clinical data accuracy.
+- Letters vary by country and clinic, so deep reasoning is needed to find the right values.
+
+**AI Coaching** (`gemini-3-flash-preview`)
+- Thinking Level: `LOW` for concise responses.
+- Generates personalized weekly feedback based on intake patterns.
+- Multilingual output (EN/KO/RU) via prompt engineering.
+
+## Features
+
+### Input Methods
+- **Photo Analysis**: Snap a meal photo for instant Phe breakdown
+- **Live Conversation**: Show food on camera, talk through portions with Gemini
+- **Voice Input**: Describe what you ate, get Phe estimates
+- **Barcode Scan**: Client-side scanning (zxing-wasm) with Gemini OCR fallback
+- **Food Search**: Query USDA FoodData Central and Korean MFDS databases
+- **Diagnosis OCR**: Photograph a diagnosis letter to auto-configure Phe limits
+
+### Tracking
+- **Phe Dashboard**: Color-coded daily progress (green/yellow/red)
+- **Exchange Calculator**: mg to exchange units (1 exchange = 50mg Phe)
+- **Formula Tracking**: Medical formula intake with time slots and reminders
+- **Blood Level History**: Phe blood test trends with test reminders
+- **Weekly Insights**: Pattern detection, goal hit rates, AI coaching tips
+- **Reports**: Exportable summaries for clinic visits
+
+### Collaboration
+- **Caregiver Mode**: Parents link to child's account with granular permissions (view intake, blood levels, alerts). Invite/accept flow with RLS enforcement.
+- **PKU Recipes**: Recipe database with per-serving Phe calculations
+- **Multilingual**: English, Korean, Russian with region-specific PKU terminology
+
+### Infrastructure
+- **PWA**: Installable, works offline with cached food database (90-day TTL)
+- **Guest Mode**: Full functionality without sign-up (localStorage)
+- **Cloud Sync**: Google OAuth login syncs data across devices via Supabase
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| AI | Gemini 3 (`gemini-3-flash-preview`), Gemini Live API (`native-audio-preview`) |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS |
+| Backend | Next.js API Routes, Supabase (Auth, PostgreSQL, RLS, Storage) |
+| State | Zustand 5 with localStorage persistence |
+| PWA | Serwist (runtime caching, offline fallback) |
+| i18n | next-intl (EN, KO, RU) |
+| Food Data | USDA FoodData Central, Korean MFDS API |
+| Scanning | zxing-wasm (client-side), Gemini OCR (fallback) |
+| Testing | Vitest, Testing Library |
+| Deployment | Vercel |
+
+## Architecture
+
+```
+Client (PWA)
+│
+├─ Photo ──┐
+├─ Voice ──┤
+├─ Live  ──┤──→ API Routes ──→ Gemini 3 / Live API ──→ FoodItem[]
+├─ Scan  ──┤        │                                      │
+├─ OCR   ──┘        │                                      ▼
+│                    │                              Zustand Store
+│                    │                          ┌──────────┴──────────┐
+│                    │                     Guest Mode            Cloud Sync
+│                    │                   (localStorage)         (Supabase)
+│                    │
+│                    └──→ USDA / Korean MFDS APIs ──→ PKU Food Cache
+```
+
+## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh/)
+- [Supabase](https://supabase.com/) project
+- [Gemini API key](https://aistudio.google.com/apikey)
+
+### Setup
 
 ```bash
+git clone https://github.com/3000-2/mypku.git
+cd mypku
+bun install
 cp .env.example .env
 ```
 
-`.env` 파일에 Gemini API 키를 설정하세요:
+Fill in `.env`:
 
 ```
-GEMINI_API_KEY=your_actual_api_key
+GEMINI_API_KEY=                    # Required
+NEXT_PUBLIC_SUPABASE_URL=          # Required
+NEXT_PUBLIC_SUPABASE_ANON_KEY=     # Required
+FOOD_SAFETY_KOREA_API_KEY=         # Optional — Korean food database
+USDA_FDC_API_KEY=                  # Optional — USDA food database
 ```
 
-### 개발 서버 실행
+### Run
 
 ```bash
-# 의존성 설치
-bun install
-
-# 개발 서버 실행
-bun dev
+bun dev          # Dev server at localhost:3000
+bun build        # Production build
+bun lint         # ESLint
+bun test:run     # Run tests
 ```
 
-http://localhost:3000 에서 확인할 수 있습니다.
+## Disclaimer
 
-### 프로덕션 빌드
-
-```bash
-bun run build
-bun start
-```
-
-## 프로젝트 구조
-
-```
-mypku/
-├── app/
-│   ├── page.tsx              # 메인 대시보드
-│   ├── analyze/page.tsx      # 음식 사진 분석
-│   ├── history/page.tsx      # 식사 기록
-│   ├── settings/page.tsx     # 모드 설정
-│   └── api/
-│       ├── analyze/route.ts  # Gemini API 음식 분석
-│       └── coaching/route.ts # AI 코칭 메시지
-├── components/
-│   ├── dashboard/            # 대시보드 컴포넌트
-│   ├── analyze/              # 분석 관련 컴포넌트
-│   ├── pages/                # 페이지 클라이언트 컴포넌트
-│   ├── common/               # 공통 컴포넌트
-│   └── ui/                   # UI 컴포넌트 라이브러리
-├── lib/
-│   ├── gemini.ts             # Gemini API 클라이언트
-│   └── prompts.ts            # 2단계 프롬프트
-├── hooks/
-│   └── useNutritionStore.ts  # Zustand 상태 관리
-└── types/
-    └── nutrition.ts          # TypeScript 타입
-```
-
-## 면책조항
-
-본 서비스는 의료기기가 아니며, 질병의 유무를 판단하거나 치료할 수 없습니다. 중요한 의학적 결정은 반드시 의사와 상의하십시오. AI 분석 결과는 추정치이며 참고용입니다.
-
-## 라이선스
-
-MIT License
+MyPKU is a decision-support tool, not a medical device. AI analysis results are estimates. Always consult your doctor or metabolic dietitian for medical decisions.

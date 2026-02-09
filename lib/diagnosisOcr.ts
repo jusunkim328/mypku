@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenAI, MediaResolution, ThinkingLevel } from "@google/genai";
 
 // Exponential Backoff 설정
 const RETRY_CONFIG = {
@@ -62,44 +62,44 @@ export interface DiagnosisOCRResult {
   confidence: number;
 }
 
-// Structured Output 스키마
-const diagnosisOcrSchema = {
-  type: SchemaType.OBJECT,
+// Gemini 3 Structured Output — 진단서 OCR JSON Schema
+const diagnosisOcrJsonSchema = {
+  type: "object",
   properties: {
     phenylalanine_allowance_mg: {
-      type: SchemaType.NUMBER,
+      type: "number",
       description:
         "Daily phenylalanine allowance in mg. Extract from phrases like 'daily Phe intake', 'Phe tolerance', 'phenylalanine allowance'. Value 0 means not found.",
     },
     blood_phe_target_min: {
-      type: SchemaType.NUMBER,
+      type: "number",
       description:
         "Minimum target blood Phe level. Extract from phrases like 'target range', 'blood Phe level'. Value 0 means not found.",
     },
     blood_phe_target_max: {
-      type: SchemaType.NUMBER,
+      type: "number",
       description:
         "Maximum target blood Phe level. Extract from phrases like 'target range', 'blood Phe level'. Value 0 means not found.",
     },
     blood_phe_unit: {
-      type: SchemaType.STRING,
+      type: "string",
       enum: ["umol/L", "mg/dL", "unknown"],
       description:
         "Unit of blood Phe levels. Common units: umol/L (µmol/L, micromol/L) or mg/dL.",
     },
     exchange_unit_mg: {
-      type: SchemaType.NUMBER,
+      type: "number",
       description:
         "Phe amount per exchange unit in mg. Common values: 50mg (standard) or 15mg (detailed). Value 0 means not found.",
     },
     evidence_snippets: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
+      type: "array",
+      items: { type: "string" },
       description:
         "Exact text snippets from the document that support the extracted values. Quote the relevant portions.",
     },
     confidence: {
-      type: SchemaType.NUMBER,
+      type: "number",
       description:
         "Overall confidence in the extraction (0.0 to 1.0). Consider document quality, clarity of values, and whether units are explicitly stated.",
     },
@@ -146,41 +146,43 @@ Extract key PKU dietary management values from this medical document image.
 - This may be in any language (English, Korean, Japanese, German, etc.) - extract values regardless of language`;
 
 /**
- * Gemini Vision으로 진단서/처방전에서 PKU 관련 정보 추출
+ * Gemini 3 Vision으로 진단서/처방전에서 PKU 관련 정보 추출
+ * - Thinking Level: high (복잡한 의료 문서 분석)
+ * - Media Resolution: high (OCR 정확도 향상)
  */
 export async function extractDiagnosisInfo(
   imageBase64: string
 ): Promise<DiagnosisOCRResult> {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: diagnosisOcrSchema,
-    },
-  });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
   // Base64에서 MIME 타입 추출
   const mimeMatch = imageBase64.match(/^data:(.+);base64,/);
   const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
   const base64Data = imageBase64.replace(/^data:.+;base64,/, "");
 
-  const result = await withRetry(
+  const response = await withRetry(
     () =>
-      model.generateContent([
-        DIAGNOSIS_OCR_PROMPT,
-        {
-          inlineData: {
-            mimeType,
-            data: base64Data,
-          },
+      ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          DIAGNOSIS_OCR_PROMPT,
+          { inlineData: { mimeType, data: base64Data } },
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseJsonSchema: diagnosisOcrJsonSchema,
+          // Gemini 3: Thinking Level — 복잡한 의료 문서 분석에 deep thinking
+          thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+          // Gemini 3: Media Resolution — 고해상도로 문서 텍스트 정확 인식
+          mediaResolution: MediaResolution.MEDIA_RESOLUTION_HIGH,
         },
-      ]),
+      }),
     "extractDiagnosisInfo"
   );
 
-  const text = result.response.text();
+  const text = response.text;
+  if (!text) throw new Error("Empty response from Gemini");
+
   const parsed = JSON.parse(text);
 
   // 0 값을 null로 변환 (Gemini 스키마에서 nullable을 지원하지 않으므로)

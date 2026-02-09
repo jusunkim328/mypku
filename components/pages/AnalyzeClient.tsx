@@ -22,11 +22,12 @@ import { startRecording, logRecordingMetrics } from "@/lib/analytics";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import FavoriteMealCard from "@/components/favorites/FavoriteMealCard";
-import { Heart } from "lucide-react";
+import LiveAnalysis from "@/components/analyze/LiveAnalysis";
+import { Heart, Radio } from "lucide-react";
 import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
 type AnalysisState = "idle" | "loading" | "success" | "error";
-type InputMode = "image" | "voice" | "manual" | "favorites";
+type InputMode = "image" | "voice" | "manual" | "favorites" | "live";
 
 function calculateTotalNutrition(items: FoodItem[]): NutritionData {
   return items.reduce(
@@ -88,6 +89,7 @@ export default function AnalyzeClient() {
   const isOnline = useNetworkStatus();
   const { favorites, removeFavorite } = useFavoriteMeals();
   const tFav = useTranslations("Favorites");
+  const tLive = useTranslations("LiveAnalysis");
 
   const [inputMode, setInputMode] = useState<InputMode>("image");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -330,6 +332,17 @@ export default function AnalyzeClient() {
             {t("manualEntry")}
           </button>
           <button
+            onClick={() => handleModeChange("live")}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+              inputMode === "live"
+                ? "bg-white dark:bg-gray-700 text-red-600 dark:text-red-400 shadow-sm"
+                : "text-gray-600 dark:text-gray-400"
+            }`}
+          >
+            <Radio className="w-4 h-4" />
+            {tLive("tab")}
+          </button>
+          <button
             onClick={() => handleModeChange("favorites")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
               inputMode === "favorites"
@@ -387,6 +400,22 @@ export default function AnalyzeClient() {
               }}
             />
           </Card>
+        )}
+
+        {/* 라이브 분석 */}
+        {inputMode === "live" && (
+          isAuthenticated ? (
+            <LiveAnalysis
+              onSave={(liveItems, liveNutrition) => {
+                setItems(liveItems);
+                setTotalNutrition(liveNutrition);
+                setAnalysisState("success");
+                setInputMode("image"); // 결과 표시 모드로 전환
+              }}
+            />
+          ) : (
+            <LoginPromptCard features={["featureAnalyze", "featureVoice"]} />
+          )
         )}
 
         {/* 즐겨찾기 */}

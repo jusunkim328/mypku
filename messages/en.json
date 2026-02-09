@@ -907,5 +907,31 @@
     "pheAlertMessage": "Patient is at {percent}% of daily Phe goal ({current}/{goal}mg)",
     "pheAlertOver": "Patient exceeded daily Phe goal by {overPercent}% ({current}/{goal}mg)",
     "growthGuidance": "As your child grows, gradually grant them more permissions."
+  },
+  "LiveAnalysis": {
+    "title": "Live Analysis",
+    "tab": "Live",
+    "startCamera": "Start Camera",
+    "stopCamera": "Stop Camera",
+    "startMic": "Start Mic",
+    "stopMic": "Stop Mic",
+    "save": "Save Analysis",
+    "connecting": "Connecting to AI...",
+    "connected": "Connected — show food and talk!",
+    "disconnected": "Disconnected",
+    "sessionLimit": "Session limit reached (2 min). Results saved.",
+    "unsupported": "Live analysis requires a modern browser with camera and microphone support.",
+    "permissionDenied": "Camera or microphone permission denied.",
+    "timeRemaining": "{minutes}:{seconds} remaining",
+    "foodDetected": "{count} food(s) detected",
+    "restart": "Start New Session",
+    "noFoodsYet": "Show your food to the camera and describe it",
+    "error": "Connection error. Please try again.",
+    "liveLabel": "LIVE",
+    "extracting": "Analyzing conversation for food data...",
+    "extractError_model_overloaded": "The AI model is temporarily overloaded. Please try again in a moment.",
+    "extractError_rate_limit": "Too many requests. Please wait a moment and try again.",
+    "extractError_region_unsupported": "This AI model is not available in your region.",
+    "extractError_extract_failed": "Failed to analyze the conversation. Please try again."
   }
 }

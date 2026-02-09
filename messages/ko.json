@@ -247,7 +247,8 @@
     "source_manual": "수동입력",
     "source_usda": "USDA",
     "source_kfda": "식약처",
-    "source_voice": "음성"
+    "source_voice": "음성",
+    "aiEstimate": "AI 추정값"
   },
   "NutrientRing": {
     "goal": "목표",
@@ -906,5 +907,31 @@
     "pheAlertMessage": "환자의 일일 Phe 목표 대비 {percent}% ({current}/{goal}mg)",
     "pheAlertOver": "환자가 일일 Phe 목표를 {overPercent}% 초과했습니다 ({current}/{goal}mg)",
     "growthGuidance": "아이가 성장함에 따라 점진적으로 더 많은 권한을 부여하세요."
+  },
+  "LiveAnalysis": {
+    "title": "실시간 분석",
+    "tab": "라이브",
+    "startCamera": "카메라 시작",
+    "stopCamera": "카메라 중지",
+    "startMic": "마이크 시작",
+    "stopMic": "마이크 중지",
+    "save": "분석 저장",
+    "connecting": "AI 연결 중...",
+    "connected": "연결됨 — 음식을 보여주고 말해보세요!",
+    "disconnected": "연결 끊김",
+    "sessionLimit": "세션 시간 초과 (2분). 결과가 저장되었습니다.",
+    "unsupported": "실시간 분석은 카메라와 마이크를 지원하는 최신 브라우저가 필요합니다.",
+    "permissionDenied": "카메라 또는 마이크 권한이 거부되었습니다.",
+    "timeRemaining": "{minutes}:{seconds} 남음",
+    "foodDetected": "음식 {count}개 감지됨",
+    "restart": "새 세션 시작",
+    "noFoodsYet": "카메라에 음식을 보여주고 설명해주세요",
+    "error": "연결 오류. 다시 시도해주세요.",
+    "liveLabel": "라이브",
+    "extracting": "대화 내용에서 음식 데이터 분석 중...",
+    "extractError_model_overloaded": "AI 모델이 일시적으로 과부하 상태입니다. 잠시 후 다시 시도해주세요.",
+    "extractError_rate_limit": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+    "extractError_region_unsupported": "현재 지역에서 이 AI 모델을 사용할 수 없습니다.",
+    "extractError_extract_failed": "대화 분석에 실패했습니다. 다시 시도해주세요."
   }
 }
