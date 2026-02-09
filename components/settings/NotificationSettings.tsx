@@ -17,12 +17,16 @@ export default function NotificationSettings() {
     pheWarnings,
     goalAchievements,
     streakMilestones,
+    formulaMissedReminder,
+    formulaMissedDelayMin,
     requestPermission,
     setMealReminderTime,
     toggleMealReminder,
     togglePheWarnings,
     toggleGoalAchievements,
     toggleStreakMilestones,
+    toggleFormulaMissedReminder,
+    setFormulaMissedDelayMin,
     _hasHydrated,
   } = useNotificationStore();
 
@@ -168,6 +172,34 @@ export default function NotificationSettings() {
             disabled={!isGranted}
           />
         </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("formulaMissedReminder")}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t("formulaMissedReminderDesc")}</p>
+          </div>
+          <Toggle
+            checked={formulaMissedReminder && isGranted}
+            onChange={toggleFormulaMissedReminder}
+            disabled={!isGranted}
+          />
+        </div>
+
+        {formulaMissedReminder && isGranted && (
+          <div className="ml-1">
+            <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">{t("formulaMissedDelay")}</label>
+            <select
+              value={formulaMissedDelayMin}
+              onChange={(e) => setFormulaMissedDelayMin(Number(e.target.value))}
+              className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded"
+            >
+              <option value={15}>{t("delay15min")}</option>
+              <option value={30}>{t("delay30min")}</option>
+              <option value={60}>{t("delay60min")}</option>
+            </select>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{t("formulaMissedNote")}</p>
+          </div>
+        )}
       </div>
     </Card>
   );

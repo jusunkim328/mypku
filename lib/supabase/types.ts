@@ -59,6 +59,7 @@ export type Database = {
       caregiver_links: {
         Row: {
           accepted_at: string | null
+          alert_threshold_percent: number | null
           caregiver_user_id: string | null
           id: string
           invite_email: string | null
@@ -71,6 +72,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          alert_threshold_percent?: number | null
           caregiver_user_id?: string | null
           id?: string
           invite_email?: string | null
@@ -83,6 +85,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          alert_threshold_percent?: number | null
           caregiver_user_id?: string | null
           id?: string
           invite_email?: string | null
@@ -268,6 +271,7 @@ export type Database = {
           is_active: boolean | null
           serving_amount: number
           serving_unit: string
+          slot_times: Json | null
           time_slots: string[]
           updated_at: string | null
           user_id: string | null
@@ -279,6 +283,7 @@ export type Database = {
           is_active?: boolean | null
           serving_amount?: number
           serving_unit?: string
+          slot_times?: Json | null
           time_slots?: string[]
           updated_at?: string | null
           user_id?: string | null
@@ -290,6 +295,7 @@ export type Database = {
           is_active?: boolean | null
           serving_amount?: number
           serving_unit?: string
+          slot_times?: Json | null
           time_slots?: string[]
           updated_at?: string | null
           user_id?: string | null
@@ -510,6 +516,160 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          recipe_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          recipe_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          recipe_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_favorites_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_items: {
+        Row: {
+          amount: number
+          calories: number | null
+          id: string
+          is_optional: boolean | null
+          name: string
+          name_ko: string | null
+          name_ru: string | null
+          phenylalanine_mg: number
+          protein_g: number
+          recipe_id: string | null
+          sort_order: number | null
+          unit: string
+        }
+        Insert: {
+          amount: number
+          calories?: number | null
+          id?: string
+          is_optional?: boolean | null
+          name: string
+          name_ko?: string | null
+          name_ru?: string | null
+          phenylalanine_mg?: number
+          protein_g?: number
+          recipe_id?: string | null
+          sort_order?: number | null
+          unit: string
+        }
+        Update: {
+          amount?: number
+          calories?: number | null
+          id?: string
+          is_optional?: boolean | null
+          name?: string
+          name_ko?: string | null
+          name_ru?: string | null
+          phenylalanine_mg?: number
+          protein_g?: number
+          recipe_id?: string | null
+          sort_order?: number | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_items_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          category: string
+          cook_time_min: number | null
+          created_at: string | null
+          description: string | null
+          exchanges: number | null
+          id: string
+          image_url: string | null
+          instructions: string | null
+          instructions_ko: string | null
+          instructions_ru: string | null
+          is_verified: boolean | null
+          name: string
+          name_ko: string | null
+          name_ru: string | null
+          pku_safety: string | null
+          prep_time_min: number | null
+          servings: number | null
+          source: string | null
+          total_calories: number
+          total_phe_mg: number
+          total_protein_g: number
+        }
+        Insert: {
+          category: string
+          cook_time_min?: number | null
+          created_at?: string | null
+          description?: string | null
+          exchanges?: number | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          instructions_ko?: string | null
+          instructions_ru?: string | null
+          is_verified?: boolean | null
+          name: string
+          name_ko?: string | null
+          name_ru?: string | null
+          pku_safety?: string | null
+          prep_time_min?: number | null
+          servings?: number | null
+          source?: string | null
+          total_calories?: number
+          total_phe_mg?: number
+          total_protein_g?: number
+        }
+        Update: {
+          category?: string
+          cook_time_min?: number | null
+          created_at?: string | null
+          description?: string | null
+          exchanges?: number | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          instructions_ko?: string | null
+          instructions_ru?: string | null
+          is_verified?: boolean | null
+          name?: string
+          name_ko?: string | null
+          name_ru?: string | null
+          pku_safety?: string | null
+          prep_time_min?: number | null
+          servings?: number | null
+          source?: string | null
+          total_calories?: number
+          total_phe_mg?: number
+          total_protein_g?: number
+        }
+        Relationships: []
+      }
       water_intakes: {
         Row: {
           created_at: string | null
@@ -693,7 +853,6 @@ export const Constants = {
   },
 } as const
 
-// Custom type aliases for convenience
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type DailyGoals = Database["public"]["Tables"]["daily_goals"]["Row"];
 export type MealRecordRow = Database["public"]["Tables"]["meal_records"]["Row"];

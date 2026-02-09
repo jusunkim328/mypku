@@ -46,11 +46,16 @@ interface UseFormulaRecordsReturn {
 
   // 로딩 상태
   isLoading: boolean;
+
+  // 슬롯별 시간 매핑
+  slotTimesMap: Record<string, string>;
 }
 
 const getTodayDateStr = (): string => {
   return new Date().toISOString().split("T")[0];
 };
+
+const EMPTY_SLOT_TIMES: Record<string, string> = {};
 
 export function useFormulaRecords(): UseFormulaRecordsReturn {
   const { user, isAuthenticated } = useAuth();
@@ -283,6 +288,8 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
     [isFormulaActive, isAuthenticated, isCaregiverMode, queryUserId, localStore, timeSlots]
   );
 
+  const slotTimesMap = formulaSettings?.slotTimes ?? EMPTY_SLOT_TIMES;
+
   return {
     isFormulaActive,
     timeSlots,
@@ -293,5 +300,6 @@ export function useFormulaRecords(): UseFormulaRecordsReturn {
     completedCount,
     fetchFormulaSummary,
     isLoading,
+    slotTimesMap,
   };
 }

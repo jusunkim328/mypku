@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Block, Button, Card, Preloader } from "@/components/ui";
-import { ScanBarcode, Database, Settings, Droplets, GraduationCap } from "lucide-react";
+import { ScanBarcode, Database, Settings, Droplets, GraduationCap, BookOpen } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotificationStore } from "@/hooks/useNotificationStore";
 import { useMealRecords } from "@/hooks/useMealRecords";
@@ -23,8 +23,11 @@ import FormulaWidget from "@/components/dashboard/FormulaWidget";
 import PatientSelector from "@/components/caregiver/PatientSelector";
 import PatientBanner from "@/components/caregiver/PatientBanner";
 import BloodTestReminderBanner from "@/components/blood/BloodTestReminderBanner";
+import FormulaReminderBanner from "@/components/dashboard/FormulaReminderBanner";
 import FavoriteMealCard from "@/components/favorites/FavoriteMealCard";
 import Disclaimer from "@/components/common/Disclaimer";
+import CaregiverPheAlert from "@/components/caregiver/CaregiverPheAlert";
+import WeeklyInsight from "@/components/dashboard/WeeklyInsight";
 
 export default function HomeClient() {
   const t = useTranslations("HomePage");
@@ -152,9 +155,15 @@ export default function HomeClient() {
       {/* 보호자 모드 배너 */}
       <PatientBanner />
 
+      {/* 보호자 Phe 알림 (보호자 모드에서만) */}
+      <CaregiverPheAlert />
+
       <Block className="space-y-4">
         {/* 혈중 검사 리마인더 배너 */}
         <BloodTestReminderBanner compact />
+
+        {/* 포뮬러 미복용 리마인더 배너 */}
+        <FormulaReminderBanner />
 
         {/* Phe 잔여량 카드 (PKU 핵심 지표) */}
         <PheRemainingCard
@@ -217,6 +226,9 @@ export default function HomeClient() {
           </Card>
         )}
 
+        {/* 주간 인사이트 */}
+        <WeeklyInsight />
+
         {/* 스트릭 배지 */}
         <StreakBadge />
 
@@ -269,6 +281,12 @@ export default function HomeClient() {
             <Button large outline className="w-full flex items-center justify-center gap-2">
               <Database className="w-5 h-5" />
               {t("foodDatabase")}
+            </Button>
+          </Link>
+          <Link href="/recipes" className="md:col-span-2">
+            <Button large outline className="w-full flex items-center justify-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              {t("recipes")}
             </Button>
           </Link>
           <Link href="/learn" className="col-span-2 md:col-span-4">

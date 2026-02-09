@@ -5,13 +5,7 @@ import { Check, FlaskConical, Settings2 } from "lucide-react";
 import { useFormulaRecords } from "@/hooks/useFormulaRecords";
 import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import { Link } from "@/i18n/navigation";
-
-const SLOT_ICONS: Record<string, string> = {
-  morning: "\u2600\uFE0F",
-  noon: "\uD83C\uDF24\uFE0F",
-  evening: "\uD83C\uDF19",
-  bedtime: "\uD83C\uDF1A",
-};
+import { SLOT_ICONS } from "@/lib/formulaSlotDefaults";
 
 export default function FormulaWidget() {
   const t = useTranslations("Formula");

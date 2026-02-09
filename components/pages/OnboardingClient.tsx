@@ -121,6 +121,7 @@ export default function OnboardingClient() {
           servingAmount: data.formulaServingAmount,
           servingUnit: data.formulaServingUnit as "ml" | "g" | "scoop",
           timeSlots: data.formulaTimeSlots,
+          slotTimes: {},
           isActive: true,
         });
       }

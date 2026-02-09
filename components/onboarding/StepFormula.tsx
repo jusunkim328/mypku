@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Input, NumberInput } from "@/components/ui";
 import { FlaskConical, X, Plus } from "lucide-react";
+import { ALL_SLOTS } from "@/lib/formulaSlotDefaults";
 
 interface StepFormulaProps {
   usesFormula: boolean;
@@ -19,8 +20,6 @@ interface StepFormulaProps {
     formulaTimeSlots?: string[];
   }) => void;
 }
-
-const DEFAULT_SLOTS = ["morning", "noon", "evening", "bedtime"];
 const SERVING_UNITS = ["ml", "g", "scoop"];
 
 export default function StepFormula({
@@ -40,7 +39,7 @@ export default function StepFormula({
     setFormulaChoice(choice);
     onUpdate({ usesFormula: choice === "yes" });
     if (choice === "yes" && formulaTimeSlots.length === 0) {
-      onUpdate({ formulaTimeSlots: [...DEFAULT_SLOTS] });
+      onUpdate({ formulaTimeSlots: [...ALL_SLOTS] });
     }
   };
 
@@ -150,7 +149,7 @@ export default function StepFormula({
               {t("timeSlotsLabel")}
             </label>
             <div className="flex flex-wrap gap-2">
-              {DEFAULT_SLOTS.map((slot) => (
+              {ALL_SLOTS.map((slot) => (
                 <button
                   key={slot}
                   onClick={() => toggleSlot(slot)}

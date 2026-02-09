@@ -13,6 +13,7 @@ export interface CaregiverLink {
   permissions: string[];
   status: "pending" | "accepted" | "revoked";
   inviteEmail: string | null;
+  inviteToken: string | null;
   invitedAt: string;
   acceptedAt: string | null;
   patientEmail?: string;
@@ -28,6 +29,11 @@ export type RemoveLinkFn = (
   linkId: string
 ) => Promise<{ success: boolean; error?: string }>;
 
+export type UpdatePermissionsFn = (
+  linkId: string,
+  permissions: string[]
+) => Promise<{ success: boolean; error?: string }>;
+
 export interface UseFamilyShareReturn {
   caregivers: CaregiverLink[];
   patients: CaregiverLink[];
@@ -38,6 +44,7 @@ export interface UseFamilyShareReturn {
     token: string
   ) => Promise<{ success: boolean; error?: string }>;
   removeLink: RemoveLinkFn;
+  updatePermissions: UpdatePermissionsFn;
   refresh: () => Promise<void>;
 }
 
@@ -51,6 +58,7 @@ function mapRow(row: any): CaregiverLink {
     permissions: row.permissions || ["view", "edit"],
     status: row.status,
     inviteEmail: row.invite_email,
+    inviteToken: row.invite_token ?? null,
     invitedAt: row.invited_at,
     acceptedAt: row.accepted_at,
   };
@@ -74,7 +82,7 @@ export function useFamilyShare(): UseFamilyShareReturn {
     try {
       const supabase = supabaseRef.current;
 
-      const selectCols = "id, caregiver_user_id, patient_profile_id, relationship, permissions, status, invite_email, invited_at, accepted_at";
+      const selectCols = "id, caregiver_user_id, patient_profile_id, relationship, permissions, status, invite_email, invite_token, invited_at, accepted_at";
 
       const [caregiverResult, patientResult] = await Promise.all([
         supabase.from("caregiver_links").select(selectCols).eq("patient_profile_id", user.id).order("invited_at", { ascending: false }),
@@ -234,6 +242,32 @@ export function useFamilyShare(): UseFamilyShareReturn {
     [user, fetchLinks]
   );
 
+  // 권한 업데이트 (환자만 자신의 링크 변경 가능)
+  const updatePermissions: UpdatePermissionsFn = useCallback(
+    async (linkId, permissions) => {
+      if (!user) return { success: false, error: "notAuthenticated" };
+
+      try {
+        const supabase = supabaseRef.current;
+
+        const { error } = await supabase
+          .from("caregiver_links")
+          .update({ permissions })
+          .eq("id", linkId)
+          .eq("patient_profile_id", user.id);
+
+        if (error) throw error;
+
+        await fetchLinks();
+        return { success: true };
+      } catch (error) {
+        console.error("[useFamilyShare] 권한 업데이트 실패:", error);
+        return { success: false, error: "updateFailed" };
+      }
+    },
+    [user, fetchLinks]
+  );
+
   return {
     caregivers,
     patients,
@@ -242,6 +276,7 @@ export function useFamilyShare(): UseFamilyShareReturn {
     sendInvite,
     acceptInvite,
     removeLink,
+    updatePermissions,
     refresh: fetchLinks,
   };
 }

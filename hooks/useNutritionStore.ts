@@ -18,6 +18,7 @@ interface FormulaSettings {
   servingAmount: number;
   servingUnit: "ml" | "g" | "scoop";
   timeSlots: string[];
+  slotTimes: Record<string, string>;
   isActive: boolean;
 }
 

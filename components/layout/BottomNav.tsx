@@ -2,20 +2,20 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { Home, Camera, History, Settings } from "lucide-react";
+import { Home, Camera, BookOpen, Settings } from "lucide-react";
 
 const HIDDEN_ROUTES = ["/onboarding", "/auth", "/invite", "/~offline"];
 
 interface NavItem {
-  href: "/" | "/analyze" | "/history" | "/settings";
+  href: "/" | "/analyze" | "/recipes" | "/settings";
   icon: typeof Home;
-  labelKey: "home" | "record" | "history" | "settings";
+  labelKey: "home" | "record" | "recipes" | "settings";
 }
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/", icon: Home, labelKey: "home" },
   { href: "/analyze", icon: Camera, labelKey: "record" },
-  { href: "/history", icon: History, labelKey: "history" },
+  { href: "/recipes", icon: BookOpen, labelKey: "recipes" },
   { href: "/settings", icon: Settings, labelKey: "settings" },
 ];
 

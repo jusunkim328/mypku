@@ -231,7 +231,7 @@ export default function SettingsClient() {
   const isCaregiverMode = useIsCaregiverMode();
   const canEdit = useCanEdit();
   const activePatient = usePatientContext((s) => s.activePatient);
-  const { caregivers, patients, isLoading: familyLoading, sendInvite, removeLink } = useFamilyShare();
+  const { caregivers, patients, isLoading: familyLoading, sendInvite, removeLink, updatePermissions } = useFamilyShare();
   const { preferManualEntry, setPreferManualEntry } = useNutritionStore();
 
   // authLoading 타임아웃 (3초 후 강제로 로딩 완료 처리)
@@ -533,6 +533,7 @@ export default function SettingsClient() {
                   patients={patients}
                   isLoading={familyLoading}
                   removeLink={removeLink}
+                  updatePermissions={updatePermissions}
                 />
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

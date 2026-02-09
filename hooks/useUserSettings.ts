@@ -13,6 +13,7 @@ interface FormulaSettingsDB {
   servingAmount: number;
   servingUnit: "ml" | "g" | "scoop";
   timeSlots: string[];
+  slotTimes: Record<string, string>;
   isActive: boolean;
 }
 
@@ -74,6 +75,7 @@ export function useUserSettings() {
             servingAmount: data.serving_amount,
             servingUnit: data.serving_unit as "ml" | "g" | "scoop",
             timeSlots: data.time_slots ?? [],
+            slotTimes: (data.slot_times as Record<string, string>) ?? {},
             isActive: data.is_active ?? false,
           });
         } else if (!error && !data && localStore.formulaSettings) {
@@ -87,6 +89,7 @@ export function useUserSettings() {
               serving_amount: local.servingAmount,
               serving_unit: local.servingUnit,
               time_slots: local.timeSlots,
+              slot_times: local.slotTimes ?? {},
               is_active: local.isActive,
               updated_at: new Date().toISOString(),
             }, { onConflict: "user_id" });
@@ -146,6 +149,7 @@ export function useUserSettings() {
             servingAmount: fsData.serving_amount,
             servingUnit: fsData.serving_unit as "ml" | "g" | "scoop",
             timeSlots: fsData.time_slots ?? [],
+            slotTimes: (fsData.slot_times as Record<string, string>) ?? {},
             isActive: fsData.is_active ?? false,
           });
         } else {
@@ -309,6 +313,7 @@ export function useUserSettings() {
             serving_amount: settings.servingAmount,
             serving_unit: settings.servingUnit,
             time_slots: settings.timeSlots,
+            slot_times: settings.slotTimes ?? {},
             is_active: settings.isActive,
             updated_at: new Date().toISOString(),
           }, { onConflict: "user_id" });

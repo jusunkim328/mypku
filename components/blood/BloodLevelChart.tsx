@@ -16,12 +16,13 @@ import {
 import { TrendingUp, BarChart3 } from "lucide-react";
 import type { BloodLevelRecord, BloodLevelSettings } from "@/hooks/useBloodLevels";
 import { umolToMgDl, type BloodUnit } from "@/hooks/useBloodLevels";
-import type { NutritionData } from "@/types/nutrition";
+import type { NutritionData, MealRecord } from "@/types/nutrition";
+import PheCorrelationChart from "@/components/blood/PheCorrelationChart";
 
 // --- Types ---
 
 type PeriodDays = 7 | 14 | 30 | 90;
-type ViewMode = "blood" | "intake" | "both";
+type ViewMode = "blood" | "intake" | "both" | "correlation";
 
 interface DailyIntakeData {
   date: string; // YYYY-MM-DD
@@ -34,6 +35,8 @@ interface BloodLevelChartProps {
   displayUnit?: BloodUnit;
   /** Daily Phe intake data for overlay (optional) */
   dailyIntakeData?: DailyIntakeData[];
+  /** Meal records for correlation analysis (optional) */
+  mealRecords?: MealRecord[];
 }
 
 // --- Helpers ---
@@ -147,6 +150,7 @@ export default function BloodLevelChart({
   settings,
   displayUnit = "umol",
   dailyIntakeData = [],
+  mealRecords = [],
 }: BloodLevelChartProps) {
   const t = useTranslations("BloodLevels");
   const [period, setPeriod] = useState<PeriodDays>(30);
@@ -307,12 +311,13 @@ export default function BloodLevelChart({
 
       {/* View mode tabs (only if intake data exists) */}
       {hasIntakeData && (
-        <div className="flex gap-1 mb-4">
+        <div className="flex gap-1 mb-4 flex-wrap">
           {(
             [
               { mode: "blood" as ViewMode, label: t("viewBloodLevel") },
               { mode: "intake" as ViewMode, label: t("viewDailyIntake") },
               { mode: "both" as ViewMode, label: t("viewBoth") },
+              { mode: "correlation" as ViewMode, label: t("viewCorrelation") },
             ] as const
           ).map((opt) => (
             <button
@@ -330,7 +335,13 @@ export default function BloodLevelChart({
         </div>
       )}
 
+      {/* Correlation view */}
+      {viewMode === "correlation" && (
+        <PheCorrelationChart bloodRecords={records} mealRecords={mealRecords} />
+      )}
+
       {/* Chart */}
+      {viewMode !== "correlation" && (<>
       <div className="w-full" style={{ minHeight: 300 }}>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
@@ -484,6 +495,7 @@ export default function BloodLevelChart({
           </span>
         )}
       </div>
+      </>)}
     </div>
   );
 }

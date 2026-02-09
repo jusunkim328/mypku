@@ -163,11 +163,18 @@ food_items            # 개별 음식 아이템 (nutrition: JSONB)
 pku_foods             # PKU 식품 DB (외부 API 캐싱)
 blood_level_records   # 혈중 Phe 검사 기록
 formula_settings      # 포뮬러(특수분유) 설정
-caregiver_links       # 보호자-환자 관계 (초대/수락/거부)
+formula_intakes       # 포뮬러 복용 기록
+caregiver_links       # 보호자-환자 관계 (초대/수락/거부, permissions, alert_threshold_percent)
+water_intakes         # 수분 섭취 기록
+favorite_meals        # 즐겨찾기 식사
+recipes               # PKU 레시피 (다국어, RLS: 모두 읽기)
+recipe_items          # 레시피 재료 (RLS: 모두 읽기)
+recipe_favorites      # 레시피 즐겨찾기 (RLS: 자기 것만)
 ```
 
 - 모든 테이블에 RLS 정책 적용 (auth.uid() 기반)
 - `caregiver_links`는 보호자/환자 양쪽 RLS 정책이 별도 적용
+- `recipes`/`recipe_items`는 모두 읽기 가능 (anon key로 SELECT)
 - Storage 버킷: `meal-images` (Public)
 
 ---
@@ -195,6 +202,14 @@ mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwh
 ```
 - 자동 생성된 타입에는 `__InternalSupabase` 섹션이 포함되어 타입 추론이 정확함
 - 수동 타입 정의 시 `.from().update()` 등에서 `never` 타입 에러 발생 가능
+- **수동 타입 별칭 보존 필수**: `types.ts` 파일 끝에 아래 별칭이 있으며, 타입 재생성 시 유실되지 않도록 주의:
+  ```typescript
+  export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+  export type DailyGoals = Database["public"]["Tables"]["daily_goals"]["Row"];
+  export type MealRecordRow = Database["public"]["Tables"]["meal_records"]["Row"];
+  export type FoodItemRow = Database["public"]["Tables"]["food_items"]["Row"];
+  export type FavoriteMealRow = Database["public"]["Tables"]["favorite_meals"]["Row"];
+  ```
 
 ### 에러 처리
 - API 재시도는 Exponential Backoff 방식 사용 (`lib/pkuFoodDatabase.ts` 참조)
@@ -216,6 +231,38 @@ mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwh
 ### 면책조항
 - 모든 페이지에 `<Disclaimer />` 컴포넌트 표시 필수
 - 의료 진단/치료 조언 제공 금지
+
+---
+
+## Agent Teams 프로세스 규칙
+
+병렬 에이전트(Agent Teams)를 사용할 때 반드시 준수해야 하는 규칙.
+
+### Supabase 스키마 변경 시 타입 동기화
+- 에이전트가 `apply_migration`으로 테이블을 생성/변경한 경우, **반드시 타입 재생성**까지 포함해야 함
+- 타입 재생성 후 `types.ts` 파일 끝의 수동 별칭(Profile, DailyGoals 등)이 유실되므로 복원 필요
+- 에이전트 프롬프트에 "Supabase 스키마 변경 시 `generate_typescript_types` 실행 + 수동 별칭 복원" 지시를 명시적으로 넣을 것
+
+### 공유 UI 컴포넌트 사용 시 Props 확인
+- `components/ui/index.tsx`의 공유 컴포넌트(Card, Button, Toggle 등)는 제한된 props만 지원
+- 에이전트에게 **"사용하려는 UI 컴포넌트의 props를 먼저 읽고 확인할 것"** 지시 필수
+- 예: `Card`에 `onClick` prop 없음 → wrapper `div`로 해결
+
+### 빌드 검증 명령어
+- Next.js 프로덕션 빌드: **`bunx next build`** (`bun build`가 아님! `bun build`는 번들러)
+- Wave 2 통합 단계에서 `bunx next build` 필수 실행 — TypeScript 타입 체크가 여기서만 수행됨
+
+### 에이전트 간 파일 충돌 방지
+- `messages/{en,ko,ru}.json`: 여러 에이전트가 동시 수정 시 충돌 가능. JSON 키를 서로 다른 최상위 섹션에 추가하도록 분리
+- `components/pages/HomeClient.tsx`: 대시보드 진입점으로 여러 에이전트가 수정. import + JSX 삽입 위치를 명확히 지정
+- `hooks/useNotificationStore.ts`: 알림 관련 에이전트만 수정하도록 소유권 명시
+
+### Wave 2 통합 체크리스트
+1. `bun test:run` — 기존 + 신규 테스트 전체 통과
+2. `bun lint` — ESLint 에러/경고 0
+3. `bunx next build` — 프로덕션 빌드 성공 (TypeScript 타입 체크 포함)
+4. Supabase MCP `get_advisors(type: "security")` — 새 테이블 RLS 누락 확인
+5. Supabase 타입 재생성 + 수동 별칭 복원 확인
 
 ---
 

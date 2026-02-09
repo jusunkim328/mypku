@@ -45,7 +45,8 @@
     "bloodLevels": "Blood Levels",
     "viewBadges": "View Badges",
     "goal": "Goal",
-    "learnAboutPku": "PKU Guide"
+    "learnAboutPku": "PKU Guide",
+    "recipes": "Recipes"
   },
   "AnalyzePage": {
     "title": "Food Analysis",
@@ -219,7 +220,10 @@
     "servingUnit": "Unit",
     "timeSlots": "Daily Schedule",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "slotTime": "Reminder time",
+    "defaultTime": "Default",
+    "customTime": "Custom time"
   },
   "FoodItem": {
     "foodName": "Food name",
@@ -387,7 +391,14 @@
     "goalAchievements": "Goal Achievements",
     "goalAchievementsDesc": "Celebrate when you meet daily goals",
     "streakMilestones": "Streak Milestones",
-    "streakMilestonesDesc": "Celebrate logging streaks (7, 14, 30+ days)"
+    "streakMilestonesDesc": "Celebrate logging streaks (7, 14, 30+ days)",
+    "formulaMissedReminder": "Formula Missed Reminder",
+    "formulaMissedReminderDesc": "Alert when formula doses are missed",
+    "formulaMissedDelay": "Alert delay",
+    "delay15min": "15 minutes",
+    "delay30min": "30 minutes",
+    "delay60min": "1 hour",
+    "formulaMissedNote": "In-app alerts work only when the app is open."
   },
   "Offline": {
     "title": "You're Offline",
@@ -521,6 +532,7 @@
     "viewBloodLevel": "Blood Level",
     "viewDailyIntake": "Daily Intake",
     "viewBoth": "Both",
+    "viewCorrelation": "Correlation",
     "inRangeLegend": "In range",
     "belowRangeLegend": "Below range",
     "aboveRangeLegend": "Above range",
@@ -787,13 +799,39 @@
     "goToBloodLevels": "Record a test",
     "overdueTitle": "Blood test reminder",
     "overdueDesc": "Last test was {days} days ago. Consider scheduling a blood Phe test.",
+    "preReminderTitle": "Blood test coming up",
+    "preReminderDesc": "Your next blood test is in {days} days. Don't forget to schedule!",
     "addRecord": "Add result"
   },
   "BottomNav": {
     "home": "Home",
     "record": "Record",
+    "recipes": "Recipes",
     "history": "History",
     "settings": "Settings"
+  },
+  "Recipes": {
+    "title": "Recipes",
+    "search": "Search recipes...",
+    "all": "All",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack",
+    "dessert": "Dessert",
+    "side": "Side",
+    "noResults": "No recipes found",
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "servings": "Servings",
+    "prepTime": "Prep Time",
+    "cookTime": "Cook Time",
+    "perServing": "per serving",
+    "communityDisclaimer": "Community recipe. Not medically verified.",
+    "optional": "optional",
+    "minutes": "min",
+    "addToFavorites": "Add to Favorites",
+    "removeFromFavorites": "Remove from Favorites"
   },
   "Undo": {
     "deleted": "\"{name}\" deleted",
@@ -826,5 +864,48 @@
     "exceeded": "Over limit!",
     "nearLimit": "Near limit",
     "dailyProgress": "Daily Progress"
+  },
+  "WeeklyInsight": {
+    "title": "Weekly Insight",
+    "coldStartMessage": "Keep logging your meals! You need at least 3 days of data for weekly insights.",
+    "partialData": "Partial",
+    "avgPhe": "Avg Phe",
+    "goalHitRate": "Days in Goal",
+    "formulaRate": "Formula",
+    "goalLine": "Goal",
+    "pheSpike": "Phe spiked {increase}% on {date} ({value}mg)",
+    "formulaMissedStreak": "Formula missed for {days} days starting {startDate}",
+    "pheOverLimit": "Phe exceeded limit on {date}: {value}mg (limit: {limit}mg)"
+  },
+  "Correlation": {
+    "title": "Diet vs Blood Phe Correlation",
+    "insufficient": "Not enough data for correlation analysis",
+    "insufficientHint": "You have {current} data points. At least {needed} blood tests with prior meal data are needed.",
+    "correlationNote": "Correlation does not imply causation. Many factors affect blood Phe levels. Always consult your metabolic team.",
+    "strong_positive": "Strong positive",
+    "strong_negative": "Strong negative",
+    "moderate": "Moderate",
+    "weak": "Weak",
+    "none": "No correlation",
+    "sampleSize": "Samples",
+    "rValue": "R"
+  },
+  "PreventiveReminders": {
+    "formulaMissedTitle": "Formula reminder",
+    "formulaMissedDesc": "You have missed formula slots: {slots}",
+    "takeNow": "Go to formula",
+    "dismiss": "Dismiss"
+  },
+  "CaregiverAdvanced": {
+    "permissionsLabel": "Permissions",
+    "permView": "View (always on)",
+    "permEdit": "Edit records",
+    "permExport": "Export data",
+    "editPermConfirm": "Are you sure you want to grant edit permission? The caregiver will be able to add and modify records.",
+    "permissionsSaved": "Permissions updated!",
+    "permissionsSaveFailed": "Failed to update permissions.",
+    "pheAlertMessage": "Patient is at {percent}% of daily Phe goal ({current}/{goal}mg)",
+    "pheAlertOver": "Patient exceeded daily Phe goal by {overPercent}% ({current}/{goal}mg)",
+    "growthGuidance": "As your child grows, gradually grant them more permissions."
   }
 }

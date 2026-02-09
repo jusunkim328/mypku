@@ -45,7 +45,8 @@
     "bloodLevels": "혈중 검사",
     "viewBadges": "배지 보기",
     "goal": "목표",
-    "learnAboutPku": "PKU 가이드"
+    "learnAboutPku": "PKU 가이드",
+    "recipes": "레시피"
   },
   "AnalyzePage": {
     "title": "음식 분석",
@@ -219,7 +220,10 @@
     "servingUnit": "단위",
     "timeSlots": "복용 시간",
     "active": "활성",
-    "inactive": "비활성"
+    "inactive": "비활성",
+    "slotTime": "알림 시간",
+    "defaultTime": "기본값",
+    "customTime": "시간 설정"
   },
   "FoodItem": {
     "foodName": "음식 이름",
@@ -386,7 +390,14 @@
     "goalAchievements": "목표 달성 축하",
     "goalAchievementsDesc": "일일 목표 달성 시 축하 알림",
     "streakMilestones": "연속 기록 마일스톤",
-    "streakMilestonesDesc": "연속 기록 달성 시 축하 알림 (7, 14, 30일 이상)"
+    "streakMilestonesDesc": "연속 기록 달성 시 축하 알림 (7, 14, 30일 이상)",
+    "formulaMissedReminder": "포뮬러 미복용 알림",
+    "formulaMissedReminderDesc": "포뮬러 복용 시간이 지났을 때 알림",
+    "formulaMissedDelay": "알림 지연 시간",
+    "delay15min": "15분",
+    "delay30min": "30분",
+    "delay60min": "1시간",
+    "formulaMissedNote": "인앱 알림은 앱이 열려 있을 때만 동작합니다."
   },
   "Offline": {
     "title": "오프라인 상태입니다",
@@ -520,6 +531,7 @@
     "viewBloodLevel": "혈중 수치",
     "viewDailyIntake": "일일 섭취량",
     "viewBoth": "모두 보기",
+    "viewCorrelation": "상관관계",
     "inRangeLegend": "범위 내",
     "belowRangeLegend": "범위 미만",
     "aboveRangeLegend": "범위 초과",
@@ -786,13 +798,39 @@
     "goToBloodLevels": "검사 기록하기",
     "overdueTitle": "혈중 검사 리마인더",
     "overdueDesc": "마지막 검사가 {days}일 전입니다. 혈중 Phe 검사 일정을 확인하세요.",
+    "preReminderTitle": "혈중 검사 예정",
+    "preReminderDesc": "다음 혈중 검사까지 {days}일 남았습니다. 일정을 확인하세요!",
     "addRecord": "결과 추가"
   },
   "BottomNav": {
     "home": "홈",
     "record": "기록",
+    "recipes": "레시피",
     "history": "기록보기",
     "settings": "설정"
+  },
+  "Recipes": {
+    "title": "레시피",
+    "search": "레시피 검색...",
+    "all": "전체",
+    "breakfast": "아침",
+    "lunch": "점심",
+    "dinner": "저녁",
+    "snack": "간식",
+    "dessert": "디저트",
+    "side": "사이드",
+    "noResults": "레시피를 찾을 수 없습니다",
+    "ingredients": "재료",
+    "instructions": "조리법",
+    "servings": "인분",
+    "prepTime": "준비 시간",
+    "cookTime": "조리 시간",
+    "perServing": "1인분당",
+    "communityDisclaimer": "커뮤니티 레시피입니다. 의학적으로 검증되지 않았습니다.",
+    "optional": "선택",
+    "minutes": "분",
+    "addToFavorites": "즐겨찾기에 추가",
+    "removeFromFavorites": "즐겨찾기에서 제거"
   },
   "Undo": {
     "deleted": "\"{name}\" 삭제됨",
@@ -825,5 +863,48 @@
     "exceeded": "한도 초과!",
     "nearLimit": "한도 근접",
     "dailyProgress": "일일 진행률"
+  },
+  "WeeklyInsight": {
+    "title": "주간 인사이트",
+    "coldStartMessage": "식사 기록을 계속 남겨주세요! 주간 분석에는 최소 3일의 데이터가 필요합니다.",
+    "partialData": "부분 데이터",
+    "avgPhe": "평균 Phe",
+    "goalHitRate": "목표 달성일",
+    "formulaRate": "포뮬러",
+    "goalLine": "목표",
+    "pheSpike": "{date}에 Phe가 {increase}% 급등 ({value}mg)",
+    "formulaMissedStreak": "{startDate}부터 {days}일간 포뮬러 미복용",
+    "pheOverLimit": "{date}에 Phe 한도 초과: {value}mg (한도: {limit}mg)"
+  },
+  "Correlation": {
+    "title": "식이 vs 혈중 Phe 상관관계",
+    "insufficient": "상관관계 분석에 충분한 데이터가 없습니다",
+    "insufficientHint": "현재 {current}개의 데이터 포인트가 있습니다. 최소 {needed}개의 혈액 검사와 사전 식사 데이터가 필요합니다.",
+    "correlationNote": "상관관계는 인과관계를 의미하지 않습니다. 혈중 Phe 수치에는 많은 요인이 영향을 미칩니다. 항상 담당 의료팀과 상담하세요.",
+    "strong_positive": "강한 양의 상관",
+    "strong_negative": "강한 음의 상관",
+    "moderate": "보통",
+    "weak": "약함",
+    "none": "상관관계 없음",
+    "sampleSize": "표본 수",
+    "rValue": "R"
+  },
+  "PreventiveReminders": {
+    "formulaMissedTitle": "포뮬러 리마인더",
+    "formulaMissedDesc": "미복용 시간대: {slots}",
+    "takeNow": "포뮬러로 이동",
+    "dismiss": "닫기"
+  },
+  "CaregiverAdvanced": {
+    "permissionsLabel": "권한 설정",
+    "permView": "조회 (항상 켜짐)",
+    "permEdit": "기록 편집",
+    "permExport": "데이터 내보내기",
+    "editPermConfirm": "편집 권한을 부여하시겠습니까? 보호자가 기록을 추가하고 수정할 수 있게 됩니다.",
+    "permissionsSaved": "권한이 업데이트되었습니다!",
+    "permissionsSaveFailed": "권한 업데이트에 실패했습니다.",
+    "pheAlertMessage": "환자의 일일 Phe 목표 대비 {percent}% ({current}/{goal}mg)",
+    "pheAlertOver": "환자가 일일 Phe 목표를 {overPercent}% 초과했습니다 ({current}/{goal}mg)",
+    "growthGuidance": "아이가 성장함에 따라 점진적으로 더 많은 권한을 부여하세요."
   }
 }

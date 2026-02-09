@@ -7,11 +7,7 @@ import { Card, Button, NumberInput, Input } from "@/components/ui";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { useIsCaregiverMode, useCanEdit, usePatientContext } from "@/hooks/usePatientContext";
 import { toast } from "@/hooks/useToast";
-
-const ALL_SLOTS = ["morning", "noon", "evening", "bedtime"] as const;
-
-const sortedSlots = (slots: string[]): string[] =>
-  [...slots].sort((a, b) => ALL_SLOTS.indexOf(a as typeof ALL_SLOTS[number]) - ALL_SLOTS.indexOf(b as typeof ALL_SLOTS[number]));
+import { ALL_SLOTS, sortSlots, DEFAULT_SLOT_TIMES } from "@/lib/formulaSlotDefaults";
 
 interface FormulaSettingsCardProps {
   onChangesStateChange: (hasChanges: boolean) => void;
@@ -27,12 +23,16 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
   const activePatient = usePatientContext((s) => s.activePatient);
 
   const [draftFormula, setDraftFormula] = useState(formulaSettings);
+  const [localSlotTimes, setLocalSlotTimes] = useState<Record<string, string>>(
+    formulaSettings?.slotTimes ?? {}
+  );
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // formulaSettings 외부 변경 시 드래프트 동기화
   useEffect(() => {
     setDraftFormula(formulaSettings);
+    setLocalSlotTimes(formulaSettings?.slotTimes ?? {});
   }, [formulaSettings]);
 
   // 변경 감지 (timeSlots는 정렬 후 비교)
@@ -44,9 +44,10 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
       draftFormula.servingAmount !== formulaSettings.servingAmount ||
       draftFormula.servingUnit !== formulaSettings.servingUnit ||
       draftFormula.isActive !== formulaSettings.isActive ||
-      JSON.stringify(sortedSlots(draftFormula.timeSlots)) !== JSON.stringify(sortedSlots(formulaSettings.timeSlots))
+      JSON.stringify(sortSlots(draftFormula.timeSlots)) !== JSON.stringify(sortSlots(formulaSettings.timeSlots)) ||
+      JSON.stringify(localSlotTimes) !== JSON.stringify(formulaSettings.slotTimes ?? {})
     );
-  }, [draftFormula, formulaSettings]);
+  }, [draftFormula, formulaSettings, localSlotTimes]);
 
   // 부모에 변경 상태 전달
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
     if (!draftFormula) return;
     setIsSaving(true);
     try {
-      await setFormulaSettings(draftFormula);
+      await setFormulaSettings({ ...draftFormula, slotTimes: localSlotTimes });
       if (isCaregiverMode && activePatient) {
         toast.success(t("patientFormulaSaved", { name: activePatient.name || activePatient.email }));
       } else {
@@ -72,6 +73,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
 
   const handleCancel = () => {
     setDraftFormula(formulaSettings);
+    setLocalSlotTimes(formulaSettings?.slotTimes ?? {});
     setShowDisableConfirm(false);
   };
 
@@ -115,6 +117,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                 servingAmount: 200,
                 servingUnit: "ml",
                 timeSlots: ["morning", "noon", "evening", "bedtime"],
+                slotTimes: {},
                 isActive: true,
               })
             }
@@ -229,29 +232,52 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                 <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                   {tFormula("timeSlots")}
                 </label>
-                <div className="flex flex-wrap gap-2 mt-1.5">
+                <div className="space-y-2 mt-1.5">
                   {ALL_SLOTS.map((slot) => {
                     const isSelected = draftFormula.timeSlots.includes(slot);
                     return (
-                      <button
-                        key={slot}
-                        disabled={!canEdit}
-                        onClick={() => {
-                          const newSlots = isSelected
-                            ? draftFormula.timeSlots.filter((s) => s !== slot)
-                            : [...draftFormula.timeSlots, slot];
-                          if (newSlots.length > 0) {
-                            setDraftFormula({ ...draftFormula, timeSlots: newSlots });
-                          }
-                        }}
-                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${!canEdit ? "opacity-50 cursor-not-allowed " : ""}${
-                          isSelected
-                            ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-700"
-                            : "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-purple-200 dark:hover:border-purple-800"
-                        }`}
-                      >
-                        {tFormula(slot)}
-                      </button>
+                      <div key={slot} className="flex items-center justify-between">
+                        <button
+                          disabled={!canEdit}
+                          onClick={() => {
+                            const newSlots = isSelected
+                              ? draftFormula.timeSlots.filter((s) => s !== slot)
+                              : [...draftFormula.timeSlots, slot];
+                            if (newSlots.length > 0) {
+                              setDraftFormula({ ...draftFormula, timeSlots: newSlots });
+                              if (isSelected) {
+                                // 슬롯 OFF → slotTimes에서 해당 키 제거
+                                setLocalSlotTimes(prev => {
+                                  const { [slot]: _, ...rest } = prev;
+                                  return rest;
+                                });
+                              } else {
+                                // 슬롯 ON → 기본 시간 설정
+                                setLocalSlotTimes(prev => ({
+                                  ...prev,
+                                  [slot]: prev[slot] ?? DEFAULT_SLOT_TIMES[slot] ?? "12:00",
+                                }));
+                              }
+                            }
+                          }}
+                          className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${!canEdit ? "opacity-50 cursor-not-allowed " : ""}${
+                            isSelected
+                              ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-700"
+                              : "bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-transparent hover:border-purple-200 dark:hover:border-purple-800"
+                          }`}
+                        >
+                          {tFormula(slot)}
+                        </button>
+                        {isSelected && (
+                          <input
+                            type="time"
+                            value={localSlotTimes[slot] ?? DEFAULT_SLOT_TIMES[slot] ?? "12:00"}
+                            onChange={(e) => setLocalSlotTimes(prev => ({ ...prev, [slot]: e.target.value }))}
+                            disabled={!canEdit}
+                            className="ml-2 px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-gray-100 disabled:opacity-50"
+                          />
+                        )}
+                      </div>
                     );
                   })}
                 </div>

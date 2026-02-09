@@ -23,6 +23,8 @@ export interface NotificationSettings {
   pheWarnings: boolean;
   goalAchievements: boolean;
   streakMilestones: boolean;
+  formulaMissedReminder: boolean;
+  formulaMissedDelayMin: number;
 }
 
 interface NotificationStore extends NotificationSettings {
@@ -42,6 +44,8 @@ interface NotificationStore extends NotificationSettings {
   togglePheWarnings: (enabled: boolean) => void;
   toggleGoalAchievements: (enabled: boolean) => void;
   toggleStreakMilestones: (enabled: boolean) => void;
+  toggleFormulaMissedReminder: (enabled: boolean) => void;
+  setFormulaMissedDelayMin: (min: number) => void;
   initializeReminders: () => void;
   cancelAllReminders: () => void;
   setHasHydrated: (state: boolean) => void;
@@ -61,6 +65,8 @@ export const useNotificationStore = create<NotificationStore>()(
       pheWarnings: true,
       goalAchievements: true,
       streakMilestones: true,
+      formulaMissedReminder: true,
+      formulaMissedDelayMin: 30,
       _hasHydrated: false,
       _timerIds: {},
 
@@ -147,6 +153,16 @@ export const useNotificationStore = create<NotificationStore>()(
       // Toggle streak milestones
       toggleStreakMilestones: (enabled) => {
         set({ streakMilestones: enabled });
+      },
+
+      // Toggle formula missed reminder
+      toggleFormulaMissedReminder: (enabled) => {
+        set({ formulaMissedReminder: enabled });
+      },
+
+      // Set formula missed delay
+      setFormulaMissedDelayMin: (min) => {
+        set({ formulaMissedDelayMin: min });
       },
 
       // Initialize all reminders

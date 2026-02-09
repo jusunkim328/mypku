@@ -3,8 +3,9 @@
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, Info, Calendar } from "lucide-react";
 import { useBloodLevels } from "@/hooks/useBloodLevels";
+import { usePreventiveReminders } from "@/hooks/usePreventiveReminders";
 import { showBloodTestReminder } from "@/lib/notifications";
 
 interface BloodTestReminderBannerProps {
@@ -14,6 +15,7 @@ interface BloodTestReminderBannerProps {
 export default function BloodTestReminderBanner({ compact }: BloodTestReminderBannerProps) {
   const t = useTranslations("BloodTestReminder");
   const { records, settings, daysSinceLastTest, isTestOverdue } = useBloodLevels();
+  const { shouldShowBloodTestPreReminder, daysUntilBloodTest } = usePreventiveReminders();
   const notifiedRef = useRef(false);
 
   const overdue = isTestOverdue;
@@ -77,6 +79,31 @@ export default function BloodTestReminderBanner({ compact }: BloodTestReminderBa
             <Link
               href="/blood-levels"
               className="inline-block text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline mt-1"
+            >
+              {t("addRecord")} →
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 사전 알림: 7일 이내 예정 (파란색 배너)
+  if (shouldShowBloodTestPreReminder && daysUntilBloodTest !== null) {
+    return (
+      <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <Calendar className="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+            {t("preReminderTitle")}
+          </p>
+          <p className="text-xs text-blue-600 dark:text-blue-300 mt-0.5">
+            {t("preReminderDesc", { days: daysUntilBloodTest })}
+          </p>
+          {compact && (
+            <Link
+              href="/blood-levels"
+              className="inline-block text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline mt-1"
             >
               {t("addRecord")} →
             </Link>

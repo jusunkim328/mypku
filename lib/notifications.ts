@@ -126,6 +126,25 @@ export function showGoalAchievement(): void {
   });
 }
 
+const SLOT_DISPLAY_NAMES: Record<string, string> = {
+  morning: "Morning",
+  noon: "Noon",
+  evening: "Evening",
+  bedtime: "Bedtime",
+};
+
+/**
+ * 포뮬러 미복용 리마인더 알림
+ */
+export function showFormulaReminder(missedSlots: string[]): void {
+  const displaySlots = missedSlots.map((slot) => SLOT_DISPLAY_NAMES[slot] ?? slot);
+  showNotification("Formula Reminder", {
+    body: `You have missed formula slots: ${displaySlots.join(", ")}`,
+    tag: "formula-reminder",
+    requireInteraction: false,
+  });
+}
+
 /**
  * 혈중 Phe 검사 리마인더 알림
  */

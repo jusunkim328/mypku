@@ -45,7 +45,8 @@
     "bloodLevels": "Анализы крови",
     "viewBadges": "Достижения",
     "goal": "Цель",
-    "learnAboutPku": "Гид по ФКУ"
+    "learnAboutPku": "Гид по ФКУ",
+    "recipes": "Рецепты"
   },
   "AnalyzePage": {
     "title": "Анализ еды",
@@ -219,7 +220,10 @@
     "servingUnit": "Единица",
     "timeSlots": "Расписание приёма",
     "active": "Активна",
-    "inactive": "Неактивна"
+    "inactive": "Неактивна",
+    "slotTime": "Время напоминания",
+    "defaultTime": "По умолчанию",
+    "customTime": "Настроить время"
   },
   "FoodItem": {
     "foodName": "Название продукта",
@@ -386,7 +390,14 @@
     "goalAchievements": "Достижение целей",
     "goalAchievementsDesc": "Поздравление при достижении суточных целей",
     "streakMilestones": "Рубежи серии",
-    "streakMilestonesDesc": "Поздравление при серии записей (7, 14, 30+ дней)"
+    "streakMilestonesDesc": "Поздравление при серии записей (7, 14, 30+ дней)",
+    "formulaMissedReminder": "Напоминание о пропущенной смеси",
+    "formulaMissedReminderDesc": "Уведомление при пропуске приёма смеси",
+    "formulaMissedDelay": "Задержка уведомления",
+    "delay15min": "15 минут",
+    "delay30min": "30 минут",
+    "delay60min": "1 час",
+    "formulaMissedNote": "Уведомления в приложении работают только при открытом приложении."
   },
   "Offline": {
     "title": "Вы офлайн",
@@ -520,6 +531,7 @@
     "viewBloodLevel": "Уровень в крови",
     "viewDailyIntake": "Суточное потребление",
     "viewBoth": "Оба",
+    "viewCorrelation": "Корреляция",
     "inRangeLegend": "В норме",
     "belowRangeLegend": "Ниже нормы",
     "aboveRangeLegend": "Выше нормы",
@@ -786,13 +798,39 @@
     "goToBloodLevels": "Записать анализ",
     "overdueTitle": "Напоминание об анализе крови",
     "overdueDesc": "Последний анализ был {days} дней назад. Запланируйте анализ крови на Phe.",
+    "preReminderTitle": "Приближается анализ крови",
+    "preReminderDesc": "До следующего анализа крови осталось {days} дней. Не забудьте записаться!",
     "addRecord": "Добавить результат"
   },
   "BottomNav": {
     "home": "Главная",
     "record": "Запись",
+    "recipes": "Рецепты",
     "history": "История",
     "settings": "Настройки"
+  },
+  "Recipes": {
+    "title": "Рецепты",
+    "search": "Поиск рецептов...",
+    "all": "Все",
+    "breakfast": "Завтрак",
+    "lunch": "Обед",
+    "dinner": "Ужин",
+    "snack": "Перекус",
+    "dessert": "Десерт",
+    "side": "Гарнир",
+    "noResults": "Рецепты не найдены",
+    "ingredients": "Ингредиенты",
+    "instructions": "Инструкция",
+    "servings": "Порции",
+    "prepTime": "Подготовка",
+    "cookTime": "Готовка",
+    "perServing": "на порцию",
+    "communityDisclaimer": "Рецепт от сообщества. Не проверен медицинскими специалистами.",
+    "optional": "по желанию",
+    "minutes": "мин",
+    "addToFavorites": "Добавить в избранное",
+    "removeFromFavorites": "Убрать из избранного"
   },
   "Undo": {
     "deleted": "\"{name}\" удалено",
@@ -825,5 +863,48 @@
     "exceeded": "Лимит превышен!",
     "nearLimit": "Близко к лимиту",
     "dailyProgress": "Дневной прогресс"
+  },
+  "WeeklyInsight": {
+    "title": "Еженедельный отчёт",
+    "coldStartMessage": "Продолжайте записывать приёмы пищи! Для еженедельного анализа нужны данные минимум за 3 дня.",
+    "partialData": "Частичные данные",
+    "avgPhe": "Средн. Phe",
+    "goalHitRate": "Дней в норме",
+    "formulaRate": "Смесь",
+    "goalLine": "Цель",
+    "pheSpike": "Phe вырос на {increase}% {date} ({value} мг)",
+    "formulaMissedStreak": "Смесь не принималась {days} дней с {startDate}",
+    "pheOverLimit": "Phe превысил лимит {date}: {value} мг (лимит: {limit} мг)"
+  },
+  "Correlation": {
+    "title": "Корреляция диеты и Phe крови",
+    "insufficient": "Недостаточно данных для корреляционного анализа",
+    "insufficientHint": "У вас {current} точек данных. Необходимо минимум {needed} анализов крови с предшествующими записями о питании.",
+    "correlationNote": "Корреляция не означает причинно-следственную связь. Многие факторы влияют на уровень Phe в крови. Всегда консультируйтесь с вашей метаболической командой.",
+    "strong_positive": "Сильная положительная",
+    "strong_negative": "Сильная отрицательная",
+    "moderate": "Умеренная",
+    "weak": "Слабая",
+    "none": "Нет корреляции",
+    "sampleSize": "Выборка",
+    "rValue": "R"
+  },
+  "PreventiveReminders": {
+    "formulaMissedTitle": "Напоминание о смеси",
+    "formulaMissedDesc": "Пропущенные приёмы: {slots}",
+    "takeNow": "Перейти к смеси",
+    "dismiss": "Закрыть"
+  },
+  "CaregiverAdvanced": {
+    "permissionsLabel": "Разрешения",
+    "permView": "Просмотр (всегда вкл.)",
+    "permEdit": "Редактирование записей",
+    "permExport": "Экспорт данных",
+    "editPermConfirm": "Вы уверены, что хотите предоставить право на редактирование? Ухаживающий сможет добавлять и изменять записи.",
+    "permissionsSaved": "Разрешения обновлены!",
+    "permissionsSaveFailed": "Не удалось обновить разрешения.",
+    "pheAlertMessage": "Пациент достиг {percent}% суточной нормы Phe ({current}/{goal} мг)",
+    "pheAlertOver": "Пациент превысил суточную норму Phe на {overPercent}% ({current}/{goal} мг)",
+    "growthGuidance": "По мере взросления ребёнка постепенно предоставляйте больше прав."
   }
 }
