@@ -1,53 +1,5 @@
 import { GoogleGenAI, MediaResolution, ThinkingLevel } from "@google/genai";
-
-// Exponential Backoff 설정
-const RETRY_CONFIG = {
-  maxRetries: 3,
-  baseDelayMs: 1000,
-  maxDelayMs: 30000,
-};
-
-/**
- * Exponential Backoff로 재시도
- */
-async function withRetry<T>(
-  operation: () => Promise<T>,
-  operationName: string
-): Promise<T> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-
-      const isRetryable =
-        lastError.message.includes("429") ||
-        lastError.message.includes("Too Many Requests") ||
-        lastError.message.includes("503") ||
-        lastError.message.includes("Resource exhausted");
-
-      if (!isRetryable || attempt === RETRY_CONFIG.maxRetries) {
-        throw lastError;
-      }
-
-      const delay = Math.min(
-        RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt) + Math.random() * 1000,
-        RETRY_CONFIG.maxDelayMs
-      );
-
-      console.log(
-        `[DiagnosisOCR] ${operationName} failed (attempt ${attempt + 1}/${RETRY_CONFIG.maxRetries + 1}), ` +
-          `retrying in ${Math.round(delay / 1000)}s...`
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-
-  throw lastError;
-}
+import { withRetry } from "@/lib/retry";
 
 /**
  * OCR 추출 결과 타입
@@ -153,7 +105,11 @@ Extract key PKU dietary management values from this medical document image.
 export async function extractDiagnosisInfo(
   imageBase64: string
 ): Promise<DiagnosisOCRResult> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
+  const ai = new GoogleGenAI({ apiKey });
 
   // Base64에서 MIME 타입 추출
   const mimeMatch = imageBase64.match(/^data:(.+);base64,/);
@@ -177,7 +133,7 @@ export async function extractDiagnosisInfo(
           mediaResolution: MediaResolution.MEDIA_RESOLUTION_HIGH,
         },
       }),
-    "extractDiagnosisInfo"
+    { logTag: "DiagnosisOCR" }
   );
 
   const text = response.text;

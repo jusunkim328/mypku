@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui";
 import FoodItemCard from "./FoodItemCard";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { formatPhe } from "@/lib/nutrition";
 import { getFoodsByPheRange, type PKUFood } from "@/lib/pkuFoodDatabase";
 import type { FoodItem, NutritionData } from "@/types/nutrition";
 
@@ -100,7 +101,7 @@ export default function AnalysisResult({
           <div className="col-span-2 md:col-span-1 bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4">
             <span className="text-gray-600 dark:text-gray-400">{t("estimatedPhe")}</span>
             <p className="text-xl md:text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-              {totalNutrition.phenylalanine_mg}mg
+              {formatPhe(totalNutrition.phenylalanine_mg)}mg
             </p>
           </div>
           <div className="col-span-2 md:col-span-1 flex items-center gap-2 p-3 md:p-4 bg-indigo-600 dark:bg-indigo-700 rounded-lg">

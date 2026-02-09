@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { requireAuth } from "@/lib/apiAuth";
+import { withRetry } from "@/lib/retry";
 import type { FoodItem, PKUSafetyLevel } from "@/types/nutrition";
 
 const extractionSchema = {
@@ -68,7 +69,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ foods: [] });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ foods: [], errorCode: "server_config_error" });
+    }
+    const ai = new GoogleGenAI({ apiKey });
+
+    const MAX_TRANSCRIPT_LENGTH = 50000;
+    const truncatedTranscript = transcript.length > MAX_TRANSCRIPT_LENGTH
+      ? transcript.slice(-MAX_TRANSCRIPT_LENGTH)
+      : transcript;
 
     const extractConfig = {
       tools: [{ googleSearch: {} }],
@@ -79,23 +89,29 @@ export async function POST(req: NextRequest) {
 
     let response;
     try {
-      response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [EXTRACTION_PROMPT + transcript],
-        config: extractConfig,
-      });
+      response = await withRetry(
+        () => ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: [EXTRACTION_PROMPT + truncatedTranscript],
+          config: extractConfig,
+        }),
+        { logTag: "LiveExtract:primary" }
+      );
     } catch (e: unknown) {
       const status = (e as { status?: number }).status;
       if (status === 503 || status === 429) {
         console.warn("[Live Extract] Gemini 3 unavailable, falling back to 2.5-flash");
-        response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [EXTRACTION_PROMPT + transcript],
-          config: {
-            responseMimeType: "application/json",
-            responseJsonSchema: extractionSchema,
-          },
-        });
+        response = await withRetry(
+          () => ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [EXTRACTION_PROMPT + truncatedTranscript],
+            config: {
+              responseMimeType: "application/json",
+              responseJsonSchema: extractionSchema,
+            },
+          }),
+          { logTag: "LiveExtract:fallback" }
+        );
       } else {
         throw e;
       }
@@ -106,13 +122,13 @@ export async function POST(req: NextRequest) {
 
     const parsed = JSON.parse(text);
     const foods: FoodItem[] = (parsed.foods || []).map(
-      (f: Record<string, unknown>, i: number) => {
+      (f: Record<string, unknown>) => {
         const phe_mg = Number(f.phe_mg) || 0;
         const safety = (f.pku_safety as PKUSafetyLevel) || (phe_mg > 100 ? "avoid" : phe_mg > 20 ? "caution" : "safe");
         const confidence = Math.min(Number(f.confidence) || 0.7, 1);
 
         return {
-          id: `live-${Date.now()}-${i}`,
+          id: `live-${crypto.randomUUID()}`,
           name: String(f.name || "Unknown"),
           estimatedWeight_g: Number(f.weight_g) || 100,
           nutrition: {

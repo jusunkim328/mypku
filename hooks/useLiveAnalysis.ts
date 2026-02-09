@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { GoogleGenAI, Modality, Session, type LiveServerMessage } from "@google/genai";
 import {
   startMicrophoneCapture,
@@ -9,9 +9,7 @@ import {
   stopPlayback,
 } from "@/lib/audioUtils";
 import type { FoodItem, NutritionData } from "@/types/nutrition";
-
-// Live API 모델 — native-audio: Live API + Function Calling + Audio 생성 지원
-const LIVE_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025";
+import { calculateTotalNutrition } from "@/lib/nutrition";
 
 // 세션 제한: 2분
 const SESSION_LIMIT_MS = 2 * 60 * 1000;
@@ -87,6 +85,9 @@ export function useLiveAnalysis(locale: string = "en") {
 
   const sessionRef = useRef<Session | null>(null);
   const messagesRef = useRef<LiveMessage[]>([]);
+  const extractingRef = useRef(false);
+  const extractAfterSessionRef = useRef<() => void>(() => {});
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -94,17 +95,7 @@ export function useLiveAnalysis(locale: string = "en") {
   const startTimeRef = useRef<number>(0);
 
   // 총 영양소 계산
-  const totalNutrition: NutritionData = foods.reduce(
-    (acc, item) => ({
-      calories: acc.calories + item.nutrition.calories,
-      protein_g: acc.protein_g + item.nutrition.protein_g,
-      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-      fat_g: acc.fat_g + item.nutrition.fat_g,
-      phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-    }),
-    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-  );
+  const totalNutrition = useMemo(() => calculateTotalNutrition(foods), [foods]);
 
   // messages ref 동기화
   useEffect(() => {
@@ -139,6 +130,7 @@ export function useLiveAnalysis(locale: string = "en") {
       }
       sessionRef.current = null;
     }
+    ctxRef.current = null;
 
     setIsMicOn(false);
     setIsCameraOn(false);
@@ -154,14 +146,8 @@ export function useLiveAnalysis(locale: string = "en") {
       if (remaining <= 0) {
         cleanup();
         setSessionExpired(true);
-        // 타이머 만료 시 대화에서 음식 추출
-        extractFoodsFromTranscript(messagesRef.current).then((result) => {
-          if (result.foods.length > 0) {
-            setFoods((prev) => (prev.length > 0 ? prev : result.foods));
-          }
-          if (result.errorCode) setExtractError(result.errorCode);
-          setStatus("idle");
-        });
+        // 타이머 만료 시 extractAfterSession 재사용 (extractingRef 가드 포함)
+        extractAfterSessionRef.current();
       }
     }, 1000);
   }, [cleanup]);
@@ -175,12 +161,14 @@ export function useLiveAnalysis(locale: string = "en") {
       if (!session || !video || !canvas) return;
       if (video.readyState < 2) return;
 
-      const ctx = canvas.getContext("2d");
+      if (!ctxRef.current) {
+        canvas.width = 640;
+        canvas.height = 480;
+        ctxRef.current = canvas.getContext("2d");
+      }
+      const ctx = ctxRef.current;
       if (!ctx) return;
 
-      // 작은 해상도로 캡처 (대역폭 절약)
-      canvas.width = 640;
-      canvas.height = 480;
       ctx.drawImage(video, 0, 0, 640, 480);
 
       const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
@@ -193,7 +181,7 @@ export function useLiveAnalysis(locale: string = "en") {
           },
         });
       } catch {
-        // session closed
+        // session closed — intentionally ignored
       }
     }, VIDEO_FRAME_INTERVAL_MS);
   }, []);
@@ -214,7 +202,7 @@ export function useLiveAnalysis(locale: string = "en") {
       if (!tokenRes.ok) {
         throw new Error(`Token error: ${tokenRes.status}`);
       }
-      const { token } = await tokenRes.json();
+      const { token, model } = await tokenRes.json();
 
       // 2. 카메라 시작
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -231,7 +219,7 @@ export function useLiveAnalysis(locale: string = "en") {
       const ai = new GoogleGenAI({ apiKey: token, httpOptions: { apiVersion: "v1alpha" } });
 
       const session = await ai.live.connect({
-        model: LIVE_MODEL,
+        model,
         config: {
           responseModalities: [Modality.AUDIO],
           systemInstruction: buildSystemInstruction(locale),
@@ -302,12 +290,8 @@ export function useLiveAnalysis(locale: string = "en") {
             setStatus("error");
           },
           onclose: () => {
-            // cleanup은 disconnect/타이머에서 호출되므로 여기서는 상태만 처리
-            // 서버 측 종료 시에만 cleanup 실행 (사용자 disconnect가 아닌 경우)
-            if (sessionRef.current) {
-              cleanup();
-              setStatus("idle");
-            }
+            cleanup();
+            setStatus("idle");
           },
         },
       });
@@ -327,7 +311,7 @@ export function useLiveAnalysis(locale: string = "en") {
           turnComplete: true,
         });
       } catch {
-        // session may have closed
+        // session may have closed — intentionally ignored
       }
 
       // 5. 마이크 시작
@@ -340,7 +324,7 @@ export function useLiveAnalysis(locale: string = "en") {
             },
           });
         } catch {
-          // session closed
+          // session closed — intentionally ignored
         }
       });
       setIsMicOn(true);
@@ -356,15 +340,17 @@ export function useLiveAnalysis(locale: string = "en") {
       setStatus("error");
       cleanup();
     }
-  }, [cleanup, startVideoFrames, startTimer]);
+  }, [cleanup, startVideoFrames, startTimer, locale]);
 
   // 대화 종료 후 FoodItem 추출
   const extractAfterSession = useCallback(async () => {
+    if (extractingRef.current) return;
     const msgs = messagesRef.current;
     if (msgs.length === 0) {
       setStatus("idle");
       return;
     }
+    extractingRef.current = true;
     setStatus("extracting");
     setExtractError(null);
     try {
@@ -379,8 +365,14 @@ export function useLiveAnalysis(locale: string = "en") {
       console.error("[Live] Extract error:", err);
       setExtractError("extract_failed");
     }
+    extractingRef.current = false;
     setStatus("idle");
   }, []);
+
+  // extractAfterSession ref 동기화 (startTimer에서 참조하기 위함)
+  useEffect(() => {
+    extractAfterSessionRef.current = extractAfterSession;
+  }, [extractAfterSession]);
 
   // 연결 해제
   const disconnect = useCallback(() => {
@@ -406,7 +398,7 @@ export function useLiveAnalysis(locale: string = "en") {
             },
           });
         } catch {
-          // session closed
+          // session closed — intentionally ignored
         }
       });
       setIsMicOn(true);

@@ -14,6 +14,7 @@ import {
   MOCK_DAILY_GOALS,
 } from "@/lib/devAuth";
 import { migrateLocalDataIfNeeded, type MigrationResult } from "@/lib/dataMigration";
+import { withRetry } from "@/lib/retry";
 
 interface AuthContextType {
   user: User | null;
@@ -31,30 +32,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Exponential Backoff 재시도 함수
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
-): Promise<T> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error as Error;
-
-      if (attempt < maxRetries - 1) {
-        const delay = baseDelay * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-  }
-
-  throw lastError;
-}
 
 // AbortController 기반 타임아웃 헬퍼
 function createTimeoutController(timeoutMs: number = 10000): {

@@ -5,6 +5,7 @@ import { Mic, MicOff, Video, VideoOff, Radio } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 import FoodItemCard from "@/components/analyze/FoodItemCard";
 import { useLiveAnalysis } from "@/hooks/useLiveAnalysis";
+import { formatPhe } from "@/lib/nutrition";
 import type { FoodItem, NutritionData } from "@/types/nutrition";
 
 interface LiveAnalysisProps {
@@ -204,7 +205,7 @@ export default function LiveAnalysis({ onSave }: LiveAnalysisProps) {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <p className="text-lg font-bold text-primary-600 dark:text-primary-400">
-                {Math.round(totalNutrition.phenylalanine_mg || 0)}mg
+                {formatPhe(totalNutrition.phenylalanine_mg)}mg
               </p>
               <p className="text-xs text-gray-500">Phe</p>
             </div>

@@ -37,6 +37,9 @@ let micWorklet: AudioWorkletNode | null = null;
 export async function startMicrophoneCapture(
   onChunk: (base64Pcm: string) => void
 ): Promise<void> {
+  // 기존 캡처가 있으면 정리
+  stopMicrophoneCapture();
+
   micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   micContext = new AudioContext({ sampleRate: 16000 });
   const source = micContext.createMediaStreamSource(micStream);
@@ -111,9 +114,11 @@ export function stopPlayback(): void {
 // --- 유틸 ---
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
+  const CHUNK_SIZE = 8192;
   let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.byteLength; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.byteLength));
+    binary += String.fromCharCode(...chunk);
   }
   return btoa(binary);
 }

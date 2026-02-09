@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { requireAuth } from "@/lib/apiAuth";
+import { GEMINI_LIVE_MODEL } from "@/lib/constants/gemini";
 
 export async function POST() {
   const auth = await requireAuth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+    }
+    const ai = new GoogleGenAI({ apiKey });
     const expireTime = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
     const token = await ai.authTokens.create({
@@ -15,7 +20,7 @@ export async function POST() {
         uses: 1,
         expireTime,
         liveConnectConstraints: {
-          model: "gemini-2.5-flash-native-audio-preview-12-2025",
+          model: GEMINI_LIVE_MODEL,
           config: {
             responseModalities: [Modality.AUDIO],
           },
@@ -24,7 +29,7 @@ export async function POST() {
       },
     });
 
-    return NextResponse.json({ token: token.name });
+    return NextResponse.json({ token: token.name, model: GEMINI_LIVE_MODEL });
   } catch (error) {
     console.error("[Live Token] Error:", error);
     return NextResponse.json(

@@ -1,5 +1,7 @@
 import { GoogleGenAI, MediaResolution, ThinkingLevel } from "@google/genai";
 import { PKU_ANALYSIS_PROMPT } from "./prompts";
+import { withRetry } from "@/lib/retry";
+import { calculateTotalNutrition } from "@/lib/nutrition";
 import type {
   FoodItem,
   NutritionData,
@@ -9,61 +11,14 @@ import type {
 } from "@/types/nutrition";
 
 // 서버 사이드에서만 사용 (API Route에서 호출)
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY environment variable is not set");
+}
+const ai = new GoogleGenAI({ apiKey });
 
 // Gemini 3 모델
 const GEMINI_MODEL = "gemini-3-flash-preview";
-
-// Exponential Backoff 설정
-const RETRY_CONFIG = {
-  maxRetries: 3,
-  baseDelayMs: 1000,  // 1초
-  maxDelayMs: 30000,  // 최대 30초
-};
-
-/**
- * Exponential Backoff로 재시도하는 유틸리티 함수
- */
-async function withRetry<T>(
-  operation: () => Promise<T>,
-  operationName: string
-): Promise<T> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-
-      // 429 (Rate Limit) 또는 503 (Service Unavailable) 에러만 재시도
-      const isRetryable =
-        lastError.message.includes("429") ||
-        lastError.message.includes("Too Many Requests") ||
-        lastError.message.includes("503") ||
-        lastError.message.includes("Resource exhausted");
-
-      if (!isRetryable || attempt === RETRY_CONFIG.maxRetries) {
-        throw lastError;
-      }
-
-      // Exponential backoff with jitter
-      const delay = Math.min(
-        RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt) + Math.random() * 1000,
-        RETRY_CONFIG.maxDelayMs
-      );
-
-      console.log(
-        `[Gemini] ${operationName} failed (attempt ${attempt + 1}/${RETRY_CONFIG.maxRetries + 1}), ` +
-        `retrying in ${Math.round(delay / 1000)}s...`
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-
-  throw lastError;
-}
 
 // Gemini 3 Structured Output — PKU 분석 JSON Schema
 const pkuAnalysisJsonSchema = {
@@ -172,7 +127,7 @@ export async function analyzeFood(imageBase64: string): Promise<{
           mediaResolution: MediaResolution.MEDIA_RESOLUTION_HIGH,
         },
       }),
-    "analyzeFood"
+    { logTag: "Gemini:analyzeFood" }
   );
 
   const text = response.text;
@@ -210,17 +165,7 @@ export async function analyzeFood(imageBase64: string): Promise<{
     };
   });
 
-  const totalNutrition: NutritionData = items.reduce(
-    (acc, item) => ({
-      calories: acc.calories + item.nutrition.calories,
-      protein_g: acc.protein_g + item.nutrition.protein_g,
-      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-      fat_g: acc.fat_g + item.nutrition.fat_g,
-      phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-    }),
-    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-  );
+  const totalNutrition = calculateTotalNutrition(items);
 
   return { items, totalNutrition };
 }
@@ -266,7 +211,7 @@ Return a JSON with foods array containing:
           thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
         },
       }),
-    "analyzeFoodByText"
+    { logTag: "Gemini:analyzeFoodByText" }
   );
 
   const text = response.text;
@@ -304,17 +249,7 @@ Return a JSON with foods array containing:
     };
   });
 
-  const totalNutrition: NutritionData = items.reduce(
-    (acc, item) => ({
-      calories: acc.calories + item.nutrition.calories,
-      protein_g: acc.protein_g + item.nutrition.protein_g,
-      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-      fat_g: acc.fat_g + item.nutrition.fat_g,
-      phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-    }),
-    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-  );
+  const totalNutrition = calculateTotalNutrition(items);
 
   return { items, totalNutrition };
 }
@@ -359,7 +294,7 @@ export async function extractBarcodeFromImage(
           mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
         },
       }),
-    "extractBarcode"
+    { logTag: "Gemini:extractBarcode" }
   );
 
   const text = (response.text || "").trim();
@@ -415,7 +350,7 @@ ${languageInstruction} Respond in plain text only (not JSON).`;
           thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
         },
       }),
-    "generateCoaching"
+    { logTag: "Gemini:generateCoaching" }
   );
 
   return response.text || "";

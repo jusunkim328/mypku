@@ -20,6 +20,8 @@ import { showStreakCelebration } from "@/lib/notifications";
 import { recommendMealType } from "@/lib/mealTypeRecommend";
 import { startRecording, logRecordingMetrics } from "@/lib/analytics";
 import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { calculateTotalNutrition } from "@/lib/nutrition";
+import { fetchWithRetry } from "@/lib/retry";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import FavoriteMealCard from "@/components/favorites/FavoriteMealCard";
 import LiveAnalysis from "@/components/analyze/LiveAnalysis";
@@ -28,49 +30,6 @@ import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
 type AnalysisState = "idle" | "loading" | "success" | "error";
 type InputMode = "image" | "voice" | "manual" | "favorites" | "live";
-
-function calculateTotalNutrition(items: FoodItem[]): NutritionData {
-  return items.reduce(
-    (acc, item) => ({
-      calories: acc.calories + item.nutrition.calories,
-      protein_g: acc.protein_g + item.nutrition.protein_g,
-      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-      fat_g: acc.fat_g + item.nutrition.fat_g,
-      phenylalanine_mg: (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-    }),
-    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-  );
-}
-
-// Exponential Backoff로 재시도
-async function fetchWithRetry(
-  url: string,
-  options: RequestInit,
-  maxRetries = 3,
-  baseDelay = 1000
-): Promise<Response> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch(url, options);
-      if (response.ok || response.status < 500) {
-        return response;
-      }
-      // 5xx 에러는 재시도
-      lastError = new Error(`Server error: ${response.status}`);
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error("Network error");
-    }
-
-    if (attempt < maxRetries - 1) {
-      const delay = baseDelay * Math.pow(2, attempt);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-
-  throw lastError || new Error("Request failed");
-}
 
 export default function AnalyzeClient() {
   const router = useRouter();
@@ -133,8 +92,7 @@ export default function AnalyzeClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text, locale }),
         },
-        3,
-        1000
+        { maxRetries: 3, baseDelayMs: 1000 }
       );
 
       if (response.status === 401) {
@@ -190,8 +148,7 @@ export default function AnalyzeClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageBase64 }),
         },
-        3,
-        1000
+        { maxRetries: 3, baseDelayMs: 1000 }
       );
 
       if (response.status === 401) {

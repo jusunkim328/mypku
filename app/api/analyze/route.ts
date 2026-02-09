@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeFood } from "@/lib/gemini";
 import { requireAuth } from "@/lib/apiAuth";
 import { sanitizeFilterValue } from "@/lib/sanitize";
+import { calculateTotalNutrition } from "@/lib/nutrition";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AnalysisResponse, FoodItem, NutritionData } from "@/types/nutrition";
 
@@ -83,17 +84,7 @@ async function enrichWithDBData(supabase: SupabaseClient, items: FoodItem[]): Pr
   );
 
   // 총 영양소 재계산
-  const totalNutrition: NutritionData = enrichedItems.reduce(
-    (acc, item) => ({
-      calories: acc.calories + item.nutrition.calories,
-      protein_g: acc.protein_g + item.nutrition.protein_g,
-      carbs_g: acc.carbs_g + item.nutrition.carbs_g,
-      fat_g: acc.fat_g + item.nutrition.fat_g,
-      phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) + (item.nutrition.phenylalanine_mg || 0),
-    }),
-    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, phenylalanine_mg: 0 }
-  );
+  const totalNutrition = calculateTotalNutrition(enrichedItems);
 
   return { items: enrichedItems, totalNutrition };
 }
