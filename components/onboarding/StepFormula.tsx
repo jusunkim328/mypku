@@ -97,10 +97,11 @@ export default function StepFormula({
         <div className="space-y-4 animate-fade-in">
           {/* Formula name */}
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="onboarding-formula-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t("formulaNameLabel")}
             </label>
             <Input
+              id="onboarding-formula-name"
               value={formulaName}
               onChange={(e) => onUpdate({ formulaName: e.target.value })}
               placeholder={t("formulaNamePlaceholder")}

@@ -81,7 +81,11 @@
     "confirmedSummary": "Confirmed: {phe}mg Phe ({exchanges} Exchanges)",
     "switchToManual": "Enter food manually",
     "aiEstimate": "AI Estimate",
-    "aiEstimateHint": "Values are AI-estimated. Please verify."
+    "aiEstimateHint": "Values are AI-estimated. Please verify.",
+    "tabVideoTalk": "Video Talk",
+    "tabPicture": "Picture",
+    "tabVoice": "Voice",
+    "tabManualEntry": "Manual Entry"
   },
   "HistoryPage": {
     "title": "Meal History",
@@ -353,7 +357,7 @@
     "voiceLoggerDesc": "Log 5 meals with voice input"
   },
   "ProfilePage": {
-    "title": "My Profile",
+    "title": "Achievements",
     "streakSection": "Streak Progress",
     "achievementsSection": "Achievements"
   },
@@ -806,8 +810,10 @@
   "BottomNav": {
     "home": "Home",
     "record": "Record",
+    "quickActions": "Quick Add",
     "recipes": "Recipes",
     "history": "History",
+    "more": "More",
     "settings": "Settings"
   },
   "Recipes": {
@@ -933,5 +939,50 @@
     "extractError_rate_limit": "Too many requests. Please wait a moment and try again.",
     "extractError_region_unsupported": "This AI model is not available in your region.",
     "extractError_extract_failed": "Failed to analyze the conversation. Please try again."
+  },
+  "QuickActions": {
+    "title": "Quick Actions",
+    "takePhoto": "Take Photo",
+    "scanBarcode": "Scan Barcode",
+    "manualEntry": "Manual Entry",
+    "videoTalk": "Video Talk",
+    "favorites": "Favorites",
+    "voice": "Voice",
+    "formulaCheck": "Formula Check",
+    "addWater": "Add Water"
+  },
+  "MoreMenu": {
+    "title": "More",
+    "recipes": "Recipes",
+    "foodDatabase": "Food Database",
+    "learn": "Learn",
+    "report": "Medical Report",
+    "settings": "Settings",
+    "achievements": "Achievements",
+    "scanBarcode": "Scan Barcode",
+    "bloodLevels": "Blood Phe"
+  },
+  "SettingsGroups": {
+    "accountFamily": "Account & Family",
+    "nutritionGoals": "Nutrition Goals",
+    "formula": "Formula",
+    "notifications": "Notifications",
+    "general": "General"
+  },
+  "OnboardingChecklist": {
+    "title": "Getting Started",
+    "profileSetup": "Complete your profile",
+    "pheGoal": "Set daily Phe goal",
+    "firstMeal": "Record your first meal",
+    "formulaSetup": "Set up formula",
+    "firstBloodTest": "Record first blood test",
+    "dismiss": "Dismiss",
+    "complete": "All set! Great job!"
+  },
+  "TodaySummary": {
+    "title": "Today's Summary",
+    "remaining": "remaining",
+    "exceeded": "exceeded",
+    "ofGoal": "of goal"
   }
 }

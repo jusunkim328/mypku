@@ -46,7 +46,7 @@ export default function NutrientRing({
     <div className="flex flex-col items-center">
       <div className="relative w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32">
         {/* SVG 그라데이션 정의 */}
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 96 96">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 96 96" role="img" aria-label={`${label}: ${Math.round(safeCurrent)} of ${goal}${unit}`}>
           <defs>
             <linearGradient id="gradient-primary" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="var(--pku-primary-400)" />
@@ -123,7 +123,7 @@ export default function NutrientRing({
       </div>
 
       <span className="mt-2 text-sm md:text-base font-medium text-gray-700 dark:text-gray-300">{label}</span>
-      <span className="text-xs md:text-sm text-gray-400 dark:text-gray-500">
+      <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
         {t("goal")}: {goal}
         {unit}
       </span>

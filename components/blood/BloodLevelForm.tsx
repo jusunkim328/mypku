@@ -77,10 +77,11 @@ export default function BloodLevelForm({
       {/* 수치 + 단위 */}
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
+          <label htmlFor="blood-level-value" className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
             {t("valueLabel")}
           </label>
           <input
+            id="blood-level-value"
             type="number"
             step="any"
             min="0"
@@ -93,10 +94,11 @@ export default function BloodLevelForm({
           />
         </div>
         <div className="w-32">
-          <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
+          <label htmlFor="blood-level-unit" className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
             {t("unitLabel")}
           </label>
           <select
+            id="blood-level-unit"
             value={unit}
             onChange={(e) => setUnit(e.target.value as BloodUnit)}
             className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
@@ -109,10 +111,11 @@ export default function BloodLevelForm({
 
       {/* 날짜 */}
       <div>
-        <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
+        <label htmlFor="blood-level-date" className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
           {t("dateLabel")}
         </label>
         <input
+          id="blood-level-date"
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -123,10 +126,11 @@ export default function BloodLevelForm({
 
       {/* 메모 */}
       <div>
-        <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
+        <label htmlFor="blood-level-notes" className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
           {t("notesLabel")}
         </label>
         <input
+          id="blood-level-notes"
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

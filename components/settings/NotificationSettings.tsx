@@ -117,11 +117,14 @@ export default function NotificationSettings() {
                     checked={reminder.enabled && isGranted}
                     onChange={(checked) => toggleMealReminder(mealType, checked)}
                     disabled={!isGranted}
+                    aria-label={tMealTypes(mealType)}
                   />
                 </div>
                 {reminder.enabled && isGranted && (
                   <input
                     type="time"
+                    id={`meal-reminder-time-${mealType}`}
+                    aria-label={`${tMealTypes(mealType)} reminder time`}
                     value={reminder.time}
                     onChange={(e) => setMealReminderTime(mealType, e.target.value)}
                     className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded"
@@ -146,6 +149,7 @@ export default function NotificationSettings() {
             checked={pheWarnings && isGranted}
             onChange={togglePheWarnings}
             disabled={!isGranted}
+            aria-label={t("pheWarnings")}
           />
         </div>
 
@@ -158,6 +162,7 @@ export default function NotificationSettings() {
             checked={goalAchievements && isGranted}
             onChange={toggleGoalAchievements}
             disabled={!isGranted}
+            aria-label={t("goalAchievements")}
           />
         </div>
 
@@ -170,6 +175,7 @@ export default function NotificationSettings() {
             checked={streakMilestones && isGranted}
             onChange={toggleStreakMilestones}
             disabled={!isGranted}
+            aria-label={t("streakMilestones")}
           />
         </div>
 
@@ -182,13 +188,15 @@ export default function NotificationSettings() {
             checked={formulaMissedReminder && isGranted}
             onChange={toggleFormulaMissedReminder}
             disabled={!isGranted}
+            aria-label={t("formulaMissedReminder")}
           />
         </div>
 
         {formulaMissedReminder && isGranted && (
           <div className="ml-1">
-            <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">{t("formulaMissedDelay")}</label>
+            <label htmlFor="formula-missed-delay" className="text-xs text-gray-500 dark:text-gray-400 block mb-1">{t("formulaMissedDelay")}</label>
             <select
+              id="formula-missed-delay"
               value={formulaMissedDelayMin}
               onChange={(e) => setFormulaMissedDelayMin(Number(e.target.value))}
               className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded"
@@ -197,7 +205,7 @@ export default function NotificationSettings() {
               <option value={30}>{t("delay30min")}</option>
               <option value={60}>{t("delay60min")}</option>
             </select>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{t("formulaMissedNote")}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("formulaMissedNote")}</p>
           </div>
         )}
       </div>

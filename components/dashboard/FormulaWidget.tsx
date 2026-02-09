@@ -32,7 +32,7 @@ export default function FormulaWidget() {
   const percentage = Math.round((completedCount / totalSlots) * 100);
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-800 p-4 md:p-5 lg:p-6">
+    <div id="formula-widget" className="bg-white dark:bg-gray-900 rounded-xl shadow-sm dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-800 p-4 md:p-5 lg:p-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

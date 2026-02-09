@@ -137,6 +137,7 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
               disabled={!canEdit}
               role="switch"
               aria-checked={draftFormula.isActive}
+              aria-label={`${t("formulaSettings")}: ${draftFormula.isActive ? tFormula("active") : tFormula("inactive")}`}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 draftFormula.isActive
                   ? "bg-purple-600"
@@ -172,10 +173,11 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
             <>
               {/* 포뮬러 이름 */}
               <div>
-                <label className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                <label htmlFor="formula-name" className="text-sm text-gray-600 dark:text-gray-300 font-medium">
                   {tFormula("formulaName")}
                 </label>
                 <Input
+                  id="formula-name"
                   value={draftFormula.formulaName}
                   onChange={(e) =>
                     setDraftFormula({ ...draftFormula, formulaName: e.target.value })
@@ -271,6 +273,8 @@ export default function FormulaSettingsCard({ onChangesStateChange }: FormulaSet
                         {isSelected && (
                           <input
                             type="time"
+                            id={`formula-slot-time-${slot}`}
+                            aria-label={`${tFormula(slot)} time`}
                             value={localSlotTimes[slot] ?? DEFAULT_SLOT_TIMES[slot] ?? "12:00"}
                             onChange={(e) => setLocalSlotTimes(prev => ({ ...prev, [slot]: e.target.value }))}
                             disabled={!canEdit}

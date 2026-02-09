@@ -81,7 +81,11 @@
     "confirmedSummary": "Подтверждено: {phe} мг Phe ({exchanges} обменов)",
     "switchToManual": "Ввести вручную",
     "aiEstimate": "Оценка ИИ",
-    "aiEstimateHint": "Значения оценены ИИ. Пожалуйста, проверьте."
+    "aiEstimateHint": "Значения оценены ИИ. Пожалуйста, проверьте.",
+    "tabVideoTalk": "Видео-чат",
+    "tabPicture": "Фото",
+    "tabVoice": "Голос",
+    "tabManualEntry": "Ручной ввод"
   },
   "HistoryPage": {
     "title": "История питания",
@@ -353,7 +357,7 @@
     "voiceLoggerDesc": "Запишите 5 приёмов пищи голосом"
   },
   "ProfilePage": {
-    "title": "Мой профиль",
+    "title": "Достижения",
     "streakSection": "Прогресс серии",
     "achievementsSection": "Достижения"
   },
@@ -806,8 +810,10 @@
   "BottomNav": {
     "home": "Главная",
     "record": "Запись",
+    "quickActions": "Быстрое добавление",
     "recipes": "Рецепты",
     "history": "История",
+    "more": "Ещё",
     "settings": "Настройки"
   },
   "Recipes": {
@@ -933,5 +939,50 @@
     "extractError_rate_limit": "Слишком много запросов. Подождите и попробуйте снова.",
     "extractError_region_unsupported": "Эта модель ИИ недоступна в вашем регионе.",
     "extractError_extract_failed": "Не удалось проанализировать разговор. Попробуйте снова."
+  },
+  "QuickActions": {
+    "title": "Быстрые действия",
+    "takePhoto": "Сделать фото",
+    "scanBarcode": "Сканировать штрихкод",
+    "manualEntry": "Ручной ввод",
+    "videoTalk": "Видео-чат",
+    "favorites": "Избранное",
+    "voice": "Голос",
+    "formulaCheck": "Проверка формулы",
+    "addWater": "Добавить воду"
+  },
+  "MoreMenu": {
+    "title": "Ещё",
+    "recipes": "Рецепты",
+    "foodDatabase": "База продуктов",
+    "learn": "Обучение",
+    "report": "Медицинский отчёт",
+    "achievements": "Достижения",
+    "settings": "Настройки",
+    "scanBarcode": "Сканер штрихкодов",
+    "bloodLevels": "Уровень Phe"
+  },
+  "SettingsGroups": {
+    "accountFamily": "Аккаунт и семья",
+    "nutritionGoals": "Цели по питанию",
+    "formula": "Формула",
+    "notifications": "Уведомления",
+    "general": "Общие"
+  },
+  "OnboardingChecklist": {
+    "title": "Начало работы",
+    "profileSetup": "Заполните профиль",
+    "pheGoal": "Установить цель по Phe",
+    "firstMeal": "Запишите первый приём пищи",
+    "formulaSetup": "Настроить формулу",
+    "firstBloodTest": "Записать первый анализ крови",
+    "dismiss": "Скрыть",
+    "complete": "Всё готово! Отличная работа!"
+  },
+  "TodaySummary": {
+    "title": "Итоги дня",
+    "remaining": "осталось",
+    "exceeded": "превышено",
+    "ofGoal": "от цели"
   }
 }

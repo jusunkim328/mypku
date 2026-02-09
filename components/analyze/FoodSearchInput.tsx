@@ -155,7 +155,9 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
     <div className="space-y-4">
       {/* 검색 입력 */}
       <div className="relative">
+        <label htmlFor="food-search-input" className="sr-only">{t("searchPlaceholder")}</label>
         <input
+          id="food-search-input"
           ref={inputRef}
           type="text"
           value={query}
@@ -223,6 +225,7 @@ export default function FoodSearchInput({ onFoodSelect }: FoodSearchInputProps) 
             </div>
             <button
               onClick={handleCancel}
+              aria-label="Cancel selection"
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <X className="w-5 h-5" />

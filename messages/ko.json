@@ -81,7 +81,11 @@
     "confirmedSummary": "확정됨: {phe}mg Phe ({exchanges} Exchanges)",
     "switchToManual": "수동으로 입력하기",
     "aiEstimate": "AI 추정값",
-    "aiEstimateHint": "AI가 추정한 값입니다. 확인해주세요."
+    "aiEstimateHint": "AI가 추정한 값입니다. 확인해주세요.",
+    "tabVideoTalk": "영상 대화",
+    "tabPicture": "사진",
+    "tabVoice": "음성",
+    "tabManualEntry": "수동 입력"
   },
   "HistoryPage": {
     "title": "식사 기록",
@@ -353,7 +357,7 @@
     "voiceLoggerDesc": "음성으로 5개 식사 기록"
   },
   "ProfilePage": {
-    "title": "내 프로필",
+    "title": "업적",
     "streakSection": "스트릭 진행률",
     "achievementsSection": "업적"
   },
@@ -806,8 +810,10 @@
   "BottomNav": {
     "home": "홈",
     "record": "기록",
+    "quickActions": "빠른 추가",
     "recipes": "레시피",
-    "history": "기록보기",
+    "history": "기록 목록",
+    "more": "더보기",
     "settings": "설정"
   },
   "Recipes": {
@@ -933,5 +939,50 @@
     "extractError_rate_limit": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
     "extractError_region_unsupported": "현재 지역에서 이 AI 모델을 사용할 수 없습니다.",
     "extractError_extract_failed": "대화 분석에 실패했습니다. 다시 시도해주세요."
+  },
+  "QuickActions": {
+    "title": "빠른 액션",
+    "takePhoto": "사진 촬영",
+    "scanBarcode": "바코드 스캔",
+    "manualEntry": "수동 입력",
+    "videoTalk": "영상 대화",
+    "favorites": "즐겨찾기",
+    "voice": "음성",
+    "formulaCheck": "포뮬러 체크",
+    "addWater": "수분 추가"
+  },
+  "MoreMenu": {
+    "title": "더보기",
+    "recipes": "레시피",
+    "foodDatabase": "식품 DB",
+    "learn": "학습",
+    "report": "의료 보고서",
+    "achievements": "업적",
+    "settings": "설정",
+    "scanBarcode": "바코드 스캔",
+    "bloodLevels": "혈중 Phe"
+  },
+  "SettingsGroups": {
+    "accountFamily": "계정 & 가족",
+    "nutritionGoals": "영양 목표",
+    "formula": "포뮬러",
+    "notifications": "알림",
+    "general": "일반"
+  },
+  "OnboardingChecklist": {
+    "title": "시작하기",
+    "profileSetup": "프로필 설정 완료",
+    "pheGoal": "일일 Phe 목표 설정",
+    "firstMeal": "첫 식사 기록",
+    "formulaSetup": "포뮬러 설정",
+    "firstBloodTest": "첫 혈중 검사 기록",
+    "dismiss": "닫기",
+    "complete": "모두 완료! 잘했어요!"
+  },
+  "TodaySummary": {
+    "title": "오늘의 요약",
+    "remaining": "남음",
+    "exceeded": "초과",
+    "ofGoal": "목표 대비"
   }
 }

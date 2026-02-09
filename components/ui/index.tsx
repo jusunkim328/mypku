@@ -2,9 +2,17 @@
 
 import React from "react";
 import { Loader2 } from "lucide-react";
+// DesktopNavLinks: md+ 화면에서 표시되는 드롭다운 네비게이션.
+// Navbar에 자동 포함되어 모든 서브 페이지에 데스크톱 내비 제공.
+// HomeClient는 커스텀 헤더를 사용하므로 별도 import.
+import DesktopNavLinks from "@/components/layout/DesktopNavLinks";
 
 // NumberInput 컴포넌트 re-export
 export { NumberInput } from "./NumberInput";
+
+// Accordion 컴포넌트 re-export
+export { AccordionGroup } from "./Accordion";
+export type { AccordionItem } from "./Accordion";
 
 // Page 컴포넌트
 export function Page({ children, className = "", noBottomNav = false }: { children: React.ReactNode; className?: string; noBottomNav?: boolean }) {
@@ -37,7 +45,10 @@ export function Navbar({
           <h1 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h1>
           {subtitle && <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
         </div>
-        <div className="w-16 md:w-20 text-right">{right}</div>
+        <div className="w-16 md:w-auto flex items-center justify-end gap-2">
+          {right}
+          <DesktopNavLinks />
+        </div>
       </div>
     </header>
   );
@@ -110,7 +121,7 @@ export function Button({
     focus:outline-none focus:ring-2 focus:ring-offset-2
     active:scale-[0.98] disabled:active:scale-100
   `;
-  const sizeClasses = large ? "px-6 py-3 text-base" : small ? "px-3 py-1.5 text-sm" : "px-4 py-2.5 text-sm";
+  const sizeClasses = large ? "px-6 py-3 text-base min-h-[44px]" : small ? "px-3 py-1.5 text-sm min-h-[36px]" : "px-4 py-2.5 text-sm min-h-[44px]";
 
   let variantClasses = "";
   if (clear) {
@@ -213,17 +224,23 @@ export function Toggle({
   checked,
   onChange,
   disabled = false,
+  "aria-label": ariaLabel,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
+  "aria-label"?: string;
 }) {
   return (
     <button
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
       className={`
-        relative w-12 h-7 rounded-full transition-all duration-300
+        relative w-12 h-7 min-h-[44px] min-w-[44px] rounded-full transition-all duration-300
+        flex items-center
         ${checked
           ? "bg-gradient-to-r from-primary-500 to-primary-600"
           : "bg-gray-300 dark:bg-gray-600"
@@ -234,7 +251,7 @@ export function Toggle({
     >
       <div
         className={`
-          absolute top-1 w-5 h-5 bg-white rounded-full shadow-md
+          absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md
           transition-transform duration-300 ease-out
           ${checked ? "translate-x-6" : "translate-x-1"}
         `}
@@ -259,7 +276,7 @@ export function ListItem({
   after?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between py-3">
+    <div className="flex items-center justify-between py-3 min-h-[44px]">
       <div>
         <p className="text-base font-medium text-gray-900 dark:text-gray-100">{title}</p>
         {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
@@ -294,7 +311,13 @@ export function Progressbar({
   };
 
   return (
-    <div className={`h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ${className}`}>
+    <div
+      role="progressbar"
+      aria-valuenow={Math.round(clampedProgress * 100)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      className={`h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ${className}`}
+    >
       <div
         className={`
           h-full rounded-full transition-all duration-500 ease-out
@@ -309,6 +332,7 @@ export function Progressbar({
 
 // Input 컴포넌트
 export function Input({
+  id,
   type = "text",
   value,
   onChange,
@@ -317,6 +341,7 @@ export function Input({
   disabled = false,
   className = "",
 }: {
+  id?: string;
   type?: string;
   value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -327,6 +352,7 @@ export function Input({
 }) {
   return (
     <input
+      id={id}
       type={type}
       value={value}
       onChange={onChange}
@@ -334,7 +360,7 @@ export function Input({
       placeholder={placeholder}
       disabled={disabled}
       className={`
-        w-full px-4 py-2.5 rounded-xl text-sm
+        w-full px-4 py-2.5 rounded-xl text-sm min-h-[44px]
         bg-white dark:bg-gray-800
         border border-gray-300 dark:border-gray-600
         text-gray-900 dark:text-gray-100

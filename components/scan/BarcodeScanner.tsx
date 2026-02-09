@@ -795,7 +795,9 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
       <div className="bg-white dark:bg-gray-900 rounded-xl p-4 md:p-5 lg:p-6 shadow-sm dark:shadow-gray-900/50 border border-gray-100 dark:border-gray-800 lg:max-w-2xl lg:mx-auto">
         <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t("manualEntry")}</h3>
         <form onSubmit={handleManualSubmit} className="flex gap-2">
+          <label htmlFor="manual-barcode-input" className="sr-only">{t("enterBarcode")}</label>
           <input
+            id="manual-barcode-input"
             type="text"
             value={manualBarcode}
             onChange={(e) => setManualBarcode(e.target.value.replace(/\D/g, ""))}
@@ -806,6 +808,7 @@ export default function BarcodeScanner({ onScan, onError }: BarcodeScannerProps)
           <button
             type="submit"
             disabled={!/^\d{8,14}$/.test(manualBarcode)}
+            aria-label={t("lookup")}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t("lookup")}

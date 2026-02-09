@@ -60,7 +60,7 @@ export default function PheRemainingCard({
           {t("title")}
         </h3>
         {isOverLimit && (
-          <span className="text-xs font-bold text-red-500 dark:text-red-400 animate-pulse">
+          <span className="text-xs font-bold text-red-500 dark:text-red-400 animate-pulse" role="alert" aria-live="polite">
             {t("exceeded")}
           </span>
         )}
@@ -90,7 +90,7 @@ export default function PheRemainingCard({
             {Math.round(used)}
             <span className="text-xs font-normal text-gray-500 ml-0.5">mg</span>
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {exchangeUsed.toFixed(1)} {tNutrients("exchange")}
           </p>
         </div>
@@ -126,7 +126,7 @@ export default function PheRemainingCard({
             {goal}
             <span className="text-xs font-normal text-gray-500 ml-0.5">mg</span>
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {exchangeGoal.toFixed(1)} {tNutrients("exchange")}
           </p>
         </div>

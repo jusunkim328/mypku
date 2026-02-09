@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Button, Card, NumberInput } from "@/components/ui";
-import { ChevronLeft, Plus } from "lucide-react";
+import { Page, Navbar, Block, Button, Card, NumberInput } from "@/components/ui";
+import { Plus } from "lucide-react";
 import {
   searchPKUFoods,
   getLowProteinFoods,
@@ -185,29 +185,25 @@ export default function FoodsClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-      {/* 헤더 */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <div className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-3 flex items-center gap-3">
-          <Link
-            href="/"
-            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-          >
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <ChevronLeft className="w-5 h-5" />
-              <span className="font-medium">{tCommon("back")}</span>
-            </button>
+    <Page>
+      <Navbar
+        title={t("title")}
+        left={
+          <Link href="/">
+            <Button clear small>
+              {tCommon("back")}
+            </Button>
           </Link>
-          <h1 className="text-xl font-bold flex-1 text-gray-900 dark:text-gray-100">{t("title")}</h1>
-        </div>
-      </header>
+        }
+      />
 
-      {/* 컨텐츠 */}
-      <main className="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-4 md:px-6 lg:px-8 py-6 space-y-6">
+      <Block className="space-y-6">
         {/* 검색 */}
         <Card className="p-4">
           <div className="flex gap-2 mb-3">
+            <label htmlFor="foods-search" className="sr-only">{t("searchPlaceholder")}</label>
             <input
+              id="foods-search"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -318,7 +314,7 @@ export default function FoodsClient() {
                       )}
                     </div>
 
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       {t("per100g", { size: food.serving_size })}
                     </p>
                   </div>
@@ -328,7 +324,7 @@ export default function FoodsClient() {
                     <button
                       onClick={() => handleOpenAddModal(food)}
                       className="ml-3 flex-shrink-0 p-2 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/70 transition-colors"
-                      title={t("addToMeal")}
+                      aria-label={t("addToMeal")}
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -339,7 +335,7 @@ export default function FoodsClient() {
             </div>
           </div>
         )}
-      </main>
+      </Block>
 
       {/* 식사에 추가 모달 */}
       {canEdit && showAddModal && selectedFood && (
@@ -463,6 +459,6 @@ export default function FoodsClient() {
           </div>
         </div>
       )}
-    </div>
+    </Page>
   );
 }

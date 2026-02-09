@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Page, Navbar, Block, Button, Card } from "@/components/ui";
 import ImageUploader from "@/components/analyze/ImageUploader";
@@ -25,7 +26,7 @@ import { fetchWithRetry } from "@/lib/retry";
 import { useFavoriteMeals } from "@/hooks/useFavoriteMeals";
 import FavoriteMealCard from "@/components/favorites/FavoriteMealCard";
 import LiveAnalysis from "@/components/analyze/LiveAnalysis";
-import { Heart, Radio } from "lucide-react";
+import { Heart, Radio, Camera as CameraIcon, Mic as MicIcon, Search as SearchIcon } from "lucide-react";
 import type { FoodItem, NutritionData, MealType } from "@/types/nutrition";
 
 type AnalysisState = "idle" | "loading" | "success" | "error";
@@ -37,7 +38,6 @@ export default function AnalyzeClient() {
   const t = useTranslations("AnalyzePage");
   const tCommon = useTranslations("Common");
   const tMeals = useTranslations("MealTypes");
-  const tVoice = useTranslations("VoiceInput");
   const tOffline = useTranslations("OfflineBanner");
   const { addMealRecord } = useMealRecords();
   const { isAuthenticated } = useAuth();
@@ -48,7 +48,15 @@ export default function AnalyzeClient() {
   const isOnline = useNetworkStatus();
   const { favorites, removeFavorite } = useFavoriteMeals();
   const tFav = useTranslations("Favorites");
-  const tLive = useTranslations("LiveAnalysis");
+  const searchParams = useSearchParams();
+
+  const tabs = useMemo<{ mode: InputMode; label: string; icon: React.ReactNode; activeColor?: string }[]>(() => [
+    { mode: "live", label: t("tabVideoTalk"), icon: <Radio className="w-4 h-4" />, activeColor: "text-red-600 dark:text-red-400" },
+    { mode: "image", label: t("tabPicture"), icon: <CameraIcon className="w-4 h-4" /> },
+    { mode: "voice", label: t("tabVoice"), icon: <MicIcon className="w-4 h-4" /> },
+    { mode: "manual", label: t("tabManualEntry"), icon: <SearchIcon className="w-4 h-4" /> },
+    { mode: "favorites", label: tFav("tab"), icon: <Heart className="w-4 h-4" /> },
+  ], [t, tFav]);
 
   const [inputMode, setInputMode] = useState<InputMode>("image");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -60,14 +68,21 @@ export default function AnalyzeClient() {
   const [error, setError] = useState<string>("");
   const [selectedMealType, setSelectedMealType] = useState<MealType>(recommendMealType);
 
-  // After hydration, respect preferManualEntry setting
+  // URL 파라미터 또는 preferManualEntry 설정에 따른 초기 모드
   const initialModeSet = useRef(false);
+  const modeParam = searchParams.get("mode");
   useEffect(() => {
-    if (!initialModeSet.current && preferManualEntry) {
+    if (initialModeSet.current) return;
+    if (modeParam && ["manual", "image", "voice", "live", "favorites"].includes(modeParam)) {
+      setInputMode(modeParam as InputMode);
+      initialModeSet.current = true;
+      return;
+    }
+    if (preferManualEntry) {
       setInputMode("manual");
       initialModeSet.current = true;
     }
-  }, [preferManualEntry]);
+  }, [modeParam, preferManualEntry]);
 
   const handleImageSelect = (base64: string) => {
     setImageBase64(base64);
@@ -248,68 +263,24 @@ export default function AnalyzeClient() {
       <Block className="space-y-4">
         {/* 입력 모드 탭 */}
         <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
-          <button
-            onClick={() => handleModeChange("image")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
-              inputMode === "image"
-                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                : "text-gray-600 dark:text-gray-400"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            {t("camera")}
-          </button>
-          <button
-            onClick={() => handleModeChange("voice")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
-              inputMode === "voice"
-                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                : "text-gray-600 dark:text-gray-400"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-            {tVoice("startRecording").split(" ")[0]}
-          </button>
-          <button
-            onClick={() => handleModeChange("manual")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
-              inputMode === "manual"
-                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                : "text-gray-600 dark:text-gray-400"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            {t("manualEntry")}
-          </button>
-          <button
-            onClick={() => handleModeChange("live")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
-              inputMode === "live"
-                ? "bg-white dark:bg-gray-700 text-red-600 dark:text-red-400 shadow-sm"
-                : "text-gray-600 dark:text-gray-400"
-            }`}
-          >
-            <Radio className="w-4 h-4" />
-            {tLive("tab")}
-          </button>
-          <button
-            onClick={() => handleModeChange("favorites")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
-              inputMode === "favorites"
-                ? "bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                : "text-gray-600 dark:text-gray-400"
-            }`}
-          >
-            <Heart className="w-4 h-4" />
-            {tFav("tab")}
-          </button>
+          {tabs.map(({ mode, label, icon, activeColor }) => {
+            const isActive = inputMode === mode;
+            const color = isActive
+              ? activeColor || "text-indigo-600 dark:text-indigo-400"
+              : "text-gray-600 dark:text-gray-400";
+            return (
+              <button
+                key={mode}
+                onClick={() => handleModeChange(mode)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${color} ${
+                  isActive ? "bg-white dark:bg-gray-700 shadow-sm" : ""
+                }`}
+              >
+                {icon}
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         {/* 이미지 업로더 */}

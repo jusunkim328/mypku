@@ -62,12 +62,13 @@ export default function PermissionEditor({
       <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
         {t("permissionsLabel")}
       </p>
-      <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-        <input type="checkbox" checked disabled className="rounded" />
+      <label htmlFor={`perm-view-${linkId}`} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+        <input id={`perm-view-${linkId}`} type="checkbox" checked disabled className="rounded" />
         {t("permView")}
       </label>
-      <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+      <label htmlFor={`perm-edit-${linkId}`} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
         <input
+          id={`perm-edit-${linkId}`}
           type="checkbox"
           checked={hasEdit}
           disabled={!isOwner || saving}
@@ -76,8 +77,9 @@ export default function PermissionEditor({
         />
         {t("permEdit")}
       </label>
-      <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+      <label htmlFor={`perm-export-${linkId}`} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
         <input
+          id={`perm-export-${linkId}`}
           type="checkbox"
           checked={hasExport}
           disabled={!isOwner || saving}

@@ -90,6 +90,7 @@ export default function BloodLevelsClient() {
           !viewOnly ? (
             <button
               onClick={() => setShowSettings(!showSettings)}
+              aria-label={t("settingsTitle")}
               className={`p-2 rounded-lg transition-colors ${
                 showSettings
                   ? "text-primary-600 bg-primary-50 dark:text-primary-400 dark:bg-primary-900/30"
@@ -114,7 +115,7 @@ export default function BloodLevelsClient() {
             </h3>
 
             {/* 단위 선택 */}
-            <div>
+            <div role="radiogroup" aria-label={t("unitLabel")}>
               <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
                 {t("unitLabel")}
               </label>
@@ -138,10 +139,11 @@ export default function BloodLevelsClient() {
             {/* 목표 범위 - 현재 단위에 맞게 표시/입력 */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                <label htmlFor="blood-target-min" className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
                   {t("targetMin")} ({tempSettings.unit === "umol" ? "\u00B5mol/L" : "mg/dL"})
                 </label>
                 <input
+                  id="blood-target-min"
                   type="number"
                   step={tempSettings.unit === "mg_dl" ? "0.1" : "1"}
                   value={
@@ -160,10 +162,11 @@ export default function BloodLevelsClient() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                <label htmlFor="blood-target-max" className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
                   {t("targetMax")} ({tempSettings.unit === "umol" ? "\u00B5mol/L" : "mg/dL"})
                 </label>
                 <input
+                  id="blood-target-max"
                   type="number"
                   step={tempSettings.unit === "mg_dl" ? "0.1" : "1"}
                   value={
@@ -256,7 +259,7 @@ export default function BloodLevelsClient() {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {t("noRecords")}
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {t("noRecordsHint")}
             </p>
           </Card>
