@@ -722,6 +722,7 @@
     "formulaCompliance": "포뮬러 복용 현황",
     "avgCompletion": "평균 완료율",
     "printReport": "인쇄 / PDF 저장",
+    "loadError": "리포트 데이터를 불러오지 못했습니다.",
     "noData": "해당 기간에 데이터가 없습니다",
     "date": "날짜",
     "value": "수치",

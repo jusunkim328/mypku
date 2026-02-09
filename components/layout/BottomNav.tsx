@@ -29,7 +29,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-nav md:hidden">
       <div className="glass border-t border-gray-200/50 dark:border-gray-700/50 pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-2xl mx-auto flex items-center justify-around">
           {NAV_ITEMS.map(({ href, icon: Icon, labelKey }) => {

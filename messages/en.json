@@ -723,6 +723,7 @@
     "formulaCompliance": "Formula Compliance",
     "avgCompletion": "Average Completion Rate",
     "printReport": "Print / Save as PDF",
+    "loadError": "Failed to load report data.",
     "noData": "No data for this period",
     "date": "Date",
     "value": "Value",

@@ -68,6 +68,11 @@ const config: Config = {
         "2xl": "1rem",
         "3xl": "1.5rem",
       },
+      zIndex: {
+        nav: "40",
+        banner: "55",
+        toast: "50",
+      },
       animation: {
         "fade-in": "fadeIn 0.2s ease-out",
         "fade-in-up": "fadeInUp 0.3s ease-out",

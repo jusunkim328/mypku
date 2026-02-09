@@ -1,5 +1,6 @@
 import type { NutritionData, DailyGoals } from "@/types/nutrition";
 import type { BloodLevelRecord } from "@/hooks/useBloodLevels";
+import { round1 } from "@/lib/formatUtils";
 
 // --- Types ---
 
@@ -40,8 +41,6 @@ const formatDate = (iso: string): string => {
   // YYYY-MM-DD format
   return iso.split("T")[0];
 };
-
-const round1 = (n: number): number => Math.round(n * 10) / 10;
 
 /**
  * Escape a value for CSV. Wraps in quotes if it contains commas, quotes, or newlines.

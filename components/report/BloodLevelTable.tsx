@@ -1,13 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { round1 } from "@/lib/formatUtils";
 import type { BloodLevelRecord } from "@/hooks/useBloodLevels";
 
 interface Props {
   records: BloodLevelRecord[];
 }
-
-const round1 = (n: number): number => Math.round(n * 10) / 10;
 
 export default function BloodLevelTable({ records }: Props) {
   const t = useTranslations("Report");

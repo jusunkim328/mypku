@@ -56,18 +56,42 @@ const useLocalFavoritesStore = create<FavoriteMealsLocalStore>()(
 );
 
 function rowToFavoriteMeal(row: FavoriteMealRow): FavoriteMeal {
+  // items 검증: 배열이 아니거나 빈 경우 빈 배열
+  const rawItems: unknown = row.items;
+  const items: FoodItem[] = Array.isArray(rawItems)
+    ? (rawItems as unknown[]).filter(
+        (item): item is FoodItem =>
+          item != null &&
+          typeof item === "object" &&
+          "name" in item &&
+          "nutrition" in item
+      )
+    : [];
+
+  // totalNutrition 검증: 필수 필드 fallback
+  const rawNutrition = row.total_nutrition as Record<string, unknown> | null;
+  const totalNutrition: NutritionData = {
+    calories: Number(rawNutrition?.calories) || 0,
+    protein_g: Number(rawNutrition?.protein_g) || 0,
+    carbs_g: Number(rawNutrition?.carbs_g) || 0,
+    fat_g: Number(rawNutrition?.fat_g) || 0,
+    phenylalanine_mg: Number(rawNutrition?.phenylalanine_mg) || 0,
+  };
+
+  // mealType 검증
+  const validMealTypes = ["breakfast", "lunch", "dinner", "snack"] as const;
+  const mealType: MealType = validMealTypes.includes(
+    row.meal_type as (typeof validMealTypes)[number]
+  )
+    ? (row.meal_type as MealType)
+    : "snack";
+
   return {
     id: row.id,
     name: row.name,
-    items: (row.items || []) as unknown as FoodItem[],
-    totalNutrition: (row.total_nutrition || {
-      calories: 0,
-      protein_g: 0,
-      carbs_g: 0,
-      fat_g: 0,
-      phenylalanine_mg: 0,
-    }) as unknown as NutritionData,
-    mealType: (row.meal_type || "snack") as MealType,
+    items,
+    totalNutrition,
+    mealType,
     useCount: row.use_count ?? 0,
     lastUsedAt: row.last_used_at ?? null,
     createdAt: row.created_at ?? new Date().toISOString(),

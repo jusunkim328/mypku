@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { round1 } from "@/lib/formatUtils";
 import type { DailyGoals } from "@/types/nutrition";
 
 interface DailyMealSummary {
@@ -20,8 +21,6 @@ interface Props {
   dailyGoals: DailyGoals;
   phePerExchange: number;
 }
-
-const round1 = (n: number): number => Math.round(n * 10) / 10;
 
 export default function PheSummary({
   dailySummaries,

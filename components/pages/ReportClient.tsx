@@ -33,6 +33,8 @@ export default function ReportClient() {
   const [period, setPeriod] = useState<ReportPeriod>(30);
   const [data, setData] = useState<ExportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Ref for fetchFormulaSummary to avoid dependency loop (function ref changes each render)
   const fetchFormulaSummaryRef = useRef(fetchFormulaSummary);
@@ -40,8 +42,9 @@ export default function ReportClient() {
 
   useEffect(() => {
     let cancelled = false;
+    setError(false);
+    setIsLoading(true);
     async function load() {
-      if (!data) setIsLoading(true);
       try {
         const result = await buildReportData({
           days: period,
@@ -52,15 +55,16 @@ export default function ReportClient() {
           phePerExchange,
         });
         if (!cancelled) setData(result);
-      } catch (error) {
-        console.error("[Report] Failed to load data:", error);
+      } catch (err) {
+        console.error("[Report] Failed to load data:", err);
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     }
     load();
     return () => { cancelled = true; };
-  }, [period, mealRecords, bloodRecords, dailyGoals, phePerExchange]);
+  }, [period, mealRecords, bloodRecords, dailyGoals, phePerExchange, retryCount]);
 
   const handlePrint = () => window.print();
 
@@ -108,6 +112,13 @@ export default function ReportClient() {
         <div className="flex items-center justify-center py-20">
           <Preloader />
         </div>
+      ) : error ? (
+        <Block className="text-center py-10">
+          <p className="text-red-500 dark:text-red-400 mb-4">{t("loadError")}</p>
+          <Button small onClick={() => setRetryCount((c) => c + 1)}>
+            {tCommon("retry")}
+          </Button>
+        </Block>
       ) : data ? (
         <Block className="space-y-6 print:space-y-4">
           <ReportHeader
