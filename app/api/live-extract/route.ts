@@ -70,15 +70,36 @@ export async function POST(req: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [EXTRACTION_PROMPT + transcript],
-      config: {
-        responseMimeType: "application/json",
-        responseJsonSchema: extractionSchema,
-        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
-      },
-    });
+    const extractConfig = {
+      tools: [{ googleSearch: {} }],
+      responseMimeType: "application/json",
+      responseJsonSchema: extractionSchema,
+      thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+    };
+
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [EXTRACTION_PROMPT + transcript],
+        config: extractConfig,
+      });
+    } catch (e: unknown) {
+      const status = (e as { status?: number }).status;
+      if (status === 503 || status === 429) {
+        console.warn("[Live Extract] Gemini 3 unavailable, falling back to 2.5-flash");
+        response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [EXTRACTION_PROMPT + transcript],
+          config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: extractionSchema,
+          },
+        });
+      } else {
+        throw e;
+      }
+    }
 
     const text = response.text;
     if (!text) return NextResponse.json({ foods: [] });

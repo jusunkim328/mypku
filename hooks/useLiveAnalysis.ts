@@ -321,7 +321,7 @@ export function useLiveAnalysis(locale: string = "en") {
           turns: [
             {
               role: "user",
-              parts: [{ text: `I'm a PKU patient. Greet me briefly in ${langName} and say you're ready to analyze my food for phenylalanine. Speak in ${langName} for the entire session. Always tell me the Phe mg for every food you see.` }],
+              parts: [{ text: `I'm a PKU patient. Greet me briefly in ${langName} and say you're ready to analyze my food for phenylalanine. Then ask me to show my food on camera and describe what I know — the name, ingredients, amounts, etc. Also mention that if I have a menu, reading the dish name and ingredients from it would be helpful too. Speak in ${langName} for the entire session. Always tell me the Phe mg for every food you see.` }],
             },
           ],
           turnComplete: true,

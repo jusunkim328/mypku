@@ -29,10 +29,10 @@ export default function AnalysisResult({
   const { getExchanges, phePerExchange } = useUserSettings();
 
   // AI가 반환한 총 exchanges 계산 (있으면 사용, 없으면 기존 방식)
-  const totalExchanges = items.reduce(
+  const totalExchanges = Math.round(items.reduce(
     (sum, item) => sum + (item.exchanges ?? getExchanges(item.nutrition.phenylalanine_mg || 0)),
     0
-  );
+  ) * 10) / 10;
 
   // 확정된 항목과 미확정 항목 분리
   const confirmedItems = items.filter(item => item.isConfirmed);
@@ -43,10 +43,10 @@ export default function AnalysisResult({
     (sum, item) => sum + (item.nutrition.phenylalanine_mg || 0),
     0
   );
-  const confirmedExchanges = confirmedItems.reduce(
+  const confirmedExchanges = Math.round(confirmedItems.reduce(
     (sum, item) => sum + (item.exchanges ?? getExchanges(item.nutrition.phenylalanine_mg || 0)),
     0
-  );
+  ) * 10) / 10;
 
   // 대체 식품 추천 상태
   const [alternatives, setAlternatives] = useState<PKUFood[]>([]);

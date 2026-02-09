@@ -58,30 +58,31 @@ export default function LiveAnalysis({ onSave }: LiveAnalysisProps) {
     <div className="space-y-4">
       {/* 카메라 프리뷰 */}
       <Card className="relative overflow-hidden bg-black rounded-2xl">
+        {/* video는 항상 렌더링하여 레이아웃 고정 */}
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className={`w-full aspect-video object-cover ${
-            isCameraOn ? "" : "hidden"
+            isCameraOn ? "opacity-100" : "opacity-0"
           }`}
         />
         <canvas ref={canvasRef} className="hidden" />
 
+        {/* idle: 카메라 꺼진 상태 */}
         {!isCameraOn && status === "idle" && (
-          <div className="flex flex-col items-center justify-center aspect-video text-gray-400">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
             <Video className="w-12 h-12 mb-3 opacity-50" />
             <p className="text-sm">{t("noFoodsYet")}</p>
           </div>
         )}
 
+        {/* connecting: 로딩 스피너 */}
         {status === "connecting" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-white text-sm">{t("connecting")}</p>
-            </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white">
+            <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-sm font-medium">{t("connecting")}</p>
           </div>
         )}
 
