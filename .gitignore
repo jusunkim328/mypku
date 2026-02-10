@@ -24,6 +24,7 @@ yarn-error.log*
 .vscode/
 *.swp
 *.swo
+*.code-workspace
 
 # OS
 .DS_Store
@@ -40,6 +41,7 @@ public/test/
 
 # Claude Code
 .claude/dev/
+.claude/settings.json
 
 # External data (licenses may vary)
 data/bls/*
