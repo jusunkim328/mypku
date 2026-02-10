@@ -1,16 +1,83 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Card, Button, Preloader } from "@/components/ui";
-import { useNutritionStore } from "@/hooks/useNutritionStore";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginPromptCard from "@/components/common/LoginPromptCard";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useMealRecords } from "@/hooks/useMealRecords";
+
+const CACHE_KEY = "mypku-coaching-cache";
+
+interface CachedCoaching {
+  message: string;
+  date: string; // YYYY-MM-DD
+  locale: string;
+}
+
+function getCachedMessage(currentLocale: string): string | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+
+    const data: CachedCoaching = JSON.parse(cached);
+    const today = new Date().toISOString().split("T")[0];
+
+    // 오늘 날짜 + 같은 언어일 때만 캐시 사용
+    if (data.date === today && data.locale === currentLocale) {
+      return data.message;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedMessage(message: string, locale: string): void {
+  if (typeof window === "undefined") return;
+
+  const data: CachedCoaching = {
+    message,
+    date: new Date().toISOString().split("T")[0],
+    locale,
+  };
+  localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+}
 
 export default function CoachingMessage() {
-  const { mode, getWeeklyData, dailyGoals } = useNutritionStore();
+  const t = useTranslations("Coaching");
+  const locale = useLocale();
+  const { isAuthenticated } = useAuth();
+  const { dailyGoals } = useUserSettings();
+  const { getWeeklyData, isLoading: recordsLoading } = useMealRecords();
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [hasData, setHasData] = useState(false);
+
+  // 캐시된 메시지 로드 및 데이터 확인
+  useEffect(() => {
+    // 데이터 로딩 중이면 대기
+    if (recordsLoading) return;
+
+    const weeklyData = getWeeklyData();
+    const dataExists = weeklyData.some((day) => day.nutrition.calories > 0);
+    setHasData(dataExists);
+
+    if (dataExists) {
+      const cached = getCachedMessage(locale);
+      if (cached) {
+        setMessage(cached);
+      }
+    }
+  }, [locale, getWeeklyData, recordsLoading]);
 
   const fetchCoaching = async () => {
+    if (!isAuthenticated) return;
+
     setIsLoading(true);
     setError("");
 
@@ -20,69 +87,115 @@ export default function CoachingMessage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           weeklyData: getWeeklyData(),
-          mode,
           dailyGoals,
+          locale,
         }),
       });
+
+      if (response.status === 401) {
+        setIsLoading(false);
+        return;
+      }
 
       const data = await response.json();
 
       if (data.success) {
         setMessage(data.message);
+        setCachedMessage(data.message, locale);
       } else {
-        setError(data.error || "코칭 메시지를 가져올 수 없습니다.");
+        setError(data.error || t("errorFetch"));
       }
     } catch {
-      setError("네트워크 오류가 발생했습니다.");
+      setError(t("networkError"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 컴포넌트 마운트 시 자동으로 코칭 메시지 가져오기
-  useEffect(() => {
-    // 기록이 있을 때만 코칭 메시지 요청
-    const weeklyData = getWeeklyData();
-    const hasData = weeklyData.some((day) => day.nutrition.calories > 0);
-    if (hasData && !message) {
-      fetchCoaching();
-    }
-  }, []);
+  // 데이터 로딩 중
+  if (recordsLoading) {
+    return (
+      <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40">
+        <div className="flex items-center justify-center py-4">
+          <Preloader className="!w-6 !h-6" />
+        </div>
+      </Card>
+    );
+  }
 
-  if (!message && !isLoading && !error) {
-    return null;
+  // 비인증 시 LoginPromptCard 표시 (데이터 유무와 무관하게 로그인 유도 우선)
+  if (!isAuthenticated) {
+    return (
+      <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">🤖</div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-1">
+              {t("title")}
+            </h3>
+            <LoginPromptCard compact features={["featureCoaching"]} />
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // 데이터가 없을 때
+  if (!hasData) {
+    return (
+      <Card className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/40 dark:to-slate-900/40">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl opacity-50">🤖</div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">
+              {t("title")}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t("noDataYet")}
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   return (
-    <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50">
+    <Card className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40">
       <div className="flex items-start gap-3">
         <div className="text-2xl">🤖</div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-indigo-900 mb-1">
-            AI 코치 피드백
+          <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-1">
+            {t("title")}
           </h3>
           {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
               <Preloader className="!w-4 !h-4" />
-              분석 중...
+              {t("analyzing")}
             </div>
           ) : error ? (
-            <div className="text-sm text-red-600">
+            <div className="text-sm text-red-600 dark:text-red-400">
               {error}
               <Button small clear onClick={fetchCoaching} className="ml-2">
-                다시 시도
+                {t("retry")}
               </Button>
             </div>
+          ) : message ? (
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{message}</p>
           ) : (
-            <p className="text-sm text-gray-700 leading-relaxed">{message}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t("promptText")}</p>
           )}
         </div>
       </div>
-      {message && !isLoading && (
-        <Button small clear onClick={fetchCoaching} className="mt-2">
-          새 피드백 받기
-        </Button>
-      )}
+      <Button
+        small
+        outline={!message}
+        clear={!!message}
+        onClick={fetchCoaching}
+        loading={isLoading}
+        className="mt-2"
+      >
+        {message ? t("getNewFeedback") : t("getFeedback")}
+      </Button>
     </Card>
   );
 }

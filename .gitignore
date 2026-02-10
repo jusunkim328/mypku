@@ -24,6 +24,7 @@ yarn-error.log*
 .vscode/
 *.swp
 *.swo
+*.code-workspace
 
 # OS
 .DS_Store
@@ -31,3 +32,28 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Secrets
+client_secret*.json
+
+# Test files
+public/test/
+
+# Claude Code
+.claude/dev/
+.claude/settings.json
+
+# External data (licenses may vary)
+data/bls/*
+!data/bls/README.md
+temp/
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
+# Next.js generated types
+next-env.d.ts
+
+# Service Worker (generated)
+public/sw.js
+public/sw.js.map

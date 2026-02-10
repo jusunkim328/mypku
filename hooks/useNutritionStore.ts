@@ -3,20 +3,47 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type {
-  UserMode,
   MealRecord,
   NutritionData,
   DailyGoals,
 } from "@/types/nutrition";
 
-interface NutritionState {
-  // 사용자 모드
-  mode: UserMode;
-  setMode: (mode: UserMode) => void;
+interface WaterIntake {
+  date: string; // YYYY-MM-DD
+  glasses: number; // 1 glass = 250ml
+}
 
-  // 일일 목표
+interface FormulaSettings {
+  formulaName: string;
+  servingAmount: number;
+  servingUnit: "ml" | "g" | "scoop";
+  timeSlots: string[];
+  slotTimes: Record<string, string>;
+  isActive: boolean;
+}
+
+interface NutritionState {
+  // 퀵셋업 완료 여부 (Phase 1 호환)
+  quickSetupCompleted: boolean;
+  setQuickSetupCompleted: (completed: boolean) => void;
+
+  // 온보딩 완료 여부 (Phase 2)
+  onboardingCompleted: boolean;
+  setOnboardingCompleted: (completed: boolean) => void;
+
+  // 진단 시기 (온보딩 Step 1)
+  diagnosisAgeGroup: string | null;
+  setDiagnosisAgeGroup: (group: string | null) => void;
+
+  // 포뮬러 설정 (온보딩 Step 3, Phase 2.3에서 확장)
+  formulaSettings: FormulaSettings | null;
+  setFormulaSettings: (settings: FormulaSettings | null) => void;
+
+  // 일일 목표 (PKU 전용)
   dailyGoals: DailyGoals;
   setDailyGoals: (goals: Partial<DailyGoals>) => void;
+  waterGoal: number; // glasses per day (default 8)
+  setWaterGoal: (glasses: number) => void;
 
   // 식사 기록
   mealRecords: MealRecord[];
@@ -24,10 +51,31 @@ interface NutritionState {
   removeMealRecord: (id: string) => void;
   updateMealRecord: (id: string, record: Partial<MealRecord>) => void;
 
-  // 계산된 값
-  todayNutrition: NutritionData;
+  // 수분 섭취
+  waterIntakes: WaterIntake[];
+  addWaterGlass: () => void;
+  removeWaterGlass: () => void;
+  getTodayWaterIntake: () => number;
+  getWaterIntakeByDate: (date: Date) => number;
+
+  // 계산된 값 (함수로 변경)
+  getTodayNutrition: () => NutritionData;
   getTodayMeals: () => MealRecord[];
   getWeeklyData: () => { date: string; nutrition: NutritionData }[];
+  getNutritionByDate: (date: Date) => NutritionData;
+  getMealsByDate: (date: Date) => MealRecord[];
+  getMonthlyData: (year: number, month: number) => Record<string, NutritionData>;
+
+  // Exchange 설정 및 계산
+  phePerExchange: number; // 1 Exchange = Xmg Phe (기본 50)
+  setPhePerExchange: (value: number) => void;
+  getExchanges: (phenylalanine_mg: number) => number;
+  getTodayExchanges: () => number;
+  getExchangeGoal: () => number;
+
+  // 수동 입력 모드 선호
+  preferManualEntry: boolean;
+  setPreferManualEntry: (prefer: boolean) => void;
 
   // 하이드레이션 상태
   _hasHydrated: boolean;
@@ -50,15 +98,25 @@ const EMPTY_NUTRITION: NutritionData = {
   phenylalanine_mg: 0,
 };
 
+// 불완전한 nutrition 데이터를 정규화
+const normalizeNutrition = (n: Partial<NutritionData> | null | undefined): NutritionData => ({
+  ...EMPTY_NUTRITION,
+  ...n,
+});
+
+// 특정 날짜인지 확인
+const isSameDate = (dateString: string, targetDate: Date): boolean => {
+  const date = new Date(dateString);
+  return (
+    date.getDate() === targetDate.getDate() &&
+    date.getMonth() === targetDate.getMonth() &&
+    date.getFullYear() === targetDate.getFullYear()
+  );
+};
+
 // 오늘 날짜인지 확인
 const isToday = (dateString: string): boolean => {
-  const date = new Date(dateString);
-  const today = new Date();
-  return (
-    date.getDate() === today.getDate() &&
-    date.getMonth() === today.getMonth() &&
-    date.getFullYear() === today.getFullYear()
-  );
+  return isSameDate(dateString, new Date());
 };
 
 // 최근 7일 내인지 확인
@@ -78,24 +136,88 @@ const sumNutrition = (records: MealRecord[]): NutritionData => {
       carbs_g: acc.carbs_g + record.totalNutrition.carbs_g,
       fat_g: acc.fat_g + record.totalNutrition.fat_g,
       phenylalanine_mg:
-        (acc.phenylalanine_mg || 0) +
-        (record.totalNutrition.phenylalanine_mg || 0),
+        acc.phenylalanine_mg + record.totalNutrition.phenylalanine_mg,
     }),
     { ...EMPTY_NUTRITION }
   );
 };
 
+// 오늘 날짜 문자열 (YYYY-MM-DD)
+const getTodayDateStr = (): string => {
+  return new Date().toISOString().split("T")[0];
+};
+
 export const useNutritionStore = create<NutritionState>()(
   persist(
     (set, get) => ({
-      mode: "general",
-      setMode: (mode) => set({ mode }),
+      // 퀵셋업 상태 (Phase 1 호환)
+      quickSetupCompleted: false,
+      setQuickSetupCompleted: (completed) => set({ quickSetupCompleted: completed }),
+
+      // 온보딩 상태 (Phase 2)
+      onboardingCompleted: false,
+      setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
+
+      // 진단 시기
+      diagnosisAgeGroup: null,
+      setDiagnosisAgeGroup: (group) => set({ diagnosisAgeGroup: group }),
+
+      // 포뮬러 설정
+      formulaSettings: null,
+      setFormulaSettings: (settings) => set({ formulaSettings: settings }),
 
       dailyGoals: DEFAULT_GOALS,
       setDailyGoals: (goals) =>
         set((state) => ({
           dailyGoals: { ...state.dailyGoals, ...goals },
         })),
+
+      waterGoal: 8, // 기본 8잔 (2L)
+      setWaterGoal: (glasses) => set({ waterGoal: glasses }),
+
+      waterIntakes: [],
+      addWaterGlass: () => {
+        const today = getTodayDateStr();
+        set((state) => {
+          const existingIndex = state.waterIntakes.findIndex((w) => w.date === today);
+          if (existingIndex >= 0) {
+            const updated = [...state.waterIntakes];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              glasses: updated[existingIndex].glasses + 1,
+            };
+            return { waterIntakes: updated };
+          }
+          return {
+            waterIntakes: [...state.waterIntakes, { date: today, glasses: 1 }],
+          };
+        });
+      },
+      removeWaterGlass: () => {
+        const today = getTodayDateStr();
+        set((state) => {
+          const existingIndex = state.waterIntakes.findIndex((w) => w.date === today);
+          if (existingIndex >= 0 && state.waterIntakes[existingIndex].glasses > 0) {
+            const updated = [...state.waterIntakes];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              glasses: Math.max(0, updated[existingIndex].glasses - 1),
+            };
+            return { waterIntakes: updated };
+          }
+          return state;
+        });
+      },
+      getTodayWaterIntake: () => {
+        const today = getTodayDateStr();
+        const intake = get().waterIntakes.find((w) => w.date === today);
+        return intake?.glasses || 0;
+      },
+      getWaterIntakeByDate: (date: Date) => {
+        const dateStr = date.toISOString().split("T")[0];
+        const intake = get().waterIntakes.find((w) => w.date === dateStr);
+        return intake?.glasses || 0;
+      },
 
       mealRecords: [],
       addMealRecord: (record) =>
@@ -113,7 +235,7 @@ export const useNutritionStore = create<NutritionState>()(
           ),
         })),
 
-      get todayNutrition() {
+      getTodayNutrition: () => {
         const todayMeals = get().mealRecords.filter((r) => isToday(r.timestamp));
         return sumNutrition(todayMeals);
       },
@@ -157,6 +279,71 @@ export const useNutritionStore = create<NutritionState>()(
         return result;
       },
 
+      // 특정 날짜의 영양소 합계
+      getNutritionByDate: (date: Date) => {
+        const meals = get().mealRecords.filter((r) => isSameDate(r.timestamp, date));
+        return sumNutrition(meals);
+      },
+
+      // 특정 날짜의 식사 목록
+      getMealsByDate: (date: Date) => {
+        return get().mealRecords.filter((r) => isSameDate(r.timestamp, date));
+      },
+
+      // 월간 데이터 (달력 뷰용)
+      getMonthlyData: (year: number, month: number) => {
+        const records = get().mealRecords.filter((r) => {
+          const date = new Date(r.timestamp);
+          return date.getFullYear() === year && date.getMonth() === month;
+        });
+
+        // 날짜별로 그룹화
+        const byDate = records.reduce(
+          (acc, record) => {
+            const date = new Date(record.timestamp).toISOString().split("T")[0];
+            if (!acc[date]) {
+              acc[date] = [];
+            }
+            acc[date].push(record);
+            return acc;
+          },
+          {} as Record<string, MealRecord[]>
+        );
+
+        // 날짜별 영양소 합계
+        const result: Record<string, NutritionData> = {};
+        for (const [date, meals] of Object.entries(byDate)) {
+          result[date] = sumNutrition(meals);
+        }
+
+        return result;
+      },
+
+      // Exchange 설정
+      phePerExchange: 50,
+      setPhePerExchange: (value) => set({ phePerExchange: value }),
+
+      // Exchange 계산
+      getExchanges: (phenylalanine_mg: number) => {
+        const phePerEx = get().phePerExchange || 50;
+        return Math.round((phenylalanine_mg / phePerEx) * 10) / 10;
+      },
+
+      // 오늘의 Exchange 합계
+      getTodayExchanges: () => {
+        const todayNutrition = get().getTodayNutrition();
+        return get().getExchanges(todayNutrition.phenylalanine_mg || 0);
+      },
+
+      // Exchange 목표
+      getExchangeGoal: () => {
+        const pheGoal = get().dailyGoals.phenylalanine_mg || 300;
+        return get().getExchanges(pheGoal);
+      },
+
+      preferManualEntry: false,
+      setPreferManualEntry: (prefer) => set({ preferManualEntry: prefer }),
+
       _hasHydrated: false,
       setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
@@ -164,12 +351,34 @@ export const useNutritionStore = create<NutritionState>()(
       name: "mypku-nutrition-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        mode: state.mode,
+        quickSetupCompleted: state.quickSetupCompleted,
+        onboardingCompleted: state.onboardingCompleted,
+        diagnosisAgeGroup: state.diagnosisAgeGroup,
+        formulaSettings: state.formulaSettings,
         dailyGoals: state.dailyGoals,
         mealRecords: state.mealRecords,
+        waterIntakes: state.waterIntakes,
+        waterGoal: state.waterGoal,
+        phePerExchange: state.phePerExchange,
+        preferManualEntry: state.preferManualEntry,
       }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        if (state) {
+          // localStorage에서 복원된 mealRecords의 totalNutrition 정규화
+          const records = state.mealRecords;
+          if (records?.length) {
+            const needsNormalization = records.some(
+              (r) => !r.totalNutrition || r.totalNutrition.protein_g === undefined
+            );
+            if (needsNormalization) {
+              state.mealRecords = records.map((r) => ({
+                ...r,
+                totalNutrition: normalizeNutrition(r.totalNutrition),
+              }));
+            }
+          }
+          state.setHasHydrated(true);
+        }
       },
     }
   )

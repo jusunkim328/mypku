@@ -1,0 +1,40 @@
+import createMiddleware from "next-intl/middleware";
+import { type NextRequest, NextResponse } from "next/server";
+import { routing } from "./i18n/routing";
+import { updateSessionWithResponse } from "@/lib/supabase/middleware";
+
+const intlMiddleware = createMiddleware(routing);
+
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // /auth/callback은 locale 처리 없이 Supabase 세션만 처리
+  if (pathname.startsWith("/auth/callback")) {
+    const response = NextResponse.next({ request });
+    const result = await updateSessionWithResponse(request, response);
+    return result;
+  }
+
+  // 다른 경로는 next-intl이 locale 라우팅 처리
+  const response = intlMiddleware(request);
+
+  // Supabase 세션 쿠키 처리 (response에 추가)
+  return await updateSessionWithResponse(request, response);
+}
+
+export const config = {
+  matcher: [
+    /*
+     * 다음을 제외한 모든 요청 경로:
+     * - api (API routes)
+     * - auth/callback (OAuth 콜백)
+     * - _next/static (정적 파일)
+     * - _next/image (이미지 최적화)
+     * - favicon.ico (파비콘)
+     * - 이미지 파일 (svg, png, jpg, etc.)
+     * - sw.js (서비스 워커)
+     * - manifest.json (PWA 매니페스트)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+  ],
+};

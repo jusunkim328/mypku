@@ -1,0 +1,53 @@
+import { NextRequest, NextResponse } from "next/server";
+import { analyzeFoodByText } from "@/lib/gemini";
+import { requireAuth } from "@/lib/apiAuth";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rateLimit";
+
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await requireAuth();
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const rl = checkRateLimit(`voice-analyze:${auth.user.id}`, RATE_LIMITS.AI_ANALYZE);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } }
+      );
+    }
+
+    const body = await request.json();
+    const { text, locale } = body;
+
+    if (!text || typeof text !== "string") {
+      return NextResponse.json({ error: "Text is required" }, { status: 400 });
+    }
+
+    if (text.trim().length < 2) {
+      return NextResponse.json({ error: "Text is too short" }, { status: 400 });
+    }
+
+    // Gemini로 텍스트 분석 (PKU 전용)
+    const result = await analyzeFoodByText(text, locale);
+
+    return NextResponse.json({
+      success: true,
+      items: result.items,
+      totalNutrition: result.totalNutrition,
+    });
+  } catch (error) {
+    console.error("Voice analyze error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Analysis failed",
+      },
+      { status: 500 }
+    );
+  }
+}

@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Camera } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 
 interface ImageUploaderProps {
@@ -12,6 +14,8 @@ export default function ImageUploader({
   imageBase64,
   onImageSelect,
 }: ImageUploaderProps) {
+  const t = useTranslations("AnalyzePage");
+  const tImg = useTranslations("ImageUploader");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -70,13 +74,14 @@ export default function ImageUploader({
   };
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 md:p-5 lg:p-6">
       {imageBase64 ? (
-        <div className="space-y-3">
-          <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+        <div className="space-y-3 md:space-y-4">
+          <div className="relative aspect-video md:aspect-[16/10] rounded-lg md:rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageBase64}
-              alt="선택된 음식 이미지"
+              alt={tImg("selectedImage")}
               className="w-full h-full object-cover"
             />
           </div>
@@ -86,32 +91,14 @@ export default function ImageUploader({
             onClick={() => onImageSelect("")}
             className="w-full"
           >
-            다른 사진 선택
+            {t("selectAnother")}
           </Button>
         </div>
       ) : (
-        <div className="space-y-3">
-          <div className="aspect-video rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center bg-gray-50">
-            <svg
-              className="w-12 h-12 text-gray-400 mb-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            <p className="text-gray-500 text-sm">음식 사진을 선택하세요</p>
+        <div className="space-y-3 md:space-y-4">
+          <div className="aspect-video md:aspect-[16/10] rounded-lg md:rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800">
+            <Camera className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-2" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t("selectPhoto")}</p>
           </div>
 
           <div className="flex gap-2">
@@ -121,7 +108,7 @@ export default function ImageUploader({
               disabled={isProcessing}
               className="flex-1"
             >
-              카메라
+              {t("camera")}
             </Button>
             <Button
               large
@@ -130,7 +117,7 @@ export default function ImageUploader({
               disabled={isProcessing}
               className="flex-1"
             >
-              갤러리
+              {t("gallery")}
             </Button>
           </div>
 
