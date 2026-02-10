@@ -19,20 +19,15 @@ PKU(페닐케톤뇨증) 환자를 위한 AI 기반 맞춤형 식단 관리 PWA.
 
 ```bash
 bun dev          # 개발 서버 (localhost:3000)
-bun build        # 프로덕션 빌드
+bun build        # 프로덕션 빌드 (= next build, TypeScript 타입 체크 포함)
 bun lint         # ESLint 검사
 bun test         # Vitest watch 모드
 bun test:run     # Vitest 단회 실행
 bun test:coverage # 커버리지 리포트
+bun test -- __tests__/lib/retry.test.ts  # 단일 테스트 파일 실행
 ```
 
-### Docker 환경
-
-```bash
-docker-compose up -d                   # 컨테이너 시작 (localhost:3001)
-docker-compose exec mypku-dev bash     # 컨테이너 진입
-docker-compose down                    # 컨테이너 종료
-```
+> **주의**: `bun build`와 `bunx next build`는 동일 (`package.json`의 `"build": "next build"`). 둘 다 사용 가능.
 
 ---
 
@@ -67,6 +62,8 @@ PWA: Serwist (Service Worker)
                                                                   ↓
                                             useAuth() 훅으로 전역 접근
 ```
+
+- `/auth/callback`은 미들웨어 matcher에 포함되지만, 미들웨어 내부에서 locale 처리 없이 Supabase 세션만 처리하는 별도 분기로 동작
 
 ### 다국어 라우팅
 
@@ -133,7 +130,6 @@ const { supabase, user } = auth;
 ### PKU 전용 기능
 - `components/onboarding/`: 온보딩 플로우에서 Phe 허용량/Exchange 단위 설정
 - `components/onboarding/DiagnosisOCR.tsx`: 진단서 사진으로 설정값 자동 추출
-- `components/dashboard/PheRemainingCard.tsx`: 일일 Phe 잔여량 표시 (녹→노→빨 프로그레스)
 - Exchange 계산: 1 Exchange = 50mg Phe (기본값, 커스터마이즈 가능)
 - PKU Safety Level: `safe` (≤20mg), `caution` (≤100mg), `avoid` (>100mg)
 
@@ -161,7 +157,7 @@ daily_goals           # 일일 영양 목표
 meal_records          # 식사 기록 (total_nutrition: JSONB)
 food_items            # 개별 음식 아이템 (nutrition: JSONB)
 pku_foods             # PKU 식품 DB (외부 API 캐싱)
-blood_level_records   # 혈중 Phe 검사 기록
+blood_levels          # 혈중 Phe 검사 기록
 formula_settings      # 포뮬러(특수분유) 설정
 formula_intakes       # 포뮬러 복용 기록
 caregiver_links       # 보호자-환자 관계 (초대/수락/거부, permissions, alert_threshold_percent)
@@ -249,8 +245,8 @@ mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwh
 - 예: `Card`에 `onClick` prop 없음 → wrapper `div`로 해결
 
 ### 빌드 검증 명령어
-- Next.js 프로덕션 빌드: **`bunx next build`** (`bun build`가 아님! `bun build`는 번들러)
-- Wave 2 통합 단계에서 `bunx next build` 필수 실행 — TypeScript 타입 체크가 여기서만 수행됨
+- Next.js 프로덕션 빌드: **`bun build`** 또는 `bunx next build` (둘 다 `next build` 실행)
+- Wave 2 통합 단계에서 빌드 필수 실행 — TypeScript 타입 체크가 여기서만 수행됨
 
 ### 에이전트 간 파일 충돌 방지
 - `messages/{en,ko,ru}.json`: 여러 에이전트가 동시 수정 시 충돌 가능. JSON 키를 서로 다른 최상위 섹션에 추가하도록 분리

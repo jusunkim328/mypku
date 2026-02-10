@@ -46,6 +46,12 @@ data/bls/*
 !data/bls/README.md
 temp/
 
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
+# Next.js generated types
+next-env.d.ts
+
 # Service Worker (generated)
 public/sw.js
 public/sw.js.map

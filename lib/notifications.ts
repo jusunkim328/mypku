@@ -49,8 +49,8 @@ export function showNotification(title: string, options?: NotificationOptions): 
   }
 
   new Notification(title, {
-    icon: "/icons/icon-192x192.png",
-    badge: "/icons/icon-96x96.png",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
     ...options,
   });
 }
