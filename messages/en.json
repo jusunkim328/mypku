@@ -698,7 +698,11 @@
     "error_emailMismatch": "This invitation was sent to a different email. Please sign in with the invited email address.",
     "didYouMean": "Did you mean {email}?",
     "useCorrection": "Yes, fix it",
-    "sendAnyway": "No, send as-is"
+    "sendAnyway": "No, send as-is",
+    "sectionMyCaregivers": "My Caregivers",
+    "sectionMyCaregiversDesc": "People you invited to help manage your records.",
+    "sectionPeopleICareFor": "People I Care For",
+    "sectionPeopleICareForDesc": "People who invited you to view their records."
   },
   "Caregiver": {
     "myData": "My Data",

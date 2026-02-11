@@ -698,7 +698,11 @@
     "error_emailMismatch": "Это приглашение было отправлено на другой адрес. Войдите с приглашённым адресом электронной почты.",
     "didYouMean": "Вы имели в виду {email}?",
     "useCorrection": "Да, исправить",
-    "sendAnyway": "Нет, отправить как есть"
+    "sendAnyway": "Нет, отправить как есть",
+    "sectionMyCaregivers": "Мои опекуны",
+    "sectionMyCaregiversDesc": "Люди, которых вы пригласили помогать управлять записями.",
+    "sectionPeopleICareFor": "Люди, о которых я забочусь",
+    "sectionPeopleICareForDesc": "Люди, которые пригласили вас для доступа к их записям."
   },
   "Caregiver": {
     "myData": "Мои данные",

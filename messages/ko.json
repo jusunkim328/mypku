@@ -698,7 +698,11 @@
     "error_emailMismatch": "이 초대는 다른 이메일로 발송되었습니다. 초대받은 이메일로 로그인해주세요.",
     "didYouMean": "혹시 {email}을(를) 입력하려고 하셨나요?",
     "useCorrection": "네, 수정할게요",
-    "sendAnyway": "아니요, 그대로 보내기"
+    "sendAnyway": "아니요, 그대로 보내기",
+    "sectionMyCaregivers": "나의 보호자",
+    "sectionMyCaregiversDesc": "내 기록 관리를 도와줄 보호자들입니다.",
+    "sectionPeopleICareFor": "내가 돌보는 가족",
+    "sectionPeopleICareForDesc": "나를 초대하여 기록을 공유한 가족들입니다."
   },
   "Caregiver": {
     "myData": "나의 데이터",

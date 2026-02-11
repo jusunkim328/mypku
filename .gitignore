@@ -57,3 +57,6 @@ next-env.d.ts
 # Service Worker (generated)
 public/sw.js
 public/sw.js.map
+
+# Supabase temp
+supabase/.temp/

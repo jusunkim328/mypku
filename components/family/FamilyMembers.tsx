@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { UserCheck, Clock, Trash2, Mail, Eye, Pencil, Copy } from "lucide-react";
+import { UserCheck, Clock, Trash2, Mail, Eye, Pencil, Copy, ShieldCheck, Heart } from "lucide-react";
 import { toast } from "@/hooks/useToast";
 import { useRouter } from "@/i18n/navigation";
 import { usePatientContext } from "@/hooks/usePatientContext";
@@ -214,25 +214,58 @@ export default function FamilyMembers({
   }
 
   return (
-    <div className="space-y-2">
-      {caregivers.map((link) => (
-        <MemberCard
-          key={link.id}
-          link={link}
-          isOwner={true}
-          onRemove={handleRemove}
-          updatePermissions={updatePermissions}
-        />
-      ))}
-      {patients.map((link) => (
-        <MemberCard
-          key={link.id}
-          link={link}
-          isOwner={false}
-          onRemove={handleRemove}
-          onViewData={handleViewData}
-        />
-      ))}
+    <div className="space-y-4">
+      {caregivers.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <ShieldCheck className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              {t("sectionMyCaregivers")}
+            </h4>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            {t("sectionMyCaregiversDesc")}
+          </p>
+          <div className="space-y-2">
+            {caregivers.map((link) => (
+              <MemberCard
+                key={link.id}
+                link={link}
+                isOwner={true}
+                onRemove={handleRemove}
+                updatePermissions={updatePermissions}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {patients.length > 0 && (
+        <div>
+          {caregivers.length > 0 && (
+            <div className="border-t border-gray-200 dark:border-gray-700 mb-4" />
+          )}
+          <div className="flex items-center gap-2 mb-1.5">
+            <Heart className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              {t("sectionPeopleICareFor")}
+            </h4>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            {t("sectionPeopleICareForDesc")}
+          </p>
+          <div className="space-y-2">
+            {patients.map((link) => (
+              <MemberCard
+                key={link.id}
+                link={link}
+                isOwner={false}
+                onRemove={handleRemove}
+                onViewData={handleViewData}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
