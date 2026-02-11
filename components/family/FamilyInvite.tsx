@@ -7,6 +7,76 @@ import { Button, Input } from "@/components/ui";
 import { toast } from "@/hooks/useToast";
 import type { SendInviteFn } from "@/hooks/useFamilyShare";
 
+// 주요 이메일 도메인: 이름 → 올바른 전체 도메인
+const KNOWN_DOMAINS: Record<string, string> = {
+  gmail: "gmail.com", googlemail: "googlemail.com",
+  hotmail: "hotmail.com", outlook: "outlook.com", live: "live.com",
+  yahoo: "yahoo.com", ymail: "ymail.com",
+  naver: "naver.com", daum: "daum.net", hanmail: "hanmail.net", kakao: "kakao.com",
+  icloud: "icloud.com", me: "me.com", mac: "mac.com",
+  protonmail: "protonmail.com", proton: "proton.me",
+  aol: "aol.com", mail: "mail.ru", yandex: "yandex.ru",
+};
+
+// 이름 부분 오타 → 올바른 이름
+const NAME_TYPO_MAP: Record<string, string> = {
+  gamil: "gmail", gmal: "gmail", gnail: "gmail", gmaill: "gmail",
+  gmial: "gmail", gmai: "gmail", gmali: "gmail", gmaul: "gmail",
+  outloo: "outlook", outlok: "outlook", outloок: "outlook",
+  yaho: "yahoo", yahooo: "yahoo", uahoo: "yahoo",
+  hotmal: "hotmail", hotmai: "hotmail", hotmial: "hotmail",
+  nave: "naver", navr: "naver",
+};
+
+// TLD 오타 → 올바른 TLD
+const TLD_TYPO_MAP: Record<string, string> = {
+  // .com 오타
+  co: "com", con: "com", cm: "com", cpm: "com", cmo: "com",
+  vom: "com", xom: "com", om: "com", comm: "com", comn: "com",
+  clm: "com", cim: "com", dom: "com", com_: "com",
+  // .net 오타
+  ne: "net", ner: "net", ney: "net", met: "net", nett: "net", bet: "net",
+  // .org 오타
+  og: "org", orh: "org", orf: "org", rg: "org",
+  // .ru 오타
+  ri: "ru", ry: "ru",
+};
+
+function suggestEmailFix(email: string): string | null {
+  const atIndex = email.lastIndexOf("@");
+  if (atIndex === -1) return null;
+
+  const domain = email.slice(atIndex + 1).toLowerCase();
+  const dotIndex = domain.indexOf(".");
+  if (dotIndex === -1) return null;
+
+  const name = domain.slice(0, dotIndex);
+  const tld = domain.slice(dotIndex + 1);
+
+  // 1) 정확한 도메인 이름 → TLD 오타 체크
+  if (name in KNOWN_DOMAINS) {
+    const correctDomain = KNOWN_DOMAINS[name];
+    if (domain !== correctDomain) {
+      return email.slice(0, atIndex + 1) + correctDomain;
+    }
+    return null; // 도메인이 완벽히 일치
+  }
+
+  // 2) 이름 오타 → 올바른 이름으로 교정 + 올바른 TLD 적용
+  const correctedName = NAME_TYPO_MAP[name];
+  if (correctedName && correctedName in KNOWN_DOMAINS) {
+    return email.slice(0, atIndex + 1) + KNOWN_DOMAINS[correctedName];
+  }
+
+  // 3) 알려지지 않은 도메인이지만 TLD가 흔한 오타인 경우
+  const correctedTld = TLD_TYPO_MAP[tld];
+  if (correctedTld && tld !== correctedTld) {
+    return email.slice(0, atIndex + 1) + name + "." + correctedTld;
+  }
+
+  return null;
+}
+
 type PermissionLevel = "edit" | "view";
 
 interface FamilyInviteProps {
@@ -22,15 +92,15 @@ export default function FamilyInvite({ sendInvite }: FamilyInviteProps) {
   const [isSending, setIsSending] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [typoSuggestion, setTypoSuggestion] = useState<string | null>(null);
 
-  const handleSendInvite = async () => {
-    if (!email.trim()) return;
-
+  const doSendInvite = async (emailToSend: string) => {
     setIsSending(true);
     setInviteUrl(null);
+    setTypoSuggestion(null);
 
     const permissions = permLevel === "edit" ? ["view", "edit"] : ["view"];
-    const result = await sendInvite(email.trim(), permissions);
+    const result = await sendInvite(emailToSend.trim(), permissions);
 
     if (result.success && result.inviteUrl) {
       setInviteUrl(result.inviteUrl);
@@ -48,6 +118,18 @@ export default function FamilyInvite({ sendInvite }: FamilyInviteProps) {
     }
 
     setIsSending(false);
+  };
+
+  const handleSendInvite = async () => {
+    if (!email.trim()) return;
+
+    const suggestion = suggestEmailFix(email.trim());
+    if (suggestion) {
+      setTypoSuggestion(suggestion);
+      return;
+    }
+
+    await doSendInvite(email);
   };
 
   const handleShare = async () => {
@@ -167,7 +249,7 @@ export default function FamilyInvite({ sendInvite }: FamilyInviteProps) {
         <Input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); setTypoSuggestion(null); }}
           onFocus={(e) => e.target.select()}
           placeholder={t("emailPlaceholder")}
           className="flex-1"
@@ -180,6 +262,29 @@ export default function FamilyInvite({ sendInvite }: FamilyInviteProps) {
           <Send className="w-4 h-4" />
         </Button>
       </div>
+      {typoSuggestion && (
+        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <p className="text-sm text-amber-700 dark:text-amber-300 mb-2">
+            {t("didYouMean", { email: typoSuggestion })}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setEmail(typoSuggestion); setTypoSuggestion(null); }}
+              className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-100 dark:bg-amber-800/40 text-amber-800 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-800/60 transition-colors"
+            >
+              {t("useCorrection")}
+            </button>
+            <button
+              type="button"
+              onClick={() => doSendInvite(email)}
+              className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              {t("sendAnyway")}
+            </button>
+          </div>
+        </div>
+      )}
       <p className="text-xs text-gray-500 dark:text-gray-400">
         {t("inviteHelp")}
       </p>

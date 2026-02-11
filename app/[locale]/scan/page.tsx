@@ -1,4 +1,15 @@
-import ScanClient from "@/components/pages/ScanClient";
+"use client";
+
+import dynamic from "next/dynamic";
+
+const ScanClient = dynamic(() => import("@/components/pages/ScanClient"), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 w-8 h-8" />
+    </div>
+  ),
+});
 
 export default function ScanPage() {
   return <ScanClient />;

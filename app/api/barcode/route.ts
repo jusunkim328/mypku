@@ -316,35 +316,34 @@ export async function GET(request: NextRequest) {
     const barcodeCountry = getOriginCountryFromBarcode(barcode);
     const contributedFrom = extractCountryFromTags(product.countries_tags);
 
-    // 3. Open Food Facts 결과를 PKU DB에 영구 저장 (다음 조회 시 API 호출 없이 DB에서 반환)
-    try {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      await supabase.from("pku_foods").upsert(
-        {
-          name: productName,
-          name_ko: product.product_name_ko || null,
-          brand: product.brands || null,
-          barcode: barcode,
-          serving_size: product.serving_size || "100g",
-          phenylalanine_mg,
-          protein_g: Math.round(protein_g * 10) / 10,
-          calories: Math.round(calories),
-          carbs_g: Math.round(carbs_g * 10) / 10,
-          fat_g: Math.round(fat_g * 10) / 10,
-          category: product.categories_tags?.[0] || null,
-          is_low_protein: protein_g < 1,
-          source: "openfoodfacts",
-          // 국가 정보 (ISO 코드)
-          barcode_country: barcodeCountry?.code || null,
-          contributed_from: contributedFrom?.code || null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any,
-        { onConflict: "name,source" }
-      );
+    // 3. Open Food Facts 결과를 PKU DB에 백그라운드 저장 (응답 블로킹 없이 fire-and-forget)
+    const supabaseForSave = createClient(supabaseUrl, supabaseAnonKey);
+    supabaseForSave.from("pku_foods").upsert(
+      {
+        name: productName,
+        name_ko: product.product_name_ko || null,
+        brand: product.brands || null,
+        barcode: barcode,
+        serving_size: product.serving_size || "100g",
+        phenylalanine_mg,
+        protein_g: Math.round(protein_g * 10) / 10,
+        calories: Math.round(calories),
+        carbs_g: Math.round(carbs_g * 10) / 10,
+        fat_g: Math.round(fat_g * 10) / 10,
+        category: product.categories_tags?.[0] || null,
+        is_low_protein: protein_g < 1,
+        source: "openfoodfacts",
+        // 국가 정보 (ISO 코드)
+        barcode_country: barcodeCountry?.code || null,
+        contributed_from: contributedFrom?.code || null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      { onConflict: "name,source" }
+    ).then(() => {
       console.log(`✓ Saved barcode ${barcode} to PKU DB (barcode_country: ${barcodeCountry?.code || "unknown"})`);
-    } catch (saveError) {
+    }, (saveError: unknown) => {
       console.log("DB save failed:", saveError);
-    }
+    });
 
     return NextResponse.json({
       found: true,

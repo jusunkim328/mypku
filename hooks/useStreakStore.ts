@@ -169,6 +169,9 @@ export const useStreakStore = create<StreakStore>()(
     }),
     {
       name: "mypku-streak-storage",
+      version: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      migrate: (state: any) => state,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         currentStreak: state.currentStreak,

@@ -695,7 +695,10 @@
     "error_cannotAcceptOwn": "You cannot accept your own invitation.",
     "error_alreadyLinked": "You are already linked to this profile.",
     "error_expired": "This invitation has expired. Please ask for a new one.",
-    "error_emailMismatch": "This invitation was sent to a different email. Please sign in with the invited email address."
+    "error_emailMismatch": "This invitation was sent to a different email. Please sign in with the invited email address.",
+    "didYouMean": "Did you mean {email}?",
+    "useCorrection": "Yes, fix it",
+    "sendAnyway": "No, send as-is"
   },
   "Caregiver": {
     "myData": "My Data",

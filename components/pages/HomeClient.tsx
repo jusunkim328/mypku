@@ -27,7 +27,11 @@ import FormulaReminderBanner from "@/components/dashboard/FormulaReminderBanner"
 import FavoriteMealCard from "@/components/favorites/FavoriteMealCard";
 import Disclaimer from "@/components/common/Disclaimer";
 import CaregiverPheAlert from "@/components/caregiver/CaregiverPheAlert";
-import WeeklyInsight from "@/components/dashboard/WeeklyInsight";
+import dynamic from "next/dynamic";
+const WeeklyInsight = dynamic(
+  () => import("@/components/dashboard/WeeklyInsight"),
+  { ssr: false, loading: () => <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> }
+);
 // DesktopNavLinks: md+ 전용 드롭다운 네비게이션. HomeClient는 커스텀 헤더를 쓰므로
 // Navbar 대신 직접 import. Navbar를 쓰는 페이지는 ui/index.tsx 통해 자동 포함.
 import DesktopNavLinks from "@/components/layout/DesktopNavLinks";
@@ -162,11 +166,7 @@ export default function HomeClient() {
         {/* 온보딩 체크리스트 */}
         {showChecklist && (
           <OnboardingChecklist
-            hasProfile={hasProfile}
-            hasPheGoal={hasPheGoal}
-            hasMealRecord={hasMealRecord}
-            hasFormula={hasFormula}
-            hasBloodLevel={hasBloodLevel}
+            status={{ profile: hasProfile, pheGoal: hasPheGoal, mealRecord: hasMealRecord, formula: hasFormula, bloodLevel: hasBloodLevel }}
             onDismiss={dismiss}
           />
         )}

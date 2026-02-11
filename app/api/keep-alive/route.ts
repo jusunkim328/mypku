@@ -28,29 +28,21 @@ export async function GET() {
   try {
     const timestamp = new Date().toISOString();
 
-    // 1. Database activity: Simple query
-    const { error: dbError } = await supabase
-      .from('profiles')
-      .select('count')
-      .limit(1);
+    // Run all health checks in parallel
+    const [dbResult, authResult, storageResult] = await Promise.all([
+      supabase.from('profiles').select('count').limit(1),
+      supabase.auth.getSession(),
+      supabase.storage.listBuckets(),
+    ]);
 
-    if (dbError) {
-      console.error('Database query error:', dbError);
-    }
+    const { error: dbError } = dbResult;
+    if (dbError) console.error('Database query error:', dbError);
 
-    // 2. Auth activity: Check session
-    const { error: authError } = await supabase.auth.getSession();
+    const { error: authError } = authResult;
+    if (authError) console.error('Auth check error:', authError);
 
-    if (authError) {
-      console.error('Auth check error:', authError);
-    }
-
-    // 3. Storage activity: List buckets (lightweight operation)
-    const { error: storageError } = await supabase.storage.listBuckets();
-
-    if (storageError) {
-      console.error('Storage check error:', storageError);
-    }
+    const { error: storageError } = storageResult;
+    if (storageError) console.error('Storage check error:', storageError);
 
     return NextResponse.json({
       success: true,

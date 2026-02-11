@@ -45,6 +45,9 @@ export const useChecklistStore = create<ChecklistStore>()(
     }),
     {
       name: "mypku-checklist-storage",
+      version: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      migrate: (state: any) => state,
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },

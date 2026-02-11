@@ -10,7 +10,11 @@ import { useCanEdit, useIsCaregiverMode } from "@/hooks/usePatientContext";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import BloodLevelForm from "@/components/blood/BloodLevelForm";
 import BloodLevelCard from "@/components/blood/BloodLevelCard";
-import BloodLevelChart from "@/components/blood/BloodLevelChart";
+import dynamic from "next/dynamic";
+const BloodLevelChart = dynamic(
+  () => import("@/components/blood/BloodLevelChart"),
+  { ssr: false, loading: () => <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" /> }
+);
 import BloodTestReminderBanner from "@/components/blood/BloodTestReminderBanner";
 
 export default function BloodLevelsClient() {

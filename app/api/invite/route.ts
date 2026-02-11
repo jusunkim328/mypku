@@ -39,7 +39,14 @@ function validatePermissions(input: unknown): string[] | null {
 }
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const [supabase, body] = await Promise.all([
+      createClient(),
+      request.json().catch(() => null),
+    ]);
+
+    if (!body) {
+      return NextResponse.json({ error: "invalidRequest" }, { status: 400 });
+    }
 
     const {
       data: { user },
@@ -53,12 +60,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "invalidRequest" }, { status: 400 });
-    }
     const { email, permissions: rawPermissions } = body;
 
     // 권한 검증

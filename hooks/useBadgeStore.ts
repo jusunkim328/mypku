@@ -254,6 +254,9 @@ export const useBadgeStore = create<BadgeStore>()(
     }),
     {
       name: "mypku-badge-storage",
+      version: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      migrate: (state: any) => state,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         badges: state.badges,

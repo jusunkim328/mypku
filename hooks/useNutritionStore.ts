@@ -349,6 +349,9 @@ export const useNutritionStore = create<NutritionState>()(
     }),
     {
       name: "mypku-nutrition-storage",
+      version: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      migrate: (state: any) => state,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         quickSetupCompleted: state.quickSetupCompleted,

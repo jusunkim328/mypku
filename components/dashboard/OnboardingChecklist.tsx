@@ -5,33 +5,33 @@ import { Link } from "@/i18n/navigation";
 import { Card } from "@/components/ui";
 import { Check, Circle, PartyPopper } from "lucide-react";
 
+interface ChecklistStatus {
+  profile: boolean;
+  pheGoal: boolean;
+  mealRecord: boolean;
+  formula: boolean;
+  bloodLevel: boolean;
+}
+
 interface OnboardingChecklistProps {
-  hasProfile: boolean;
-  hasPheGoal: boolean;
-  hasMealRecord: boolean;
-  hasFormula: boolean;
-  hasBloodLevel: boolean;
+  status: ChecklistStatus;
   onDismiss: () => void;
 }
 
 export default function OnboardingChecklist({
-  hasProfile,
-  hasPheGoal,
-  hasMealRecord,
-  hasFormula,
-  hasBloodLevel,
+  status,
   onDismiss,
 }: OnboardingChecklistProps) {
   const t = useTranslations("OnboardingChecklist");
 
-  const allCompleted = hasProfile && hasPheGoal && hasMealRecord && hasFormula && hasBloodLevel;
+  const allCompleted = status.profile && status.pheGoal && status.mealRecord && status.formula && status.bloodLevel;
 
   const items = [
-    { key: "profileSetup" as const, done: hasProfile, href: "/onboarding" as const },
-    { key: "pheGoal" as const, done: hasPheGoal, href: "/settings" as const },
-    { key: "firstMeal" as const, done: hasMealRecord, href: "/analyze" as const },
-    { key: "formulaSetup" as const, done: hasFormula, href: "/settings" as const },
-    { key: "firstBloodTest" as const, done: hasBloodLevel, href: "/blood-levels" as const },
+    { key: "profileSetup" as const, done: status.profile, href: "/onboarding" as const },
+    { key: "pheGoal" as const, done: status.pheGoal, href: "/settings" as const },
+    { key: "firstMeal" as const, done: status.mealRecord, href: "/analyze" as const },
+    { key: "formulaSetup" as const, done: status.formula, href: "/settings" as const },
+    { key: "firstBloodTest" as const, done: status.bloodLevel, href: "/blood-levels" as const },
   ];
 
   const completedCount = items.filter((i) => i.done).length;
