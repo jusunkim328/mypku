@@ -82,10 +82,10 @@
     "switchToManual": "수동으로 입력하기",
     "aiEstimate": "AI 추정값",
     "aiEstimateHint": "AI가 추정한 값입니다. 확인해주세요.",
-    "tabVideoTalk": "영상 대화",
+    "tabVideoTalk": "영상",
     "tabPicture": "사진",
     "tabVoice": "음성",
-    "tabManualEntry": "수동 입력"
+    "tabManualEntry": "수동"
   },
   "HistoryPage": {
     "title": "식사 기록",

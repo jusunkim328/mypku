@@ -82,10 +82,10 @@
     "switchToManual": "Ввести вручную",
     "aiEstimate": "Оценка ИИ",
     "aiEstimateHint": "Значения оценены ИИ. Пожалуйста, проверьте.",
-    "tabVideoTalk": "Видео-чат",
+    "tabVideoTalk": "Видео",
     "tabPicture": "Фото",
     "tabVoice": "Голос",
-    "tabManualEntry": "Ручной ввод"
+    "tabManualEntry": "Ручной"
   },
   "HistoryPage": {
     "title": "История питания",

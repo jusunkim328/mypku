@@ -262,7 +262,7 @@ export default function AnalyzeClient() {
 
       <Block className="space-y-4">
         {/* 입력 모드 탭 */}
-        <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
+        <div className="flex overflow-x-auto scrollbar-hide rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
           {tabs.map(({ mode, label, icon, activeColor }) => {
             const isActive = inputMode === mode;
             const color = isActive
@@ -272,12 +272,13 @@ export default function AnalyzeClient() {
               <button
                 key={mode}
                 onClick={() => handleModeChange(mode)}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${color} ${
+                aria-label={label}
+                className={`flex-1 min-w-0 py-2 px-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 ${color} ${
                   isActive ? "bg-white dark:bg-gray-700 shadow-sm" : ""
                 }`}
               >
-                {icon}
-                {label}
+                <span className="shrink-0">{icon}</span>
+                <span className="truncate hidden min-[420px]:block">{label}</span>
               </button>
             );
           })}

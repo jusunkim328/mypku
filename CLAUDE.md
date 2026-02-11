@@ -18,16 +18,16 @@ PKU(페닐케톤뇨증) 환자를 위한 AI 기반 맞춤형 식단 관리 PWA.
 ## 개발 명령어
 
 ```bash
-bun dev          # 개발 서버 (localhost:3000)
-bun build        # 프로덕션 빌드 (= next build, TypeScript 타입 체크 포함)
-bun lint         # ESLint 검사
-bun test         # Vitest watch 모드
-bun test:run     # Vitest 단회 실행
-bun test:coverage # 커버리지 리포트
+bun dev            # 개발 서버 (localhost:3000)
+bun run build      # 프로덕션 빌드 (= next build, TypeScript 타입 체크 포함)
+bun lint           # ESLint 검사
+bun test           # Vitest watch 모드
+bun test:run       # Vitest 단회 실행
+bun test:coverage  # 커버리지 리포트
 bun test -- __tests__/lib/retry.test.ts  # 단일 테스트 파일 실행
 ```
 
-> **주의**: `bun build`와 `bunx next build`는 동일 (`package.json`의 `"build": "next build"`). 둘 다 사용 가능.
+> **주의**: `bun build`는 bun 자체 bundler를 실행하므로 사용 금지. 반드시 `bun run build` 또는 `bunx next build`를 사용할 것.
 
 ---
 
@@ -94,6 +94,16 @@ PWA: Serwist (Service Worker)
 - `hooks/useFamilyShare.ts`: 가족 공유 초대/수락/취소
 - `useCanEdit()` / `useTargetUserId()`: 편집 권한 및 대상 사용자 결정
 - `caregiver_links` 테이블의 RLS 정책으로 데이터 접근 제한
+- **환자 전환 시 캐시 초기화 패턴**: `useMealRecords`, `useFormulaRecords`, `useWaterRecords`, `useBloodLevels`, `CaregiverPheAlert` 등에서 `prevPatientIdRef`로 `activePatient?.id` 변경을 감지하여 캐시를 리셋. 새로운 환자 데이터 훅 추가 시 이 패턴을 반드시 적용:
+  ```typescript
+  const prevPatientIdRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (prevPatientIdRef.current !== undefined && prevPatientIdRef.current !== activePatient?.id) {
+      // 캐시 초기화 (예: setDbRecords([]))
+    }
+    prevPatientIdRef.current = activePatient?.id;
+  }, [activePatient?.id]);
+  ```
 
 ---
 
@@ -245,7 +255,7 @@ mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwh
 - 예: `Card`에 `onClick` prop 없음 → wrapper `div`로 해결
 
 ### 빌드 검증 명령어
-- Next.js 프로덕션 빌드: **`bun build`** 또는 `bunx next build` (둘 다 `next build` 실행)
+- Next.js 프로덕션 빌드: **`bun run build`** 또는 `bunx next build` (`bun build`는 bun bundler 실행이므로 사용 금지)
 - Wave 2 통합 단계에서 빌드 필수 실행 — TypeScript 타입 체크가 여기서만 수행됨
 
 ### 에이전트 간 파일 충돌 방지
@@ -256,7 +266,7 @@ mcp__plugin_supabase_supabase__generate_typescript_types(project_id: "uviydudvwh
 ### Wave 2 통합 체크리스트
 1. `bun test:run` — 기존 + 신규 테스트 전체 통과
 2. `bun lint` — ESLint 에러/경고 0
-3. `bunx next build` — 프로덕션 빌드 성공 (TypeScript 타입 체크 포함)
+3. `bun run build` — 프로덕션 빌드 성공 (TypeScript 타입 체크 포함)
 4. Supabase MCP `get_advisors(type: "security")` — 새 테이블 RLS 누락 확인
 5. Supabase 타입 재생성 + 수동 별칭 복원 확인
 
@@ -288,4 +298,6 @@ devAuthState()                                // 현재 상태 확인
 GEMINI_API_KEY=xxx                    # 서버 전용 - 클라이언트 노출 금지!
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+FOOD_SAFETY_KOREA_API_KEY=xxx         # 선택 - 한국 식약처 식품 검색
+USDA_FDC_API_KEY=xxx                  # 선택 - USDA 식품 검색
 ```

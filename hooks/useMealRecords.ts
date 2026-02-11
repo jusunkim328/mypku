@@ -223,7 +223,7 @@ export function useMealRecords(): UseMealRecordsReturn {
           aiConfidence: null,
         }))
       : dbRecords;
-  }, [isAuthenticated, dbRecords, localStore.mealRecords]);
+  }, [isAuthenticated, isCaregiverMode, dbRecords, localStore.mealRecords]);
 
   // 식사 기록 추가
   const addMealRecord = useCallback(

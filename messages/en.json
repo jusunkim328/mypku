@@ -82,10 +82,10 @@
     "switchToManual": "Enter food manually",
     "aiEstimate": "AI Estimate",
     "aiEstimateHint": "Values are AI-estimated. Please verify.",
-    "tabVideoTalk": "Video Talk",
+    "tabVideoTalk": "Video",
     "tabPicture": "Picture",
     "tabVoice": "Voice",
-    "tabManualEntry": "Manual Entry"
+    "tabManualEntry": "Manual"
   },
   "HistoryPage": {
     "title": "Meal History",
@@ -860,7 +860,7 @@
     "usedCount": "Logged {count} times",
     "added": "Saved to favorites!",
     "removed": "Removed from favorites",
-    "tab": "Favorites"
+    "tab": "Fav"
   },
   "PheRemaining": {
     "title": "Daily Phe Budget",
